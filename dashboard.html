@@ -1,0 +1,2423 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="google-site-verification" content="HXszZpGpQu3yZVPZ0jetZcCyhA26gCjYC_oI5G7AJJw" />
+    <title>Dashboard - Doraemon Fansub VN</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js">
+    </script>
+
+    <style>
+        /* ===== RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            transform: translateX(-100%);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-brand {
+            padding: 20px 20px 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand .brand-logo img {
+            height: 36px;
+            width: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .sidebar-brand .brand-logo h2 {
+            font-size: 18px;
+            color: white;
+            font-weight: 700;
+        }
+
+        .sidebar-brand .brand-logo h2 span {
+            color: #ffeb3b;
+        }
+
+        .sidebar-brand small {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            display: block;
+            margin-top: 2px;
+            margin-left: 46px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 8px 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            border-left: 3px solid #ffeb3b;
+        }
+
+        .sidebar-menu li .icon {
+            font-size: 18px;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 14px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-footer .avatar-wrapper {
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer .avatar-wrapper img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #ffeb3b;
+            object-fit: cover;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .sidebar-footer .avatar-wrapper img:hover {
+            transform: scale(1.05);
+            border-color: #ffeb3b;
+        }
+
+        .sidebar-footer .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-footer .info .name {
+            font-weight: 600;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: 0.3s;
+            color: white;
+        }
+
+        .sidebar-footer .info .name:hover {
+            color: #ffeb3b;
+        }
+
+        .sidebar-footer .info .email {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-footer .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer .logout-btn:hover {
+            background: rgba(255, 0, 0, 0.3);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            transition: 0.3s;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .mobile-menu-btn {
+            display: none !important;
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 50;
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .mobile-menu-btn:active {
+            transform: scale(0.9);
+        }
+
+        .main {
+            margin-left: 0;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 4px;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 img {
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .page-header .admin-badge {
+            background: #ffeb3b;
+            color: #1a1a2e;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .page-header .home-link {
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .page-header .home-link:hover {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .page-header .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card .icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #1a73e8;
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .tab-container {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #e4e6eb;
+            background: #fafafa;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 0 4px;
+        }
+
+        .tab-header::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            padding: 12px 18px;
+            border: none;
+            background: none;
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tab-btn:hover {
+            color: #1a73e8;
+        }
+
+        .tab-btn.active {
+            color: #1a73e8;
+            border-bottom-color: #1a73e8;
+        }
+
+        .tab-content {
+            padding: 20px 24px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .table-toolbar .title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a2e;
+        }
+
+        .table-toolbar .right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .table-toolbar .right .count {
+            font-size: 13px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            border: 2px solid #e4e6eb;
+            border-radius: 10px;
+            padding: 0 12px;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+            max-width: 400px;
+        }
+
+        .search-bar:focus-within {
+            border-color: #1a73e8;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        .search-bar .search-icon {
+            color: #999;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .search-bar input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            flex: 1;
+            color: #1a1a2e;
+        }
+
+        .search-bar input::placeholder {
+            color: #aaa;
+        }
+
+        .search-bar .clear-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            display: none;
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+
+        .search-bar .clear-btn:hover {
+            color: #e94560;
+        }
+
+        .search-bar .clear-btn.visible {
+            display: block;
+        }
+
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            background: #1557b0;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.96);
+        }
+
+        .btn-danger {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+        .btn-danger:hover {
+            background: #c62828;
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: 0.3s;
+            margin-right: 4px;
+        }
+
+        .btn-edit:hover {
+            background: #d97706;
+        }
+
+        .btn-success {
+            background: #34a853;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+        .btn-success:hover {
+            background: #2d8e47;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        .btn-add-admin {
+            background: linear-gradient(135deg, #ffeb3b, #f59e0b);
+            color: #1a1a2e;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-add-admin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(255, 235, 59, 0.4);
+        }
+
+        .btn-add-admin:active {
+            transform: scale(0.96);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #f0f2f5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 600px;
+        }
+
+        table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            font-size: 11px;
+            color: #666;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e4e6eb;
+        }
+
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f2f5;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        table tr:hover td {
+            background: #f8f9fa;
+        }
+
+        table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .empty-state .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 28px 30px;
+            max-width: 100%;
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-box .close {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 26px;
+            cursor: pointer;
+            color: #999;
+            border: none;
+            background: none;
+            transition: 0.3s;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box .close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-box h2 {
+            font-size: 20px;
+            margin-bottom: 18px;
+            color: #1a1a2e;
+            padding-right: 30px;
+        }
+
+        .modal-box .form-group {
+            margin-bottom: 14px;
+        }
+
+        .modal-box .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #1a1a2e;
+        }
+
+        .modal-box .form-group label .hint {
+            font-weight: 400;
+            font-size: 11px;
+            color: #999;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .modal-box .form-group input,
+        .modal-box .form-group textarea,
+        .modal-box .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e4e6eb;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+            background: white;
+        }
+
+        .modal-box .form-group input:focus,
+        .modal-box .form-group textarea:focus,
+        .modal-box .form-group select:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        .modal-box .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .modal-box .form-group textarea.embed-code {
+            min-height: 80px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #f8f9fa;
+        }
+
+        .modal-box .form-group .embed-preview {
+            display: none;
+            margin-top: 8px;
+            padding: 10px;
+            background: #f0f2f5;
+            border-radius: 8px;
+            border: 1px solid #e4e6eb;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-box .form-group .embed-preview iframe,
+        .modal-box .form-group .embed-preview video {
+            width: 100%;
+            border-radius: 6px;
+            max-height: 200px;
+            background: #000;
+        }
+
+        .modal-box .form-group .embed-preview .remove-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .modal-box .form-group .embed-preview .remove-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-box .form-group .embed-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px dashed #e4e6eb;
+            line-height: 1.6;
+        }
+
+        .modal-box .form-group .embed-help code {
+            background: #e4e6eb;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: monospace;
+        }
+
+        .modal-box .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 8px;
+        }
+
+        .modal-box .btn-submit:hover {
+            background: #1557b0;
+        }
+
+        .modal-box .btn-submit:active {
+            transform: scale(0.97);
+        }
+
+        .modal-box .btn-submit-admin {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ffeb3b, #f59e0b);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 8px;
+        }
+
+        .modal-box .btn-submit-admin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 235, 59, 0.3);
+        }
+
+        .modal-box .btn-submit-admin:active {
+            transform: scale(0.97);
+        }
+
+        .modal-box .btn-submit-admin:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1a1a2e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 9999;
+            opacity: 0;
+            transition: 0.4s;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            font-size: 14px;
+            max-width: 90%;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (min-width: 769px) {
+            .sidebar {
+                transform: translateX(0) !important;
+                position: fixed;
+            }
+            .sidebar-overlay {
+                display: none !important;
+            }
+            .mobile-menu-btn {
+                display: none !important;
+            }
+            .main {
+                margin-left: 260px;
+                padding: 24px 32px;
+            }
+            .page-header h1 {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex !important;
+            }
+            .main {
+                padding: 16px;
+                margin-left: 0;
+                padding-top: 68px;
+            }
+            .page-header h1 {
+                margin-left: 0;
+                font-size: 18px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .stat-card {
+                padding: 14px 16px;
+            }
+            .stat-card .number {
+                font-size: 20px;
+            }
+            .tab-content {
+                padding: 14px 16px;
+            }
+            .tab-btn {
+                font-size: 12px;
+                padding: 10px 14px;
+            }
+            .modal-box {
+                padding: 20px;
+                max-width: 100%;
+            }
+            .sidebar {
+                width: 280px;
+            }
+            .search-bar {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .stat-card {
+                padding: 10px 12px;
+            }
+            .stat-card .number {
+                font-size: 18px;
+            }
+            .stat-card .label {
+                font-size: 11px;
+            }
+            .page-header h1 {
+                font-size: 16px;
+            }
+            .page-header h1 img {
+                height: 24px;
+                width: 24px;
+            }
+            .page-header .home-link {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+            .page-header .admin-badge {
+                font-size: 10px;
+                padding: 3px 10px;
+            }
+            .table-wrapper {
+                border-radius: 8px;
+            }
+            table th,
+            table td {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+            .modal-box {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            .modal-box h2 {
+                font-size: 17px;
+            }
+            .btn-primary {
+                font-size: 12px;
+                padding: 6px 14px;
+            }
+            .btn-add-admin {
+                font-size: 12px;
+                padding: 6px 14px;
+            }
+            .mobile-menu-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+                top: 10px;
+                left: 10px;
+            }
+            .search-bar {
+                padding: 0 8px;
+            }
+            .search-bar input {
+                font-size: 13px;
+                padding: 8px 0;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .stats-grid {
+                gap: 6px;
+            }
+            .stat-card {
+                padding: 8px 10px;
+            }
+            .stat-card .number {
+                font-size: 16px;
+            }
+            .page-header h1 {
+                font-size: 14px;
+            }
+            .tab-btn {
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1a73e8;
+            border-radius: 10px;
+        }
+
+        select.status-select {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #e4e6eb;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            background: white;
+        }
+
+        select.status-select:focus {
+            border-color: #1a73e8;
+        }
+
+        .badge-role {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-super-admin {
+            background: #ffeb3b;
+            color: #1a1a2e;
+        }
+
+        .badge-admin {
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
+
+        .badge-user {
+            background: #f0f2f5;
+            color: #666;
+        }
+
+        .badge-banned {
+            background: #fce8e6;
+            color: #e94560;
+        }
+
+        .status-active {
+            color: #34a853;
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            color: #999;
+            font-weight: 600;
+        }
+
+        .status-ended {
+            color: #e94560;
+            font-weight: 600;
+        }
+
+        .status-upcoming {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== OVERLAY ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== MOBILE MENU ===== -->
+    <button class="mobile-menu-btn" id="menuToggle" aria-label="Toggle menu">☰</button>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <a href="index.html" class="brand-logo">
+                <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Logo">
+                <h2>🎬 <span>Doraemon</span> VN</h2>
+            </a>
+            <small>Admin Dashboard</small>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="active" data-tab="overview"><span class="icon">📊</span> Tổng quan</li>
+            <li data-tab="posts"><span class="icon">📝</span> Quản lý bài viết</li>
+            <li data-tab="movies"><span class="icon">🎬</span> Quản lý phim</li>
+            <li data-tab="users"><span class="icon">👥</span> Người dùng</li>
+            <li data-tab="events"><span class="icon">🎮</span> Sự kiện</li>
+            <li data-tab="reports"><span class="icon">🐛</span> Báo lỗi</li>
+            <li data-tab="settings"><span class="icon">⚙️</span> Cài đặt</li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="avatar-wrapper">
+                <img id="adminAvatar" src="https://ui-avatars.com/api/?name=Admin&background=ffeb3b&color=1a1a2e&size=64" alt="avatar" />
+            </div>
+            <div class="info">
+                <div class="name" id="adminName">Admin</div>
+                <div class="email" id="adminEmail">admin@doraemonfansub.com</div>
+            </div>
+            <button class="logout-btn" id="logoutBtn" title="Đăng xuất">🚪</button>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main">
+        <!-- ===== HEADER ===== -->
+        <div class="page-header">
+            <h1>
+                <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Logo">
+                <span id="pageTitle">📊 Tổng quan</span>
+            </h1>
+            <div class="header-right">
+                <a href="index.html" class="home-link">🏠 Về trang chủ</a>
+                <span class="admin-badge">👑 Admin</span>
+            </div>
+        </div>
+
+        <!-- ===== STATS ===== -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card"><div class="icon">📝</div><div class="number" id="totalPosts">0</div><div class="label">Bài viết</div></div>
+            <div class="stat-card"><div class="icon">🎬</div><div class="number" id="totalMovies">0</div><div class="label">Phim</div></div>
+            <div class="stat-card"><div class="icon">👥</div><div class="number" id="totalUsers">0</div><div class="label">Người dùng</div></div>
+            <div class="stat-card"><div class="icon">👁️</div><div class="number" id="totalViews">0</div><div class="label">Lượt xem</div></div>
+        </div>
+
+        <!-- ===== TABS ===== -->
+        <div class="tab-container">
+            <div class="tab-header">
+                <button class="tab-btn active" data-tab="overview">📊 Tổng quan</button>
+                <button class="tab-btn" data-tab="posts">📝 Bài viết</button>
+                <button class="tab-btn" data-tab="movies">🎬 Phim</button>
+                <button class="tab-btn" data-tab="users">👥 Người dùng</button>
+                <button class="tab-btn" data-tab="events">🎮 Sự kiện</button>
+                <button class="tab-btn" data-tab="reports">🐛 Báo lỗi</button>
+                <button class="tab-btn" data-tab="settings">⚙️ Cài đặt</button>
+            </div>
+
+            <!-- ===== TAB OVERVIEW ===== -->
+            <div class="tab-content active" id="tab-overview">
+                <div style="padding: 8px 0;">
+                    <h3 style="margin-bottom: 8px; font-size: 18px;">👋 Chào mừng Admin!</h3>
+                    <p style="color: #666; font-size: 15px; line-height: 1.6;">Quản lý nội dung Doraemon Fansub VN tại đây.</p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+                        <span style="background: #e8f0fe; padding: 6px 16px; border-radius: 20px; font-size: 13px;">✅ Quản lý bài viết</span>
+                        <span style="background: #e8f0fe; padding: 6px 16px; border-radius: 20px; font-size: 13px;">✅ Quản lý phim</span>
+                        <span style="background: #e8f0fe; padding: 6px 16px; border-radius: 20px; font-size: 13px;">✅ Quản lý người dùng</span>
+                        <span style="background: #fce8e6; padding: 6px 16px; border-radius: 20px; font-size: 13px; color: #e94560;">🎮 Quản lý sự kiện</span>
+                        <span style="background: #fce8e6; padding: 6px 16px; border-radius: 20px; font-size: 13px; color: #e94560;">🐛 Báo lỗi</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== TAB POSTS ===== -->
+            <div class="tab-content" id="tab-posts">
+                <div class="table-toolbar">
+                    <span class="title">📝 Danh sách bài viết</span>
+                    <div class="right">
+                        <span class="count" id="postCount">0 bài viết</span>
+                        <button class="btn-primary" onclick="loadPosts()" style="font-size: 12px; padding: 6px 14px;">🔄 Làm mới</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="width:50px;">#</th><th>Người đăng</th><th>Nội dung</th><th style="width:120px;">Hành động</th></tr></thead>
+                        <tbody id="postsTableBody"><tr><td colspan="4" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== TAB MOVIES ===== -->
+            <div class="tab-content" id="tab-movies">
+                <div class="table-toolbar">
+                    <span class="title">🎬 Danh sách phim</span>
+                    <div class="right">
+                        <span class="count" id="movieCount">0 phim</span>
+                        <button class="btn-primary" id="addMovieBtn">➕ Thêm</button>
+                        <button class="btn-primary" onclick="loadMovies()" style="font-size: 12px; padding: 6px 14px;">🔄 Làm mới</button>
+                    </div>
+                </div>
+                <div class="search-bar" id="movieSearchBar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="movieSearchInput" placeholder="Tìm kiếm phim theo tên, thể loại..." autocomplete="off" />
+                    <button class="clear-btn" id="clearSearchBtn">✕</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="width:50px;">#</th><th>Tên phim</th><th>Thể loại</th><th>Phân loại</th><th style="width:80px;">Lượt xem</th><th style="width:140px;">Hành động</th></tr></thead>
+                        <tbody id="moviesTableBody"><tr><td colspan="6" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== TAB USERS ===== -->
+            <div class="tab-content" id="tab-users">
+                <div class="table-toolbar">
+                    <span class="title">👥 Danh sách người dùng</span>
+                    <div class="right">
+                        <span class="count" id="userCount">0 người dùng</span>
+                        <button class="btn-add-admin" id="openAddAdminBtn">👑 Thêm Admin</button>
+                        <button class="btn-primary" onclick="loadUsers()" style="font-size: 12px; padding: 6px 14px;">🔄 Làm mới</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th style="width:50px;">Avatar</th>
+                                <th>Tên</th>
+                                <th>Email</th>
+                                <th>Ngày tham gia</th>
+                                <th>Vai trò</th>
+                                <th style="width:180px;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="7" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== TAB EVENTS ===== -->
+            <div class="tab-content" id="tab-events">
+                <div class="table-toolbar">
+                    <span class="title">🎮 Danh sách sự kiện / Mini Game</span>
+                    <div class="right">
+                        <span class="count" id="eventCount">0 sự kiện</span>
+                        <button class="btn-primary" id="addEventBtn">➕ Thêm sự kiện</button>
+                        <button class="btn-primary" onclick="loadEvents()" style="font-size: 12px; padding: 6px 14px;">🔄 Làm mới</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th style="width:60px;">Poster</th>
+                                <th>Tên sự kiện</th>
+                                <th>Thời gian</th>
+                                <th>Trạng thái</th>
+                                <th>Lượt xem</th>
+                                <th style="width:180px;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsTableBody">
+                            <tr><td colspan="7" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== TAB REPORTS ===== -->
+            <div class="tab-content" id="tab-reports">
+                <div class="table-toolbar">
+                    <span class="title">🐛 Danh sách báo lỗi</span>
+                    <div class="right">
+                        <span class="count" id="reportCount">0 báo lỗi</span>
+                        <button class="btn-primary" onclick="loadReports()" style="font-size: 12px; padding: 6px 14px;">🔄 Làm mới</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="width:50px;">#</th><th>Người dùng</th><th>Tiêu đề</th><th>Mô tả</th><th>Thời gian</th><th>Trạng thái</th><th style="width:140px;">Hành động</th></tr></thead>
+                        <tbody id="reportsTableBody"><tr><td colspan="7" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== TAB SETTINGS ===== -->
+            <div class="tab-content" id="tab-settings">
+                <div style="max-width: 500px;">
+                    <h3 style="margin-bottom: 16px; font-size: 18px;">⚙️ Cài đặt Admin</h3>
+                    <div class="form-group">
+                        <label>Email Admin</label>
+                        <input type="email" id="settingsEmail" disabled style="background: #f5f5f5; color: #666;" />
+                    </div>
+                    <div class="form-group">
+                        <label>Tên hiển thị</label>
+                        <input type="text" id="settingsName" placeholder="Tên của bạn" />
+                    </div>
+                    <button class="btn-primary" id="settingsSaveBtn" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px;">💾 Lưu cài đặt</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== MODAL MOVIE ===== -->
+    <div class="modal-overlay" id="movieModal">
+        <div class="modal-box">
+            <button class="close" id="closeModal">✕</button>
+            <h2 id="modalTitle">Thêm phim mới</h2>
+            <form id="movieForm" onsubmit="return false;">
+                <div class="form-group"><label>Tên phim / Tập *</label><input type="text" id="movieTitle" placeholder="VD: Doraemon tập 830: Thủy cung sứa của Nobita" /></div>
+                <div class="form-group"><label>Phân loại *</label><select id="movieCategory"><option value="movie">🎬 Movie</option><option value="short">🎥 Short Movie</option><option value="seri">📺 Seri</option></select></div>
+                <div class="form-group"><label>Thể loại *</label><input type="text" id="movieGenre" placeholder="Phiêu lưu, Hài hước" /></div>
+                <div class="form-group"><label>Mô tả *</label><textarea id="movieDesc" placeholder="Mô tả ngắn về phim..." rows="3"></textarea></div>
+                <div class="form-group"><label>URL Poster *</label><input type="url" id="moviePoster" placeholder="https://example.com/poster.jpg" /></div>
+                <div class="form-group"><label>🎬 Mã nhúng video <span class="hint">(Từ YouTube, Cloudinary, Vimeo, AbyssPlayer...)</span></label><textarea class="embed-code" id="movieEmbed" placeholder='<iframe width="100%" height="300" src="https://abyssplayer.com/d9wfiN-31" frameborder="0" allowfullscreen></iframe>'></textarea>
+                    <div class="embed-preview" id="embedPreview"><div id="embedPreviewContent"></div><button class="remove-btn" id="removeEmbedBtn">✕</button></div>
+                    <div class="embed-help">💡 <strong>Hướng dẫn:</strong> Dán mã nhúng từ nguồn video:<br>• <strong>YouTube:</strong> Chia sẻ → Nhúng → Copy <code>&lt;iframe&gt;</code><br>• <strong>Cloudinary:</strong> Media Library → Chọn video → Embed<br>• <strong>Vimeo:</strong> Chia sẻ → Nhúng → Copy code</div>
+                </div>
+                <button type="button" class="btn-submit" id="submitMovieBtn">💾 Lưu phim</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL EVENT ===== -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal-box" style="max-width: 700px;">
+            <button class="close" id="closeEventModal">✕</button>
+            <h2 id="eventModalTitle">➕ Thêm sự kiện mới</h2>
+            <form id="eventForm" onsubmit="return false;">
+                <div class="form-group"><label>Tên sự kiện *</label><input type="text" id="eventTitle" placeholder="VD: Giải đấu Liên Quân 2026" /></div>
+                <div class="form-group"><label>Mô tả *</label><textarea id="eventDesc" rows="2" placeholder="Mô tả về sự kiện..."></textarea></div>
+                <div class="form-group"><label>URL Poster *</label><input type="url" id="eventPoster" placeholder="https://example.com/poster.jpg" /><div style="margin-top:6px;font-size:12px;color:#999;">💡 Dùng ảnh có tỷ lệ 16:9 (ví dụ: 800x450px)</div></div>
+                <div class="form-group"><label>📦 Mã nhúng (Embed Code) *</label><textarea id="eventEmbed" rows="3" placeholder='<iframe src="https://forms.google.com/..." width="100%" height="500" frameborder="0"></iframe>' style="font-family: monospace; font-size: 13px;"></textarea>
+                    <div class="embed-help" style="margin-top:6px;font-size:12px;color:#666;background:#f8f9fa;padding:8px 12px;border-radius:6px;">💡 Dán mã nhúng form đăng ký (Google Form, Typeform, hoặc HTML tùy chỉnh)</div>
+                </div>
+                <div class="form-group"><label>Thời gian diễn ra *</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><input type="date" id="eventDate" /><input type="time" id="eventTime" /></div></div>
+                <div class="form-group"><label>Địa điểm</label><input type="text" id="eventLocation" placeholder="VD: Online - Discord" /></div>
+                <div class="form-group"><label>Trạng thái</label>
+                    <select id="eventStatus">
+                        <option value="upcoming">⏳ Sắp diễn ra</option>
+                        <option value="active">✅ Đang diễn ra</option>
+                        <option value="ended">🏁 Đã kết thúc</option>
+                        <option value="inactive">⛔ Tạm ẩn</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-submit" id="submitEventBtn">💾 Lưu sự kiện</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL THÊM ADMIN ===== -->
+    <div class="modal-overlay" id="addAdminModal">
+        <div class="modal-box" style="max-width: 500px;">
+            <button class="close" id="closeAddAdminModal">✕</button>
+            <h2>👑 Thêm Admin mới</h2>
+            <form id="addAdminForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label>Email Admin *</label>
+                    <input type="email" id="newAdminEmail" placeholder="admin@example.com" required />
+                    <div style="margin-top:6px;font-size:12px;color:#999;">💡 Nhập email của user muốn thêm làm Admin</div>
+                </div>
+                <div class="form-group">
+                    <label>Tên hiển thị</label>
+                    <input type="text" id="newAdminName" placeholder="Tên hiển thị (để trống sẽ lấy từ user)" />
+                </div>
+                <button type="button" class="btn-submit-admin" id="submitAddAdminBtn">
+                    👑 Thêm Admin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // FIREBASE CONFIG
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBt3G9n5JYu3EsvqJR9IoW2vRAc_Es3-ws",
+            authDomain: "doraemon-fansub-vietnam.firebaseapp.com",
+            projectId: "doraemon-fansub-vietnam",
+            storageBucket: "doraemon-fansub-vietnam.firebasestorage.app",
+            messagingSenderId: "380840935390",
+            appId: "1:380840935390:web:60fab4722a9fba5053a74f",
+            measurementId: "G-0S2Z4XRK0B"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const SUPER_ADMIN_EMAIL = 'tuankhaimoi12345@gmail.com';
+        let adminEmails = new Set();
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.background = isError ? '#c62828' : '#1a1a2e';
+            toast.classList.add('show');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => toast.classList.remove('show'), 5000);
+        }
+
+        // ============================================================
+        // KIỂM TRA QUYỀN ADMIN
+        // ============================================================
+        async function checkAdminRole(uid) {
+            try {
+                const adminSnapshot = await db.collection('admins')
+                    .where('uid', '==', uid)
+                    .get();
+                
+                if (!adminSnapshot.empty) {
+                    return true;
+                }
+                
+                const user = auth.currentUser;
+                if (user && user.email === SUPER_ADMIN_EMAIL) {
+                    return true;
+                }
+                
+                return false;
+            } catch (e) {
+                console.error('Lỗi kiểm tra admin:', e);
+                return false;
+            }
+        }
+
+        // ============================================================
+        // LOAD DANH SÁCH ADMIN
+        // ============================================================
+        async function loadAdminList() {
+            try {
+                const snapshot = await db.collection('admins').get();
+                adminEmails = new Set();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.email) {
+                        adminEmails.add(data.email);
+                    }
+                });
+                adminEmails.add(SUPER_ADMIN_EMAIL);
+                console.log('✅ Danh sách Admin:', adminEmails);
+            } catch (e) {
+                console.error('Lỗi load admin list:', e);
+            }
+        }
+
+        // ============================================================
+        // UPDATE STATS
+        // ============================================================
+        function updateStats() {
+            const posts = document.querySelectorAll('#postsTableBody tr:not(.empty-state)').length || 0;
+            const movies = document.querySelectorAll('#moviesTableBody tr:not(.empty-state)').length || 0;
+            const users = document.querySelectorAll('#usersTableBody tr:not(.empty-state)').length || 0;
+
+            document.getElementById('totalPosts').textContent = posts;
+            document.getElementById('totalMovies').textContent = movies;
+            document.getElementById('totalUsers').textContent = users;
+
+            let views = 0;
+            document.querySelectorAll('#moviesTableBody tr').forEach(row => {
+                const cell = row.querySelector('td:nth-child(5)');
+                if (cell) {
+                    const num = parseInt(cell.textContent.replace(/[^0-9]/g, ''));
+                    if (!isNaN(num)) views += num;
+                }
+            });
+            document.getElementById('totalViews').textContent = views;
+        }
+
+        // ============================================================
+        // LOAD USERS - HIỂN THỊ ĐÚNG VAI TRÒ
+        // ============================================================
+        async function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            try {
+                const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><span class="icon">👥</span>Chưa có người dùng nào</td></tr>`;
+                    document.getElementById('userCount').textContent = '0 người dùng';
+                    updateStats();
+                    return;
+                }
+
+                await loadAdminList();
+                
+                const bannedSnapshot = await db.collection('banned_users').get();
+                const bannedEmails = new Set();
+                bannedSnapshot.forEach(doc => {
+                    bannedEmails.add(doc.data().email);
+                });
+
+                let html = '', count = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const uid = doc.id;
+                    count++;
+
+                    const avatar = data.photoURL ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(data.displayName || 'User')}&background=1a73e8&color=fff&size=32`;
+
+                    let joinDate = 'Chưa có';
+                    if (data.createdAt?.seconds) {
+                        joinDate = new Date(data.createdAt.seconds * 1000).toLocaleDateString('vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+                    }
+
+                    const isSuperAdmin = data.email === SUPER_ADMIN_EMAIL;
+                    const isAdmin = adminEmails.has(data.email);
+                    const isBanned = bannedEmails.has(data.email);
+
+                    let roleHtml = '';
+                    if (isSuperAdmin) {
+                        roleHtml = `<span class="badge-role badge-super-admin">👑 Super Admin</span>`;
+                    } else if (isBanned) {
+                        roleHtml = `<span class="badge-role badge-banned">🚫 Đã cấm</span>`;
+                    } else if (isAdmin) {
+                        roleHtml = `<span class="badge-role badge-admin">👑 Admin</span>`;
+                    } else {
+                        roleHtml = `<span class="badge-role badge-user">👤 User</span>`;
+                    }
+
+                    let actionHtml = '';
+                    if (!isSuperAdmin) {
+                        if (isBanned) {
+                            actionHtml = `<button class="btn-success btn-sm" onclick="unbanUser('${data.email}')">✅ Bỏ cấm</button>`;
+                        } else {
+                            actionHtml =
+                                `<button class="btn-danger btn-sm" onclick="banUser('${uid}','${data.email}')">🚫 Cấm</button>`;
+                        }
+                        if (!isBanned && !isAdmin) {
+                            actionHtml +=
+                                ` <button class="btn-primary btn-sm" onclick="addAdmin('${data.email}','${uid}')" style="font-size:10px;padding:3px 8px;">👑 Admin</button>`;
+                        } else if (!isBanned && isAdmin) {
+                            actionHtml +=
+                                ` <button class="btn-danger btn-sm" onclick="removeAdmin('${data.email}')" style="font-size:10px;padding:3px 8px;">🗑️ Admin</button>`;
+                        }
+                    } else {
+                        actionHtml = `<span style="color:#999;font-size:11px;">🔒 Chủ sở hữu</span>`;
+                    }
+
+                    html += `
+                        <tr>
+                            <td>${count}</td>
+                            <td>
+                                <img src="${avatar}" 
+                                     style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid ${isBanned ? '#e94560' : '#e8f0fe'};"
+                                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data.displayName || 'User')}&background=1a73e8&color=fff&size=32'">
+                            </td>
+                            <td style="font-weight:500; ${isBanned ? 'text-decoration:line-through;color:#999;' : ''}">
+                                ${data.displayName || 'Người dùng'}
+                            </td>
+                            <td style="font-size:12px;color:${isBanned ? '#e94560' : '#1a73e8'};">${data.email || ''}</td>
+                            <td style="font-size:12px;color:#666;">${joinDate}</td>
+                            <td>${roleHtml}</td>
+                            <td style="display:flex;gap:4px;flex-wrap:wrap;">${actionHtml}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+                document.getElementById('userCount').textContent = count + ' người dùng';
+                updateStats();
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML =
+                    `<tr><td colspan="7" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
+            }
+        }
+
+        // ============================================================
+        // BAN / UNBAN
+        // ============================================================
+        window.banUser = async function(uid, email) {
+            if (!email || email === SUPER_ADMIN_EMAIL) {
+                showToast(email === SUPER_ADMIN_EMAIL ? '⚠️ Không thể cấm Super Admin!' : '⚠️ Không có email!', true);
+                return;
+            }
+            const reason = prompt('Nhập lý do cấm:') || 'Vi phạm điều khoản';
+            try {
+                await db.collection('banned_users').doc(email).set({
+                    uid,
+                    email,
+                    reason,
+                    bannedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    bannedBy: auth.currentUser?.email || 'Admin'
+                });
+                showToast(`✅ Đã cấm ${email}!`);
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        window.unbanUser = async function(email) {
+            if (!confirm(`Bỏ cấm cho ${email}?`)) return;
+            try {
+                await db.collection('banned_users').doc(email).delete();
+                showToast(`✅ Đã bỏ cấm ${email}!`);
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
+        // ADD ADMIN - TỪ WEB LÊN FIRESTORE
+        // ============================================================
+        window.addAdmin = async function(email, uid) {
+            if (!email || email === SUPER_ADMIN_EMAIL) {
+                showToast(email === SUPER_ADMIN_EMAIL ? '⚠️ Không thể thêm Super Admin!' : '⚠️ Không có email!', true);
+                return;
+            }
+            try {
+                const existing = await db.collection('admins').where('email', '==', email).get();
+                if (!existing.empty) {
+                    showToast('⚠️ Đã là admin!', true);
+                    return;
+                }
+                await db.collection('admins').add({
+                    email,
+                    uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    addedBy: auth.currentUser?.email || 'Admin'
+                });
+                showToast(`✅ Đã thêm ${email} làm admin!`);
+                await loadAdminList();
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        window.removeAdmin = async function(email) {
+            if (!email || email === SUPER_ADMIN_EMAIL) {
+                showToast(email === SUPER_ADMIN_EMAIL ? '⚠️ Không thể xóa Super Admin!' : '⚠️ Không có email!', true);
+                return;
+            }
+            if (!confirm(`Xóa quyền admin của ${email}?`)) return;
+            try {
+                const snapshot = await db.collection('admins').where('email', '==', email).get();
+                snapshot.forEach(doc => doc.ref.delete());
+                showToast(`✅ Đã xóa admin ${email}!`);
+                await loadAdminList();
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
+        // MỞ MODAL THÊM ADMIN
+        // ============================================================
+        document.getElementById('openAddAdminBtn')?.addEventListener('click', function() {
+            document.getElementById('newAdminEmail').value = '';
+            document.getElementById('newAdminName').value = '';
+            document.getElementById('addAdminModal').classList.add('active');
+        });
+
+        document.getElementById('closeAddAdminModal')?.addEventListener('click', function() {
+            document.getElementById('addAdminModal').classList.remove('active');
+        });
+
+        document.getElementById('addAdminModal')?.addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        // ============================================================
+        // SUBMIT THÊM ADMIN
+        // ============================================================
+        document.getElementById('submitAddAdminBtn')?.addEventListener('click', async function() {
+            const email = document.getElementById('newAdminEmail').value.trim();
+            const displayName = document.getElementById('newAdminName').value.trim();
+
+            if (!email) {
+                showToast('⚠️ Vui lòng nhập email!', true);
+                return;
+            }
+
+            if (!email.includes('@') || !email.includes('.')) {
+                showToast('⚠️ Email không hợp lệ!', true);
+                return;
+            }
+
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('❌ Vui lòng đăng nhập lại!', true);
+                return;
+            }
+
+            const isAdmin = await checkAdminRole(user.uid);
+            if (!isAdmin) {
+                showToast('❌ Bạn không có quyền thêm Admin!', true);
+                return;
+            }
+
+            if (email === SUPER_ADMIN_EMAIL) {
+                showToast('⚠️ Đây là Super Admin, không cần thêm!', true);
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = '⏳ Đang xử lý...';
+
+            try {
+                const existingAdmin = await db.collection('admins')
+                    .where('email', '==', email)
+                    .get();
+
+                if (!existingAdmin.empty) {
+                    showToast('⚠️ Email này đã là Admin!', true);
+                    this.disabled = false;
+                    this.textContent = '👑 Thêm Admin';
+                    return;
+                }
+
+                const userSnapshot = await db.collection('users')
+                    .where('email', '==', email)
+                    .get();
+
+                let uid = '';
+                let userName = displayName;
+
+                if (userSnapshot.empty) {
+                    showToast('⚠️ User này chưa đăng ký! Vui lòng đăng ký trước.', true);
+                    this.disabled = false;
+                    this.textContent = '👑 Thêm Admin';
+                    return;
+                } else {
+                    const userDoc = userSnapshot.docs[0];
+                    const userData = userDoc.data();
+                    uid = userDoc.id;
+                    if (!userName) {
+                        userName = userData.displayName || userData.name || email.split('@')[0];
+                    }
+                }
+
+                await db.collection('admins').add({
+                    uid: uid,
+                    email: email,
+                    displayName: userName,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    addedBy: user.email,
+                    addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast(`✅ Đã thêm ${email} làm Admin thành công!`);
+                document.getElementById('addAdminModal').classList.remove('active');
+                
+                await loadAdminList();
+                loadUsers();
+
+            } catch (e) {
+                console.error('❌ Lỗi thêm Admin:', e);
+                let errorMsg = '❌ Lỗi: ' + e.message;
+                if (e.message.includes('permission')) {
+                    errorMsg = '⚠️ Không có quyền thêm Admin!\n\n🔧 Cách sửa:\n1. Vào Firebase Console → Firestore → Rules\n2. Thêm rule cho collection "admins":\n   match /admins/{adminId} {\n     allow read, write: if request.auth != null;\n   }\n3. Click PUBLISH\n4. Refresh lại trang';
+                }
+                showToast(errorMsg, true);
+            } finally {
+                this.disabled = false;
+                this.textContent = '👑 Thêm Admin';
+            }
+        });
+
+        // ============================================================
+        // LOAD EVENTS
+        // ============================================================
+        let allEvents = [];
+
+        async function loadEvents() {
+            const tbody = document.getElementById('eventsTableBody');
+            try {
+                const snapshot = await db.collection('events').orderBy('createdAt', 'desc').get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><span class="icon">🎮</span>Chưa có sự kiện nào</td></tr>`;
+                    document.getElementById('eventCount').textContent = '0 sự kiện';
+                    return;
+                }
+
+                let html = '', count = 0;
+                allEvents = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allEvents.push({ id: doc.id, ...data });
+                    count++;
+                    
+                    const statusMap = {
+                        'upcoming': '<span class="status-upcoming">⏳ Sắp diễn ra</span>',
+                        'active': '<span class="status-active">✅ Đang diễn ra</span>',
+                        'ended': '<span class="status-ended">🏁 Đã kết thúc</span>',
+                        'inactive': '<span class="status-inactive">⛔ Tạm ẩn</span>'
+                    };
+                    
+                    const dateTime = data.eventDate && data.eventTime ? `${data.eventDate} - ${data.eventTime}` : 'Chưa cập nhật';
+                    html += `
+                        <tr>
+                            <td>${count}</td>
+                            <td><img src="${data.poster || 'https://via.placeholder.com/60x60/1a73e8/FFFFFF?text=Event'}" style="width:50px;height:50px;border-radius:8px;object-fit:cover;border:1px solid #e4e6eb;" onerror="this.src='https://via.placeholder.com/60x60/1a73e8/FFFFFF?text=Event'"></td>
+                            <td style="font-weight:600;">${data.title || 'Untitled'}</td>
+                            <td style="font-size:12px;color:#666;">${dateTime}</td>
+                            <td>${statusMap[data.status] || statusMap.active}</td>
+                            <td style="font-weight:600;color:#1a73e8;">${data.views || 0}</td>
+                            <td>
+                                <button class="btn-edit btn-sm" onclick="editEvent('${doc.id}')">✏️ Sửa</button>
+                                <button class="btn-danger btn-sm" onclick="deleteEvent('${doc.id}')">🗑️ Xóa</button>
+                                <button class="btn-primary btn-sm" onclick="previewEvent('${doc.id}')" style="font-size:10px;padding:3px 8px;">👁️ Xem</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+                document.getElementById('eventCount').textContent = count + ' sự kiện';
+            } catch (e) {
+                console.error('❌ LỖI:', e);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <span class="icon">❌</span>
+                            Lỗi: ${e.message}
+                            <br><br>
+                            <button onclick="loadEvents()" style="padding:8px 20px;background:#1a73e8;color:white;border:none;border-radius:20px;cursor:pointer;margin-top:10px;">🔄 Thử lại</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // ============================================================
+        // THÊM EVENT
+        // ============================================================
+        document.getElementById('addEventBtn')?.addEventListener('click', function() {
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDesc').value = '';
+            document.getElementById('eventPoster').value = '';
+            document.getElementById('eventEmbed').value = '';
+            document.getElementById('eventDate').value = '';
+            document.getElementById('eventTime').value = '';
+            document.getElementById('eventLocation').value = '';
+            document.getElementById('eventStatus').value = 'upcoming';
+            document.getElementById('eventModalTitle').textContent = '➕ Thêm sự kiện mới';
+            document.getElementById('submitEventBtn').textContent = '💾 Lưu sự kiện';
+            document.getElementById('submitEventBtn').dataset.mode = 'add';
+            document.getElementById('submitEventBtn').dataset.id = '';
+            document.getElementById('eventModal').classList.add('active');
+        });
+
+        document.getElementById('closeEventModal')?.addEventListener('click', function() {
+            document.getElementById('eventModal').classList.remove('active');
+        });
+
+        document.getElementById('eventModal')?.addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        // ============================================================
+        // SUBMIT EVENT
+        // ============================================================
+        document.getElementById('submitEventBtn')?.addEventListener('click', async function() {
+            const title = document.getElementById('eventTitle').value.trim();
+            const description = document.getElementById('eventDesc').value.trim();
+            const poster = document.getElementById('eventPoster').value.trim();
+            const embed = document.getElementById('eventEmbed').value.trim();
+            const eventDate = document.getElementById('eventDate').value;
+            const eventTime = document.getElementById('eventTime').value;
+            const location = document.getElementById('eventLocation').value.trim();
+            const status = document.getElementById('eventStatus').value;
+
+            if (!title || !description || !poster || !embed) {
+                showToast('⚠️ Vui lòng nhập đầy đủ thông tin!', true);
+                return;
+            }
+            if (!eventDate || !eventTime) {
+                showToast('⚠️ Vui lòng chọn thời gian diễn ra!', true);
+                return;
+            }
+
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('❌ Vui lòng đăng nhập lại!', true);
+                return;
+            }
+
+            const isAdmin = await checkAdminRole(user.uid);
+            if (!isAdmin) {
+                showToast('❌ Bạn không có quyền thêm sự kiện!', true);
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = '⏳ Đang lưu...';
+
+            try {
+                const data = {
+                    title, description, poster, embed, eventDate, eventTime,
+                    location: location || 'Online', status, views: 0,
+                    createdBy: user.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('events').add(data);
+                showToast('✅ Thêm sự kiện thành công!');
+                document.getElementById('eventModal').classList.remove('active');
+                loadEvents();
+            } catch (e) {
+                console.error('❌ Lỗi:', e);
+                let errorMsg = '❌ Lỗi: ' + e.message;
+                if (e.message.includes('permission')) {
+                    errorMsg = '⚠️ Không có quyền ghi dữ liệu!\n\n🔧 Cách sửa:\n1. Vào Firebase Console → Firestore → Rules\n2. Thêm rule: match /{document=**} { allow read, write: if request.auth != null; }\n3. Click PUBLISH\n4. Refresh lại trang';
+                }
+                showToast(errorMsg, true);
+            } finally {
+                this.disabled = false;
+                this.textContent = '💾 Lưu sự kiện';
+            }
+        });
+
+        // ============================================================
+        // SỬA EVENT
+        // ============================================================
+        window.editEvent = async function(id) {
+            try {
+                const doc = await db.collection('events').doc(id).get();
+                if (!doc.exists) return;
+                const data = doc.data();
+                document.getElementById('eventTitle').value = data.title || '';
+                document.getElementById('eventDesc').value = data.description || '';
+                document.getElementById('eventPoster').value = data.poster || '';
+                document.getElementById('eventEmbed').value = data.embed || '';
+                document.getElementById('eventDate').value = data.eventDate || '';
+                document.getElementById('eventTime').value = data.eventTime || '';
+                document.getElementById('eventLocation').value = data.location || '';
+                document.getElementById('eventStatus').value = data.status || 'upcoming';
+                document.getElementById('eventModalTitle').textContent = '✏️ Sửa sự kiện';
+                document.getElementById('submitEventBtn').textContent = '💾 Cập nhật';
+                document.getElementById('submitEventBtn').dataset.mode = 'edit';
+                document.getElementById('submitEventBtn').dataset.id = id;
+                document.getElementById('eventModal').classList.add('active');
+            } catch (e) {
+                showToast('❌ Lỗi tải: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
+        // XÓA EVENT
+        // ============================================================
+        window.deleteEvent = async function(id) {
+            if (!confirm('Xóa sự kiện này?')) return;
+            try {
+                await db.collection('events').doc(id).delete();
+                showToast('✅ Đã xóa sự kiện!');
+                loadEvents();
+            } catch (e) {
+                showToast('❌ Lỗi xóa: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
+        // XEM TRƯỚC EVENT
+        // ============================================================
+        window.previewEvent = function(id) {
+            const event = allEvents.find(e => e.id === id);
+            if (!event) {
+                showToast('❌ Không tìm thấy sự kiện!', true);
+                return;
+            }
+            
+            // Tăng lượt xem
+            db.collection('events').doc(id).update({
+                views: (event.views || 0) + 1
+            }).catch(() => {});
+
+            const statusMap = {
+                'upcoming': '⏳ Sắp diễn ra',
+                'active': '🟢 Đang diễn ra',
+                'ended': '🏁 Đã kết thúc',
+                'inactive': '⛔ Tạm ẩn'
+            };
+
+            const dateTime = event.eventDate && event.eventTime ? 
+                `${event.eventDate} - ${event.eventTime}` : 'Chưa cập nhật';
+
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
+            overlay.style.zIndex = '9999';
+            overlay.innerHTML = `
+                <div class="modal-box" style="max-width:750px;max-height:95vh;overflow-y:auto;">
+                    <button class="close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+                    <div style="margin-bottom:16px;"><img src="${event.poster}" style="width:100%;border-radius:12px;max-height:300px;object-fit:cover;border:1px solid #e4e6eb;" onerror="this.src='https://via.placeholder.com/800x400/1a73e8/FFFFFF?text=Event'"></div>
+                    <h2 style="font-size:22px;margin-bottom:4px;">${event.title}</h2>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;font-size:14px;color:#666;">
+                        <span>📅 ${dateTime}</span>
+                        <span>📍 ${event.location || 'Chưa cập nhật'}</span>
+                        <span>${statusMap[event.status] || '🟢 Đang diễn ra'}</span>
+                        <span>👁️ ${(event.views || 0) + 1} lượt xem</span>
+                    </div>
+                    <p style="color:#555;line-height:1.6;margin-bottom:16px;">${event.description || ''}</p>
+                    <div style="background:#f8f9fa;border-radius:12px;padding:16px;min-height:200px;border:1px solid #e4e6eb;">
+                        ${event.embed || '<p style="text-align:center;color:#999;padding:40px;">Không có form đăng ký</p>'}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
+        };
+
+        // ============================================================
+        // LOAD POSTS
+        // ============================================================
+        async function loadPosts() {
+            const tbody = document.getElementById('postsTableBody');
+            try {
+                const snapshot = await db.collection('posts').orderBy('timestamp', 'desc').get();
+                if (snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><span class="icon">📝</span>Chưa có bài viết nào</td></tr>`;
+                    document.getElementById('postCount').textContent = '0 bài viết';
+                    updateStats();
+                    return;
+                }
+                let html = '', count = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    count++;
+                    html += `<tr><td>${count}</td><td style="font-size:12px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${data.user || 'Anonymous'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;">${data.content || ''}</td><td><button class="btn-danger btn-sm" onclick="deletePost('${doc.id}')">🗑️ Xóa</button></td></tr>`;
+                });
+                tbody.innerHTML = html;
+                document.getElementById('postCount').textContent = count + ' bài viết';
+                updateStats();
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
+            }
+        }
+
+        window.deletePost = async function(id) {
+            if (!confirm('Xóa bài viết này?')) return;
+            try {
+                await db.collection('posts').doc(id).delete();
+                showToast('✅ Đã xóa bài viết!');
+                loadPosts();
+            } catch (e) {
+                showToast('❌ Lỗi xóa: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
+        // LOAD MOVIES
+        // ============================================================
+        async function loadMovies() {
+            const tbody = document.getElementById('moviesTableBody');
+            try {
+                const snapshot = await db.collection('movies').orderBy('timestamp', 'desc').get();
+                if (snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="icon">🎬</span>Chưa có phim nào</td></tr>`;
+                    document.getElementById('movieCount').textContent = '0 phim';
+                    updateStats();
+                    return;
+                }
+                let html = '', count = 0;
+                const categoryLabels = { 'movie': '🎬 Movie', 'short': '🎥 Short', 'seri': '📺 Seri' };
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    count++;
+                    html += `<tr><td>${count}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;">${data.title || 'Untitled'}</td><td style="font-size:12px;">${data.genre || 'Chưa phân loại'}</td><td style="font-size:12px;">${categoryLabels[data.category] || '📺 Chưa phân loại'}</td><td style="font-size:13px;font-weight:600;color:#1a73e8;">${data.views || 0}</td><td><button class="btn-edit btn-sm" onclick="editMovie('${doc.id}')">✏️ Sửa</button><button class="btn-danger btn-sm" onclick="deleteMovie('${doc.id}')">🗑️ Xóa</button></td></tr>`;
+                });
+                tbody.innerHTML = html;
+                document.getElementById('movieCount').textContent = count + ' phim';
+                updateStats();
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
+            }
+        }
+
+        window.deleteMovie = async function(id) {
+            if (!confirm('Xóa phim này?')) return;
+            try {
+                await db.collection('movies').doc(id).delete();
+                showToast('✅ Đã xóa phim!');
+                loadMovies();
+            } catch (e) {
+                showToast('❌ Lỗi xóa: ' + e.message, true);
+            }
+        };
+
+        window.editMovie = async function(id) {
+            try {
+                const doc = await db.collection('movies').doc(id).get();
+                if (!doc.exists) return;
+                const data = doc.data();
+                document.getElementById('movieTitle').value = data.title || '';
+                document.getElementById('movieCategory').value = data.category || 'movie';
+                document.getElementById('movieGenre').value = data.genre || '';
+                document.getElementById('movieDesc').value = data.desc || '';
+                document.getElementById('moviePoster').value = data.poster || '';
+                document.getElementById('movieEmbed').value = data.embed || '';
+                document.getElementById('modalTitle').textContent = '✏️ Sửa phim';
+                document.getElementById('submitMovieBtn').textContent = '💾 Cập nhật';
+                document.getElementById('submitMovieBtn').dataset.mode = 'edit';
+                document.getElementById('submitMovieBtn').dataset.id = id;
+                document.getElementById('movieModal').classList.add('active');
+            } catch (e) {
+                showToast('❌ Lỗi tải: ' + e.message, true);
+            }
+        };
+
+        document.getElementById('addMovieBtn')?.addEventListener('click', function() {
+            document.getElementById('movieTitle').value = '';
+            document.getElementById('movieCategory').value = 'movie';
+            document.getElementById('movieGenre').value = '';
+            document.getElementById('movieDesc').value = '';
+            document.getElementById('moviePoster').value = '';
+            document.getElementById('movieEmbed').value = '';
+            document.getElementById('modalTitle').textContent = '➕ Thêm phim mới';
+            document.getElementById('submitMovieBtn').textContent = '💾 Lưu phim';
+            document.getElementById('submitMovieBtn').dataset.mode = 'add';
+            document.getElementById('submitMovieBtn').dataset.id = '';
+            document.getElementById('movieModal').classList.add('active');
+        });
+
+        document.getElementById('closeModal')?.addEventListener('click', function() {
+            document.getElementById('movieModal').classList.remove('active');
+        });
+
+        document.getElementById('movieModal')?.addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        document.getElementById('submitMovieBtn')?.addEventListener('click', async function() {
+            const title = document.getElementById('movieTitle').value.trim();
+            const category = document.getElementById('movieCategory').value;
+            const genre = document.getElementById('movieGenre').value.trim();
+            const desc = document.getElementById('movieDesc').value.trim();
+            const poster = document.getElementById('moviePoster').value.trim();
+            const embed = document.getElementById('movieEmbed').value.trim();
+            if (!title || !genre || !desc || !poster || !embed) {
+                showToast('⚠️ Vui lòng nhập đầy đủ thông tin!', true);
+                return;
+            }
+            const data = { title, category, genre, desc, poster, embed, views: 0 };
+            const mode = this.dataset.mode;
+            const id = this.dataset.id;
+            try {
+                if (mode === 'edit') {
+                    await db.collection('movies').doc(id).update(data);
+                    showToast('✅ Cập nhật phim thành công!');
+                } else {
+                    await db.collection('movies').add({ ...data, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                    showToast('✅ Thêm phim thành công!');
+                }
+                document.getElementById('movieModal').classList.remove('active');
+                loadMovies();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        });
+
+        // ============================================================
+        // LOAD REPORTS
+        // ============================================================
+        async function loadReports() {
+            const tbody = document.getElementById('reportsTableBody');
+            try {
+                const snapshot = await db.collection('reports').orderBy('createdAt', 'desc').get();
+                if (snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><span class="icon">🎉</span>Chưa có báo lỗi nào</td></tr>`;
+                    document.getElementById('reportCount').textContent = '0 báo lỗi';
+                    return;
+                }
+                let html = '', count = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    count++;
+                    let createdAt = 'Chưa có';
+                    if (data.createdAt?.seconds) {
+                        createdAt = new Date(data.createdAt.seconds * 1000).toLocaleDateString('vi-VN', { day: '2-digit',
+                            month: '2-digit', year: 'numeric' });
+                    }
+                    const status = data.status || 'pending';
+                    const statusColors = { pending: '#f59e0b', processing: '#3b82f6', resolved: '#34a853',
+                        closed: '#666' };
+                    html += `<tr><td>${count}</td><td style="color:#1a73e8;font-size:12px;">${data.userEmail || 'Khách'}</td><td style="font-weight:600;">${data.title || ''}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;">${data.description || ''}</td><td style="font-size:12px;color:#666;">${createdAt}</td><td><select class="status-select" onchange="updateReportStatus('${doc.id}', this.value)" style="background:${statusColors[status]}20;color:${statusColors[status]};"><option value="pending" ${status==='pending'?'selected':''}>⏳ Chờ xử lý</option><option value="processing" ${status==='processing'?'selected':''}>🔄 Đang xử lý</option><option value="resolved" ${status==='resolved'?'selected':''}>✅ Đã xử lý</option><option value="closed" ${status==='closed'?'selected':''}>🔒 Đã đóng</option></select></td><td><button class="btn-edit btn-sm" onclick="viewReport('${doc.id}')">👁️ Xem</button><button class="btn-danger btn-sm" onclick="deleteReport('${doc.id}')">🗑️</button></td></tr>`;
+                });
+                tbody.innerHTML = html;
+                document.getElementById('reportCount').textContent = count + ' báo lỗi';
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
+            }
+        }
+
+        window.updateReportStatus = async function(id, status) {
+            try {
+                await db.collection('reports').doc(id).update({ status, updatedAt: firebase.firestore.FieldValue
+                        .serverTimestamp() });
+                showToast('✅ Đã cập nhật trạng thái!');
+                loadReports();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        window.viewReport = async function(id) {
+            try {
+                const doc = await db.collection('reports').doc(id).get();
+                if (!doc.exists) return;
+                const data = doc.data();
+                const modalDiv = document.createElement('div');
+                modalDiv.className = 'modal-overlay';
+                modalDiv.style.display = 'flex';
+                modalDiv.innerHTML =
+                    `<div class="modal-box" style="max-width:600px;"><button class="close" onclick="this.closest('.modal-overlay').remove()">✕</button><h2>🐛 Chi tiết báo lỗi</h2><div style="margin:12px 0;"><strong>Tiêu đề:</strong> ${data.title || 'Không có'}</div><div style="margin:12px 0;"><strong>Mô tả:</strong><br><p style="background:#f8f9fa;padding:12px;border-radius:8px;margin-top:4px;white-space:pre-wrap;">${data.description || 'Không có'}</p></div><div style="margin:12px 0;"><strong>Người gửi:</strong> ${data.userEmail || 'Khách'}</div><div style="margin:12px 0;"><strong>Đường dẫn:</strong> ${data.url || 'Không có'}</div>${data.screenshot ? `<div style="margin:12px 0;"><strong>Ảnh màn hình:</strong><br><img src="${data.screenshot}" style="width:100%;border-radius:8px;max-height:300px;object-fit:contain;"></div>` : ''}<div style="margin:12px 0;"><strong>Thời gian:</strong> ${data.createdAt ? new Date(data.createdAt.seconds*1000).toLocaleString('vi-VN') : 'Chưa có'}</div><div style="margin:12px 0;"><strong>Trạng thái:</strong> ${data.status || 'pending'}</div></div>`;
+                document.body.appendChild(modalDiv);
+                modalDiv.addEventListener('click', e => { if (e.target === modalDiv) modalDiv.remove(); });
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        window.deleteReport = async function(id) {
+            if (!confirm('Xóa báo lỗi này?')) return;
+            try {
+                await db.collection('reports').doc(id).delete();
+                showToast('✅ Đã xóa!');
+                loadReports();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
+        // TAB SWITCHING
+        // ============================================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.sidebar-menu li[data-tab="${tabId}"]`)?.classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
+
+            const titles = { overview: '📊 Tổng quan', posts: '📝 Quản lý bài viết', movies: '🎬 Quản lý phim',
+                users: '👥 Người dùng', events: '🎮 Sự kiện', reports: '🐛 Báo lỗi', settings: '⚙️ Cài đặt' };
+            document.getElementById('pageTitle').textContent = titles[tabId] || 'Dashboard';
+            
+            if (tabId === 'events') loadEvents();
+            if (tabId === 'users') loadUsers();
+            if (tabId === 'posts') loadPosts();
+            if (tabId === 'movies') loadMovies();
+            if (tabId === 'reports') loadReports();
+        }
+
+        document.querySelectorAll('.sidebar-menu li, .tab-btn').forEach(el => {
+            el.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+                if (tabId) switchTab(tabId);
+            });
+        });
+
+        // ============================================================
+        // URL HASH
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['overview', 'posts', 'movies', 'users', 'events', 'reports', 'settings'];
+            if (hash && validTabs.includes(hash)) {
+                switchTab(hash);
+            }
+        });
+
+        window.addEventListener('hashchange', function() {
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['overview', 'posts', 'movies', 'users', 'events', 'reports', 'settings'];
+            if (hash && validTabs.includes(hash)) {
+                switchTab(hash);
+            }
+        });
+
+        // ============================================================
+        // SETTINGS
+        // ============================================================
+        document.getElementById('settingsSaveBtn')?.addEventListener('click', async function() {
+            const name = document.getElementById('settingsName').value.trim();
+            if (!name) {
+                showToast('⚠️ Vui lòng nhập tên!', true);
+                return;
+            }
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    showToast('❌ Chưa đăng nhập!', true);
+                    return;
+                }
+                await user.updateProfile({ displayName: name });
+                await db.collection('users').doc(user.uid).update({
+                    displayName: name,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Cập nhật thành công!');
+                document.getElementById('adminName').textContent = name;
+                document.getElementById('adminAvatar').src =
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffeb3b&color=1a1a2e&size=64`;
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        });
+
+        // ============================================================
+        // AUTH STATE
+        // ============================================================
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const isAdmin = await checkAdminRole(user.uid);
+            if (!isAdmin) {
+                showToast('⚠️ Bạn không có quyền truy cập Dashboard!', true);
+                setTimeout(() => window.location.href = 'index.html', 1500);
+                return;
+            }
+
+            document.getElementById('settingsEmail').value = user.email || '';
+            document.getElementById('settingsName').value = user.displayName || '';
+            document.getElementById('adminName').textContent = user.displayName || 'Admin';
+            document.getElementById('adminEmail').textContent = user.email || '';
+            document.getElementById('adminAvatar').src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'Admin')}&background=ffeb3b&color=1a1a2e&size=64`;
+
+            await loadAdminList();
+            await loadEvents();
+            await loadPosts();
+            await loadMovies();
+            await loadUsers();
+            await loadReports();
+
+            logoutBtn.addEventListener('click', async () => {
+                if (confirm('Đăng xuất?')) {
+                    await auth.signOut();
+                    window.location.href = 'login.html';
+                }
+            });
+        });
+
+        console.log('🚀 Doraemon Fansub Admin Dashboard loaded!');
+        console.log('👑 Super Admin:', SUPER_ADMIN_EMAIL);
+        console.log('✅ Tất cả Admin đều có thể thêm sự kiện!');
+        console.log('👥 Có thể thêm Admin từ web!');
+        console.log('📌 Các trạng thái sự kiện: Sắp diễn ra | Đang diễn ra | Đã kết thúc | Tạm ẩn');
+    </script>
+</body>
+</html>
