@@ -18,6 +18,8 @@
     <meta name="description" content="Xem phim Doraemon và nhiều bộ phim hay khác - Doraemon Fansub Việt Nam" />
     <meta name="keywords" content="Doraemon, Anime, Vietsub, Xem phim, Doraemon Fansub" />
     <meta name="robots" content="index, follow" />
+    <link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
 
@@ -43,17 +45,34 @@
         }
 
         body {
-            background: #f0f2f5;
-            color: #1a1a2e;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: radial-gradient(circle at top left, rgba(26, 115, 232, 0.14), transparent 22%),
+                        radial-gradient(circle at bottom right, rgba(14, 83, 190, 0.16), transparent 20%),
+                        linear-gradient(180deg, #e9f1ff 0%, #f8fbff 45%, #eef4ff 100%);
+            color: #14233d;
         }
 
         header {
             background: linear-gradient(135deg, #1a73e8, #0d47a1);
-            padding: 12px 0;
+            padding: 18px 0;
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            box-shadow: 0 18px 60px rgba(18, 43, 107, 0.20);
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -80px;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(255,255,255,0.32), transparent 60%);
+            filter: blur(26px);
+            pointer-events: none;
         }
 
         .container {
@@ -78,13 +97,16 @@
             font-weight: 800;
             color: white;
             text-decoration: none;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
         }
 
         .logo img {
-            height: 40px;
+            height: 44px;
             width: auto;
             border-radius: 50%;
             object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 0 18px rgba(255, 255, 255, 0.25);
         }
 
         .header-actions {
@@ -161,20 +183,22 @@
         }
 
         .login-btn {
-            background: #ffeb3b;
-            color: #0d47a1;
+            background: linear-gradient(135deg, #1a73e8, #0f5ccf);
+            color: white;
             border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
+            padding: 10px 22px;
+            border-radius: 30px;
             font-weight: 700;
             font-size: 14px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             text-decoration: none;
+            box-shadow: 0 10px 25px rgba(26, 115, 232, 0.18);
         }
 
         .login-btn:hover {
-            transform: scale(1.05);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(26, 115, 232, 0.25);
         }
 
         .logout-btn {
@@ -218,33 +242,39 @@
         .tabs {
             display: flex;
             gap: 0;
-            background: white;
-            border-radius: 16px;
-            padding: 4px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            background: rgba(255,255,255,0.82);
+            border-radius: 20px;
+            padding: 6px;
+            margin-bottom: 26px;
+            box-shadow: 0 18px 45px rgba(17, 43, 99, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(12px);
         }
 
         .tab-btn {
             flex: 1;
-            padding: 12px;
+            padding: 14px 18px;
             border: none;
             background: transparent;
             font-size: 15px;
-            font-weight: 600;
-            color: #65676b;
+            font-weight: 700;
+            color: #33496d;
             cursor: pointer;
-            border-radius: 12px;
-            transition: 0.3s;
+            border-radius: 18px;
+            transition: transform 0.24s ease, color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
         }
 
         .tab-btn:hover {
-            background: #f0f2f5;
+            background: rgba(26, 115, 232, 0.12);
+            color: #0d4ea2;
+            transform: translateY(-1px);
         }
 
         .tab-btn.active {
-            background: #1a73e8;
+            background: linear-gradient(135deg, #1a73e8, #0d59b1);
             color: white;
+            box-shadow: 0 16px 32px rgba(26, 115, 232, 0.18);
+            transform: scale(1.02);
         }
 
         .tab-content {
@@ -285,11 +315,12 @@
         }
 
         .create-post {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(17, 42, 112, 0.08);
+            border: 1px solid rgba(26, 115, 232, 0.12);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
         .create-post-top {
@@ -362,38 +393,42 @@
         }
 
         .post-actions button {
-            background: none;
-            border: none;
-            color: #65676b;
+            background: rgba(26, 115, 232, 0.08);
+            border: 1px solid rgba(26, 115, 232, 0.18);
+            color: #1a4d8c;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 8px;
-            transition: 0.3s;
+            padding: 8px 14px;
+            border-radius: 999px;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .post-actions button:hover {
-            background: #f0f2f5;
+            background: rgba(26, 115, 232, 0.16);
+            border-color: rgba(26, 115, 232, 0.28);
+            transform: translateY(-1px);
         }
 
         .post-btn {
-            background: #1a73e8;
+            background: linear-gradient(135deg, #1a73e8, #0f62d6);
             color: white;
             border: none;
-            padding: 8px 28px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 14px;
+            padding: 12px 30px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 15px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+            box-shadow: 0 10px 20px rgba(26, 115, 232, 0.18);
         }
 
         .post-btn:hover {
-            background: #1557b0;
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #0f62d6, #165fca);
         }
 
         .upload-preview {
@@ -477,19 +512,20 @@
 
         /* ===== SIDEBAR FILTER ===== */
         .filter-sidebar {
-            background: white;
-            border-radius: 16px;
-            padding: 16px 18px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 24px;
+            padding: 20px 22px;
+            box-shadow: 0 20px 40px rgba(17, 42, 112, 0.08);
+            border: 1px solid rgba(26, 115, 232, 0.12);
         }
 
         .filter-sidebar .filter-title {
             font-size: 15px;
             font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f2f5;
+            color: #14233d;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(26, 115, 232, 0.12);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -556,36 +592,42 @@
         }
 
         .post-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 26px;
+            padding: 22px;
+            box-shadow: 0 28px 58px rgba(17, 42, 112, 0.10);
+            transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
             position: relative;
+            border: 1px solid rgba(26, 115, 232, 0.14);
+            backdrop-filter: blur(10px);
         }
 
         .post-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 32px 72px rgba(17, 42, 112, 0.18);
+            border-color: rgba(26, 115, 232, 0.25);
         }
 
         .post-card.pinned {
-            border-left: 4px solid #ffeb3b;
-            background: #fffef5;
+            border: 1px solid #ffeb3b;
+            box-shadow: 0 28px 60px rgba(255, 235, 59, 0.18);
+            background: linear-gradient(135deg, #fff9e6, #ffffff);
         }
 
         .post-card .pin-badge {
             position: absolute;
-            top: 12px;
-            right: 12px;
-            background: #ffeb3b;
-            color: #1a1a2e;
-            font-size: 11px;
+            top: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, #1a73e8, #0f5ccf);
+            color: white;
+            font-size: 12px;
             font-weight: 700;
-            padding: 2px 10px;
-            border-radius: 12px;
+            padding: 6px 14px;
+            border-radius: 999px;
             display: none;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            box-shadow: 0 8px 22px rgba(26, 115, 232, 0.2);
         }
 
         .post-card.pinned .pin-badge {
@@ -684,7 +726,8 @@
         }
 
         .post-header .more-btn:hover {
-            background: #f0f2f5;
+            background: rgba(26, 115, 232, 0.08);
+            color: #0f4f9c;
         }
 
         /* ===== POST CONTENT - THU GỌN ===== */
@@ -987,15 +1030,17 @@
             background: #1a73e8;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-weight: 700;
             cursor: pointer;
             font-size: 13px;
+            transition: background 0.2s ease, transform 0.2s ease;
         }
 
         .comment-input button:hover {
-            background: #1557b0;
+            background: #1058a6;
+            transform: translateY(-1px);
         }
 
         .empty-state {
@@ -1498,6 +1543,38 @@
             gap: 16px;
         }
 
+        .movie-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 10px 0 4px;
+        }
+
+        .pagination-btn {
+            min-width: 40px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 999px;
+            background: #e8f0fe;
+            color: #1a3f7c;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .pagination-btn:hover {
+            background: #d2e4ff;
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, #1a73e8, #0f5ccf);
+            color: white;
+            box-shadow: 0 12px 26px rgba(26, 115, 232, 0.18);
+        }
+
         .movie-card {
             background: white;
             border-radius: 16px;
@@ -1605,21 +1682,21 @@
         .movie-card .movie-info .view-link {
             display: inline-block;
             margin-top: 8px;
-            padding: 6px 16px;
-            background: #1a73e8;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #1a73e8, #0f61ca);
             color: white;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 13px;
             font-weight: 600;
             text-decoration: none;
-            transition: 0.3s;
+            transition: transform 0.2s ease, background 0.2s ease;
             border: none;
             cursor: pointer;
         }
 
         .movie-card .movie-info .view-link:hover {
-            background: #1557b0;
-            transform: scale(1.02);
+            background: linear-gradient(135deg, #1557b0, #134aa3);
+            transform: translateY(-1px);
         }
 
         .movie-card .movie-info .view-link .external-icon {
@@ -1819,27 +1896,31 @@
 
         .toast-report {
             position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: #1a1a2e;
+            top: 22px;
+            right: 22px;
+            left: auto;
+            transform: translateY(-16px) scale(0.98);
+            background: #1a73e8;
             color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: 999px;
+            font-weight: 700;
             z-index: 99999;
             opacity: 0;
-            transition: 0.4s;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.25s ease, transform 0.25s ease, background 0.25s ease;
+            box-shadow: 0 18px 40px rgba(17, 57, 115, 0.28);
             font-size: 14px;
-            max-width: 90%;
-            text-align: center;
+            max-width: 380px;
+            min-width: 220px;
+            text-align: left;
             pointer-events: none;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.24);
         }
 
         .toast-report.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         .login-required-overlay {
@@ -2581,9 +2662,9 @@
 
             <!-- ===== TABS ===== -->
             <div class="tabs">
-                <button class="tab-btn active" data-tab="newsfeed">📰 Mới nhất</button>
-                <button class="tab-btn" data-tab="movies">🎬 Phim</button>
-                <button class="tab-btn" data-tab="events">🎮 Sự kiện</button>
+                <button class="tab-btn active" data-tab="newsfeed"><i class="fas fa-newspaper"></i> Mới nhất</button>
+                <button class="tab-btn" data-tab="movies"><i class="fa-solid fa-film"></i> Phim</button>
+                <button class="tab-btn" data-tab="events"><i class="fas fa-calendar-alt"></i> Sự kiện</button>
             </div>
 
             <!-- ===== TAB NEWSFEED ===== -->
@@ -2595,11 +2676,11 @@
                         <div class="filter-title">🔍 Lọc bài viết</div>
                         <div class="filter-btn-group">
                             <button class="filter-btn active" data-filter="all" onclick="applyFilter('all')">
-                                <span class="icon">📰</span> Tất cả
+                                <span class="icon"><i class="fas fa-list"></i></span> Tất cả
                                 <span class="badge" id="badgeAll">0</span>
                             </button>
                             <button class="filter-btn" data-filter="pinned" onclick="applyFilter('pinned')">
-                                <span class="icon">📌</span> Đã ghim
+                               <span class="icon"><i class="fa-solid fa-thumbtack"></i></span> Đã ghim
                                 <span class="badge" id="badgePinned">0</span>
                             </button>
                             <button class="filter-btn" data-filter="liked" onclick="applyFilter('liked')">
@@ -2633,9 +2714,15 @@
                             </div>
                             <div class="create-post-bottom">
                                 <div class="post-actions">
-                                    <button onclick="openUploadWidget('image')">📎 Ảnh</button>
-                                    <button onclick="openUploadWidget('video')">🎬 Video</button>
-                                    <button onclick="alert('😊 Chức năng đang phát triển!')">😊 Cảm xúc</button>
+                                    <button onclick="openUploadWidget('image')">
+    <i class="fa-solid fa-paperclip"></i> Ảnh
+</button>
+                       <button onclick="openUploadWidget('video')">
+    <i class="fas fa-video"></i> Video
+</button>
+                                    <button onclick="showToast('😊 Chức năng đang phát triển!')">
+    <i class="fas fa-smile"></i> Cảm xúc
+</button>
                                 </div>
                                 <button class="post-btn" onclick="createPost()">Đăng</button>
                             </div>
@@ -2651,18 +2738,18 @@
                     <!-- Sidebar Desktop -->
                     <div class="newsfeed-sidebar-desktop" id="filterDesktop">
                         <div class="filter-sidebar">
-                            <div class="filter-title">🔍 Lọc bài viết</div>
+                            <div class="filter-title"><i class="fas fa-search"></i> Lọc bài viết</div>
                             <div class="filter-btn-group">
                                 <button class="filter-btn active" data-filter="all" onclick="applyFilter('all')">
-                                    <span class="icon">📰</span> Tất cả
+                                    <span class="icon"><i class="fas fa-list"></i></span> Tất cả
                                     <span class="badge" id="badgeAllDesktop">0</span>
                                 </button>
                                 <button class="filter-btn" data-filter="pinned" onclick="applyFilter('pinned')">
-                                    <span class="icon">📌</span> Đã ghim
+                                    <span class="icon"><i class="fas fa-thumbtack"></i></span> Đã ghim
                                     <span class="badge" id="badgePinnedDesktop">0</span>
                                 </button>
                                 <button class="filter-btn" data-filter="liked" onclick="applyFilter('liked')">
-                                    <span class="icon">❤️</span> Đã thích
+                                    <span class="icon"><i class="fas fa-heart"></i></span> Đã thích
                                     <span class="badge" id="badgeLikedDesktop">0</span>
                                 </button>
                             </div>
@@ -2675,12 +2762,12 @@
             <div id="tab-movies" class="tab-content">
                 <div class="movie-layout">
                     <div class="movie-categories">
-                        <div class="category-title">📂 Phân loại</div>
+                        <div class="category-title"><i class="fas fa-folder-open"></i>Phân loại</div>
                         <ul class="category-list" id="categoryList">
-                            <li class="active" data-category="all">📺 Tất cả <span class="count" id="countAll">0</span></li>
-                            <li data-category="movie">🎬 Movie <span class="count" id="countMovie">0</span></li>
-                            <li data-category="short">🎥 Short Movie <span class="count" id="countShort">0</span></li>
-                            <li data-category="seri">📺 Seri <span class="count" id="countSeri">0</span></li>
+                            <li class="active" data-category="all"><i class="fas fa-border-all"></i> Tất cả <span class="count" id="countAll">0</span></li>
+                            <li data-category="movie"><i class="fas fa-play-circle"></i> Movie <span class="count" id="countMovie">0</span></li>
+                            <li data-category="short"><i class="fas fa-clapperboard"></i> Short Movie <span class="count" id="countShort">0</span></li>
+                            <li data-category="seri"><i class="fas fa-tv"></i> Seri <span class="count" id="countSeri">0</span></li>
                         </ul>
                     </div>
                     <div>
@@ -2915,6 +3002,7 @@
         let editingUserPostFileType = null;
         let editUserUploadedFileUrl = '';
         let editUserUploadedFileType = '';
+        let isRemovingAttachedFile = false;
 
         // ============================================================
         // TAB SWITCH
@@ -3013,6 +3101,27 @@
             return adminEmails.has(email);
         }
 
+        function getUserFallbackName(user) {
+            if (!user) return 'Người dùng';
+            return user.displayName || user.email?.split('@')[0] || 'Người dùng';
+        }
+
+        async function resolveUserName(user) {
+            if (!user) return 'Người dùng';
+            const fallbackName = getUserFallbackName(user);
+            if (user.displayName && user.displayName !== '') {
+                return user.displayName;
+            }
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const data = userDoc.data();
+                return data?.displayName || fallbackName;
+            } catch (e) {
+                console.error('Lỗi lấy tên người dùng từ Firestore:', e);
+                return fallbackName;
+            }
+        }
+
         // ============================================================
         // KIỂM TRA TÀI KHOẢN BỊ CẤM
         // ============================================================
@@ -3089,12 +3198,12 @@
                 authStatus.style.display = 'flex';
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
-                userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user
-                    .displayName || user.email);
-                userName.textContent = user.displayName || user.email;
+                const resolvedName = await resolveUserName(user);
+                userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(resolvedName);
+                userName.textContent = resolvedName;
                 createPostBox.style.opacity = '1';
                 createPostBox.style.pointerEvents = 'auto';
-                postInput.placeholder = `${user.displayName || 'Bạn'} đang nghĩ gì thế?`;
+                postInput.placeholder = `${resolvedName || 'Bạn'} đang nghĩ gì thế?`;
 
                 isAdmin = isUserAdmin(user.email);
 
@@ -3162,7 +3271,7 @@
                 await auth.signOut();
                 window.location.reload();
             } catch (error) {
-                alert('Đăng xuất thất bại!');
+                showToast('Đăng xuất thất bại!', true);
             }
         };
 
@@ -3171,13 +3280,13 @@
         // ============================================================
         function openUploadWidget(type) {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để đăng ảnh/video!');
+                showToast('🔑 Vui lòng đăng nhập để đăng ảnh/video!', true);
                 window.location.href = 'login.html';
                 return;
             }
 
             if (typeof cloudinary === 'undefined') {
-                alert('⚠️ Cloudinary đang tải, vui lòng thử lại sau!');
+                showToast('⚠️ Cloudinary đang tải, vui lòng thử lại sau!', true);
                 return;
             }
 
@@ -3216,7 +3325,7 @@
             }, (error, result) => {
                 if (error) {
                     console.error('Lỗi Cloudinary:', error);
-                    alert('❌ Upload thất bại: ' + (error.message || 'Lỗi không xác định'));
+                    showToast('❌ Upload thất bại: ' + (error.message || 'Lỗi không xác định'), true);
                     uploadProgress.style.display = 'none';
                     return;
                 }
@@ -3252,7 +3361,7 @@
                     uploadProgress.style.display = 'none';
 
                 } else if (result.event === 'error') {
-                    alert('❌ Upload thất bại: ' + (result.info.message || 'Lỗi không xác định'));
+                    showToast('❌ Upload thất bại: ' + (result.info.message || 'Lỗi không xác định'), true);
                     uploadProgress.style.display = 'none';
                 }
             });
@@ -3275,14 +3384,14 @@
         // ============================================================
         async function createPost() {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để đăng bài!');
+                showToast('🔑 Vui lòng đăng nhập để đăng bài!', true);
                 window.location.href = 'login.html';
                 return;
             }
 
             const content = postInput.value;
             if (!content && !uploadedFileUrl) {
-                alert('📝 Vui lòng nhập nội dung hoặc đính kèm ảnh/video!');
+                showToast('📝 Vui lòng nhập nội dung hoặc đính kèm ảnh/video!', true);
                 return;
             }
 
@@ -3292,9 +3401,11 @@
 
             try {
                 const user = auth.currentUser;
+                const currentUserName = await resolveUserName(user);
+                const currentUserAvatar = user.photoURL || LOGO_URL;
                 const postData = {
-                    user: user.displayName || 'Doraemon',
-                    avatar: LOGO_URL,
+                    user: currentUserName,
+                    avatar: currentUserAvatar,
                     color: '1',
                     content: content || '📸 Chia sẻ hình ảnh',
                     time: 'Vừa xong',
@@ -3339,7 +3450,7 @@
                 if (errorMsg.includes('permission')) {
                     errorMsg = 'Bạn chưa có quyền đăng bài. Vui lòng kiểm tra Firestore Rules.';
                 }
-                alert('❌ Lỗi đăng bài: ' + errorMsg);
+                showToast('❌ Lỗi đăng bài: ' + errorMsg, true);
                 btn.textContent = 'Đăng';
                 btn.disabled = false;
             }
@@ -3535,7 +3646,7 @@
                                 <div class="comment-body">
                                     <div class="name">
                                         <a href="${commentProfileLink}" class="profile-link">
-                                            ${c.user || 'Doraemon'}
+                                            ${c.user || c.userEmail?.split('@')[0] || 'Người dùng'}
                                         </a>
                                         ${isCommentAdmin ? `<span class="verified-badge">✓ Admin</span>` : ''}
                                         <img src="${LOGO_URL}" class="logo-small" alt="logo" loading="lazy">
@@ -3586,7 +3697,7 @@
                                 <div class="info">
                                     <div class="name">
                                         <a href="${profileLink}" class="profile-link">
-                                            ${p.user || 'Doraemon'}
+                                            ${p.user || p.userEmail?.split('@')[0] || 'Người dùng'}
                                         </a>
                                         ${isPostAdmin ? `<span class="verified-badge">✓ Admin</span>` : ''}
                                         <img src="${LOGO_URL}" class="logo-small" alt="logo" loading="lazy">
@@ -3686,7 +3797,7 @@
         // ============================================================
         async function toggleLike(postId) {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để thích bài viết!');
+                showToast('🔑 Vui lòng đăng nhập để thích bài viết!', true);
                 window.location.href = 'login.html';
                 return;
             }
@@ -3735,7 +3846,7 @@
 
             } catch (e) {
                 console.error('Lỗi like:', e);
-                alert('❌ Lỗi: ' + e.message);
+                showToast('❌ Lỗi: ' + e.message, true);
             }
         }
 
@@ -3787,22 +3898,36 @@
         async function addComment(postId) {
             const input = document.getElementById(`commentInput-${postId}`);
             const text = input.value.trim();
-            if (!text) return;
+            if (!text) {
+                showToast('📝 Vui lòng nhập nội dung bình luận!', true);
+                return;
+            }
+
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('🔑 Vui lòng đăng nhập để bình luận!', true);
+                window.location.href = 'login.html';
+                return;
+            }
 
             try {
-                const user = auth.currentUser;
                 const doc = await db.collection('posts').doc(postId).get();
-                if (!doc.exists) return;
+                if (!doc.exists) {
+                    showToast('❌ Bài viết không tồn tại!', true);
+                    return;
+                }
+
                 const data = doc.data();
                 const comments = data.comments || [];
+                const commentUserName = await resolveUserName(user);
                 comments.push({
-                    user: user?.displayName || 'Doraemon',
-                    avatar: LOGO_URL,
+                    user: commentUserName,
+                    avatar: user.photoURL || LOGO_URL,
                     color: '1',
                     text: text,
                     time: 'Vừa xong',
-                    userEmail: user?.email || '',
-                    userId: user?.uid || '',
+                    userEmail: user.email || '',
+                    userId: user.uid || '',
                     isAdmin: isAdmin
                 });
                 await db.collection('posts').doc(postId).update({ comments });
@@ -3811,8 +3936,10 @@
                 tabCache.newsfeed.loaded = false;
                 await loadPosts();
                 tabCache.newsfeed.loaded = true;
+                showToast('✅ Đã thêm bình luận!');
             } catch (e) {
                 console.error(e);
+                showToast('❌ Lỗi gửi bình luận: ' + (e.message || 'Không thể thêm bình luận'), true);
             }
         }
 
@@ -3827,8 +3954,8 @@
                 navigator.share({ title: 'Doraemon', text: content }).catch(() => {});
             } else {
                 navigator.clipboard.writeText(content)
-                    .then(() => alert('📤 Đã sao chép nội dung!'))
-                    .catch(() => alert('📤 Chia sẻ: ' + content));
+                    .then(() => showToast('📤 Đã sao chép nội dung!'))
+                    .catch(() => showToast('📤 Chia sẻ: ' + content));
             }
         }
 
@@ -3838,24 +3965,39 @@
         async function showPostOptions(postId) {
             const user = auth.currentUser;
             if (!user) {
-                alert('⚠️ Vui lòng đăng nhập!');
+                showToast('⚠️ Vui lòng đăng nhập!', true);
                 return;
             }
 
-            if (!isAdmin) {
-                alert('⚠️ Bạn không có quyền!');
-                return;
-            }
+            try {
+                const doc = await db.collection('posts').doc(postId).get();
+                if (!doc.exists) return;
 
-            const choice = prompt('Chọn hành động:\n1. Xóa bài viết');
-            if (choice === '1') {
-                if (confirm('Xóa bài viết này?')) {
-                    await db.collection('posts').doc(postId).delete();
-                    tabCache.newsfeed.loaded = false;
-                    await loadPosts();
-                    tabCache.newsfeed.loaded = true;
-                    alert('✅ Đã xóa!');
+                const data = doc.data();
+                const isOwner = data.userEmail === user.email;
+                if (!isOwner && !isAdmin) {
+                    showToast('⚠️ Bạn không có quyền!', true);
+                    return;
                 }
+
+                await db.collection('posts').doc(postId).delete();
+
+                const postEl = document.getElementById(`post-${postId}`);
+                if (postEl) postEl.remove();
+
+                allPostsData = allPostsData.filter(p => p.id !== postId);
+                tabCache.newsfeed.data = allPostsData;
+                tabCache.newsfeed.html = '';
+                updateFilterBadges(allPostsData);
+
+                tabCache.newsfeed.loaded = false;
+                await loadPosts();
+                tabCache.newsfeed.loaded = true;
+
+                showToast('✅ Đã xóa bài viết!');
+            } catch (e) {
+                console.error('Lỗi xóa bài viết:', e);
+                showToast('❌ Xóa thất bại: ' + (e.message || 'Không thể xóa bài viết'), true);
             }
         }
 
@@ -3864,7 +4006,7 @@
         // ============================================================
         window.editUserPost = async function(postId) {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để sửa bài viết!');
+                showToast('🔑 Vui lòng đăng nhập để sửa bài viết!', true);
                 window.location.href = 'login.html';
                 return;
             }
@@ -3938,6 +4080,7 @@
             editingUserPostFileType = null;
             editUserUploadedFileUrl = '';
             editUserUploadedFileType = '';
+            isRemovingAttachedFile = false;
         }
 
         closeEditPostModal?.addEventListener('click', closeEditPostModalFunc);
@@ -4029,11 +4172,11 @@
         // EDIT POST - REMOVE FILE
         // ============================================================
         function editPostRemoveFile() {
-            if (!confirm('Xóa file đính kèm?')) return;
             editUserUploadedFileUrl = '';
             editUserUploadedFileType = '';
             editingUserPostFileUrl = null;
             editingUserPostFileType = null;
+            isRemovingAttachedFile = true;
 
             editPostFilePreview.innerHTML = `<span style="color:#999;font-size:13px;">🗑️ Đã xóa file</span>`;
             showToast('✅ Đã xóa file!');
@@ -4073,7 +4216,7 @@
                 if (editUserUploadedFileUrl) {
                     updateData.fileUrl = editUserUploadedFileUrl;
                     updateData.fileType = editUserUploadedFileType;
-                } else if (editingUserPostFileUrl === null && !editUserUploadedFileUrl) {
+                } else if (isRemovingAttachedFile || editingUserPostFileUrl === null) {
                     updateData.fileUrl = null;
                     updateData.fileType = null;
                 }
@@ -4101,6 +4244,8 @@
         // ============================================================
         let allMovies = [];
         let currentCategory = 'all';
+        let currentMoviePage = 1;
+        const moviesPerPage = 21;
 
         function openMovieInNewTab(movieId) {
             if (!isLoggedIn) {
@@ -4221,7 +4366,8 @@
                 });
 
                 updateCategoryCounts(allMovies);
-                const html = renderMoviesByCategoryHTML(currentCategory);
+                currentMoviePage = 1;
+                const html = renderMoviesByCategoryHTML(currentCategory, currentMoviePage);
                 movieList.innerHTML = html;
                 tabCache.movies.html = html;
                 tabCache.movies.data = allMovies;
@@ -4241,7 +4387,8 @@
                 }];
                 allMovies = sampleMovies;
                 updateCategoryCounts(allMovies);
-                const html = renderMoviesByCategoryHTML('all');
+                currentMoviePage = 1;
+                const html = renderMoviesByCategoryHTML('all', currentMoviePage);
                 movieList.innerHTML = html;
                 tabCache.movies.html = html;
                 tabCache.movies.data = allMovies;
@@ -4263,7 +4410,20 @@
             document.getElementById('countSeri').textContent = counts.seri;
         }
 
-        function renderMoviesByCategoryHTML(category) {
+        function renderMoviePaginationHTML(totalPages, currentPage) {
+            if (totalPages <= 1) return '';
+
+            let paginationHtml = '<div class="movie-pagination">';
+            for (let page = 1; page <= totalPages; page++) {
+                paginationHtml += `
+                    <button class="pagination-btn ${page === currentPage ? 'active' : ''}" onclick="changeMoviePage(${page})">${page}</button>
+                `;
+            }
+            paginationHtml += '</div>';
+            return paginationHtml;
+        }
+
+        function renderMoviesByCategoryHTML(category, page = 1) {
             currentCategory = category;
             const filtered = category === 'all' ?
                 allMovies :
@@ -4279,8 +4439,14 @@
                     `;
             }
 
+            const totalPages = Math.ceil(filtered.length / moviesPerPage);
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            const startIndex = (page - 1) * moviesPerPage;
+            const pageMovies = filtered.slice(startIndex, startIndex + moviesPerPage);
+
             let html = `<div class="movie-grid">`;
-            filtered.forEach(m => {
+            pageMovies.forEach(m => {
                 const showLock = !isLoggedIn;
 
                 html += `
@@ -4314,17 +4480,27 @@
                     `;
             });
             html += `</div>`;
+            html += renderMoviePaginationHTML(totalPages, page);
             return html;
         }
 
         function renderMoviesByCategory(category) {
             currentCategory = category;
-            const html = renderMoviesByCategoryHTML(category);
+            currentMoviePage = 1;
+            const html = renderMoviesByCategoryHTML(category, currentMoviePage);
             movieList.innerHTML = html;
             tabCache.movies.html = html;
 
             searchInput.value = '';
             clearSearchBtn.classList.remove('visible');
+        }
+
+        window.changeMoviePage = function(page) {
+            currentMoviePage = page;
+            const html = renderMoviesByCategoryHTML(currentCategory, currentMoviePage);
+            movieList.innerHTML = html;
+            tabCache.movies.html = html;
+            window.scrollTo({ top: document.getElementById('tab-movies').offsetTop - 80, behavior: 'smooth' });
         }
 
         document.getElementById('categoryList').addEventListener('click', function(e) {
@@ -4460,7 +4636,7 @@
         function openEventPopup(eventId) {
             db.collection('events').doc(eventId).get().then(doc => {
                 if (!doc.exists) {
-                    alert('Sự kiện không tồn tại!');
+                    showToast('Sự kiện không tồn tại!', true);
                     return;
                 }
 
@@ -4531,7 +4707,7 @@
                 document.body.style.overflow = 'hidden';
 
             }).catch(e => {
-                alert('Lỗi: ' + e.message);
+                showToast('Lỗi: ' + e.message, true);
             });
         }
 
@@ -4657,7 +4833,7 @@
 
         function showToastReport(msg, isError = false) {
             toastReport.textContent = msg;
-            toastReport.style.background = isError ? '#c62828' : '#1a1a2e';
+            toastReport.style.background = isError ? '#c62828' : '#1a73e8';
             toastReport.classList.add('show');
             clearTimeout(toastReport._timer);
             toastReport._timer = setTimeout(() => toastReport.classList.remove('show'), 4000);
@@ -4668,7 +4844,7 @@
         // ============================================================
         function showToast(msg, isError = false) {
             toastReport.textContent = msg;
-            toastReport.style.background = isError ? '#c62828' : '#1a1a2e';
+            toastReport.style.background = isError ? '#c62828' : '#1a73e8';
             toastReport.classList.add('show');
             clearTimeout(toastReport._timer);
             toastReport._timer = setTimeout(() => toastReport.classList.remove('show'), 4000);
