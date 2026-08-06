@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,8 +19,7 @@
     <meta name="description" content="Xem phim Doraemon và nhiều bộ phim hay khác - Doraemon Fansub Việt Nam" />
     <meta name="keywords" content="Doraemon, Anime, Vietsub, Xem phim, Doraemon Fansub" />
     <meta name="robots" content="index, follow" />
-    <link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
 
@@ -47,10 +47,421 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         body {
             min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
             background: radial-gradient(circle at top left, rgba(26, 115, 232, 0.14), transparent 22%),
-                        radial-gradient(circle at bottom right, rgba(14, 83, 190, 0.16), transparent 20%),
-                        linear-gradient(180deg, #e9f1ff 0%, #f8fbff 45%, #eef4ff 100%);
+                radial-gradient(circle at bottom right, rgba(255, 235, 59, 0.18), transparent 20%),
+                linear-gradient(180deg, #edf5ff 0%, #f8fbff 45%, #eef6ff 100%);
             color: #14233d;
+        }
+
+        .page-loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(237, 245, 255, 0.34);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            opacity: 1;
+            transition: opacity 0.45s ease, visibility 0.45s ease;
+            visibility: visible;
+        }
+
+        .page-loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .page-loading-overlay .flight-image {
+            position: absolute;
+            width: 220px;
+            height: auto;
+            object-fit: contain;
+            transform: translate(-50%, -50%) scale(0.8);
+            filter: drop-shadow(0 18px 44px rgba(24, 76, 161, 0.24));
+            transition: left 1.25s cubic-bezier(0.2, 0.9, 0.2, 1), top 1.25s cubic-bezier(0.2, 0.9, 0.2, 1), transform 1.25s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.45s ease;
+            opacity: 0.97;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .page-loading-overlay .flight-image.animate {
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(1.4);
+        }
+
+        .hero-robot.hidden-by-loading {
+            display: none !important;
+        }
+
+        /* ===== DORAEMON PAINTER NOTIFICATION MODAL ===== */
+        .doraemon-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .doraemon-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .doraemon-modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: opacity 0.4s ease;
+        }
+
+        .doraemon-modal-card {
+            position: relative;
+            z-index: 2;
+            width: 92%;
+            max-width: 580px;
+            margin: 20px;
+            transform: translateY(100px) scale(0.85);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+        }
+
+        .doraemon-modal-overlay.show .doraemon-modal-card {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .doraemon-modal-overlay.hidden .doraemon-modal-card {
+            transform: translateY(80px) scale(0.9);
+            opacity: 0;
+        }
+
+        /* Doraemon Artist Mascot (doraemon_ve.png) */
+        .doraemon-artist-wrapper {
+            position: absolute;
+            top: -44px;
+            left: -24px;
+            z-index: 10;
+            width: 160px;
+            pointer-events: none;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25));
+            animation: doraFloat 3.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes doraFloat {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            100% {
+                transform: translateY(-8px) rotate(1.5deg);
+            }
+        }
+
+        .doraemon-artist-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .paint-sparkle {
+            position: absolute;
+            font-size: 22px;
+            animation: sparklePop 2s ease-in-out infinite alternate;
+        }
+
+        .paint-sparkle.p1 {
+            top: 5px;
+            right: 25px;
+            animation-delay: 0.2s;
+        }
+
+        .paint-sparkle.p2 {
+            top: 35px;
+            right: 5px;
+            animation-delay: 0.8s;
+        }
+
+        @keyframes sparklePop {
+            0% {
+                transform: scale(0.8) rotate(-10deg);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1.25) rotate(15deg);
+                opacity: 1;
+            }
+        }
+
+        /* Doraemon Canvas Board */
+        .doraemon-board-canvas {
+            background: #ffffff;
+            border-radius: 24px;
+            border: 3.5px solid #00a0e9;
+            box-shadow: 0 20px 50px rgba(0, 160, 233, 0.35), 0 0 0 5px rgba(255, 255, 255, 0.95);
+            overflow: hidden;
+            position: relative;
+            padding-left: 0;
+            min-height: 220px;
+        }
+
+        /* Red Collar & Bell Header */
+        .doraemon-board-header {
+            background: linear-gradient(135deg, #00a0e9 0%, #0077b6 100%);
+            padding: 14px 18px 14px 145px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            border-bottom: 4px solid #e60012;
+            min-height: 66px;
+        }
+
+        .doraemon-bell-badge {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff9900 100%);
+            border: 2.5px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 170, 0, 0.4);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .board-header-title {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            margin-left: 10px;
+            flex-grow: 1;
+            white-space: nowrap;
+        }
+
+        .dora-close-btn {
+            width: 36px;
+            height: 36px;
+            background: #e60012;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(230, 0, 18, 0.4);
+            outline: none;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .dora-close-btn:hover {
+            background: #ff2a3b;
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 6px 18px rgba(230, 0, 18, 0.6);
+        }
+
+        /* Body Content */
+        .doraemon-board-body {
+            padding: 22px 24px 24px 145px;
+        }
+
+        .board-welcome-title {
+            color: #0077b6;
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            line-height: 1.35;
+        }
+
+        .board-welcome-text {
+            color: #334155;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+        }
+
+        .board-welcome-text strong {
+            color: #0096c7;
+        }
+
+        .board-action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-dora-primary {
+            background: linear-gradient(135deg, #00a0e9, #0077b6);
+            color: #ffffff !important;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            box-shadow: 0 6px 18px rgba(0, 160, 233, 0.35);
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-dora-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0, 160, 233, 0.5);
+            background: linear-gradient(135deg, #00b4d8, #0096c7);
+        }
+
+        .btn-dora-outline {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1.5px solid #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-dora-outline:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        /* Responsive Mobile Layout */
+        @media (max-width: 640px) {
+            .doraemon-artist-wrapper {
+                top: -40px;
+                left: -12px;
+                width: 105px;
+            }
+
+            .doraemon-board-header {
+                padding: 12px 14px 12px 98px;
+                min-height: 56px;
+            }
+
+            .doraemon-bell-badge {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
+            .board-header-title {
+                font-size: 16px;
+                letter-spacing: 0.8px;
+                margin-left: 8px;
+            }
+
+            .dora-close-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                margin-left: 6px;
+            }
+
+            .doraemon-board-body {
+                padding: 18px 16px 20px 98px;
+            }
+
+            .board-welcome-title {
+                font-size: 15.5px;
+            }
+
+            .board-welcome-text {
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .board-action-buttons {
+                gap: 8px;
+                width: 100%;
+            }
+
+            .btn-dora-primary,
+            .btn-dora-outline {
+                flex: 1;
+                padding: 9px 12px;
+                font-size: 13px;
+            }
+        }
+
+        .page-loading-overlay .loading-text {
+            position: absolute;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1a73e8;
+            opacity: 0.8;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.6);
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.9;
+        }
+
+        body::before {
+            top: -60px;
+            right: -80px;
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(255, 235, 59, 0.28), transparent 70%);
+            animation: floatCloud 7s ease-in-out infinite;
+        }
+
+        body::after {
+            bottom: -80px;
+            left: -60px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(26, 115, 232, 0.16), transparent 72%);
+            animation: floatCloud 8.5s ease-in-out infinite reverse;
         }
 
         header {
@@ -70,7 +481,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             right: -80px;
             width: 220px;
             height: 220px;
-            background: radial-gradient(circle, rgba(255,255,255,0.32), transparent 60%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.32), transparent 60%);
             filter: blur(26px);
             pointer-events: none;
         }
@@ -239,33 +650,174 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             padding: 20px 0 40px;
         }
 
+        .hero-panel {
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 20px;
+            align-items: center;
+            padding: 24px 24px 22px;
+            margin-bottom: 24px;
+            border-radius: 28px;
+            border: 1px solid rgba(26, 115, 232, 0.16);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 255, 0.95));
+            box-shadow: 0 24px 60px rgba(17, 42, 112, 0.10);
+        }
+
+        .hero-panel::before {
+            content: '';
+            position: absolute;
+            inset: auto auto -24px -24px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(255, 235, 59, 0.58), transparent 72%);
+            pointer-events: none;
+            animation: floatCloud 6s ease-in-out infinite;
+        }
+
+        .hero-panel::after {
+            content: '';
+            position: absolute;
+            inset: -16px -16px auto auto;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(26, 115, 232, 0.12), transparent 70%);
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(26, 115, 232, 0.10);
+            color: #1259a5;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            border: 1px solid rgba(26, 115, 232, 0.16);
+        }
+
+        .hero-title {
+            font-size: clamp(24px, 3.2vw, 34px);
+            line-height: 1.2;
+            font-weight: 800;
+            color: #13213c;
+            margin-bottom: 10px;
+        }
+
+        .hero-title span {
+            color: #1a73e8;
+        }
+
+        .hero-subtitle {
+            color: #51627a;
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 640px;
+        }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .hero-tags span {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: white;
+            color: #295a97;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(17, 42, 112, 0.06);
+            border: 1px solid rgba(26, 115, 232, 0.12);
+        }
+
+        .hero-visual {
+            position: relative;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-robot {
+            width: 190px;
+            height: 190px;
+            border-radius: 0;
+            display: block;
+            object-fit: contain;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            position: relative;
+            z-index: 2;
+            animation: flyAcrossScreen 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards, bob 3s ease-in-out 1.4s infinite;
+            filter: drop-shadow(0 12px 24px rgba(17, 42, 112, 0.12));
+            opacity: 0;
+            transform: translate(-220px, -220px) scale(0.8);
+        }
+
+        .hero-float {
+            position: absolute;
+            font-size: 28px;
+            animation: floatCloud 4.5s ease-in-out infinite;
+        }
+
+        .hero-float-1 {
+            top: 18px;
+            left: 18px;
+        }
+
+        .hero-float-2 {
+            bottom: 30px;
+            right: 28px;
+            animation-delay: 0.8s;
+        }
+
+        .hero-float-3 {
+            top: 40px;
+            right: 24px;
+            animation-delay: 1.2s;
+        }
+
         .tabs {
             display: flex;
-            gap: 0;
-            background: rgba(255,255,255,0.82);
-            border-radius: 20px;
-            padding: 6px;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 999px;
+            padding: 8px;
             margin-bottom: 26px;
             box-shadow: 0 18px 45px rgba(17, 43, 99, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(26, 115, 232, 0.12);
             backdrop-filter: blur(12px);
         }
 
         .tab-btn {
             flex: 1;
             padding: 14px 18px;
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
             font-size: 15px;
             font-weight: 700;
             color: #33496d;
             cursor: pointer;
-            border-radius: 18px;
+            border-radius: 999px;
             transition: transform 0.24s ease, color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
         }
 
         .tab-btn:hover {
-            background: rgba(26, 115, 232, 0.12);
+            background: rgba(26, 115, 232, 0.10);
             color: #0d4ea2;
             transform: translateY(-1px);
         }
@@ -315,11 +867,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         .create-post {
-            background: rgba(255, 255, 255, 0.96);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 255, 0.96));
             border-radius: 24px;
             padding: 24px;
-            box-shadow: 0 20px 40px rgba(17, 42, 112, 0.08);
-            border: 1px solid rgba(26, 115, 232, 0.12);
+            box-shadow: 0 20px 44px rgba(17, 42, 112, 0.10);
+            border: 1px solid rgba(26, 115, 232, 0.14);
             transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
@@ -512,11 +1064,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
 
         /* ===== SIDEBAR FILTER ===== */
         .filter-sidebar {
-            background: rgba(255, 255, 255, 0.96);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 255, 0.95));
             border-radius: 24px;
             padding: 20px 22px;
-            box-shadow: 0 20px 40px rgba(17, 42, 112, 0.08);
-            border: 1px solid rgba(26, 115, 232, 0.12);
+            box-shadow: 0 20px 44px rgba(17, 42, 112, 0.10);
+            border: 1px solid rgba(26, 115, 232, 0.14);
         }
 
         .filter-sidebar .filter-title {
@@ -592,10 +1144,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         .post-card {
-            background: rgba(255, 255, 255, 0.94);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(242, 248, 255, 0.96));
             border-radius: 26px;
             padding: 22px;
-            box-shadow: 0 28px 58px rgba(17, 42, 112, 0.10);
+            box-shadow: 0 24px 54px rgba(17, 42, 112, 0.10);
             transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
             position: relative;
             border: 1px solid rgba(26, 115, 232, 0.14);
@@ -917,11 +1469,25 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         @keyframes heartPop {
-            0% { transform: scale(1); }
-            25% { transform: scale(1.3); }
-            50% { transform: scale(0.9); }
-            75% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.3);
+            }
+
+            50% {
+                transform: scale(0.9);
+            }
+
+            75% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .comments-section {
@@ -1075,10 +1641,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         .event-card {
-            background: white;
-            border-radius: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #f5faff 100%);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 16px 36px rgba(17, 42, 112, 0.09);
             transition: 0.3s;
             cursor: pointer;
             border: 2px solid transparent;
@@ -1086,7 +1652,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
 
         .event-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 18px 44px rgba(17, 42, 112, 0.16);
             border-color: #1a73e8;
         }
 
@@ -1107,6 +1673,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             color: #1a1a2e;
             margin-bottom: 4px;
             display: -webkit-box;
+            line-clamp: 1;
             -webkit-line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1116,6 +1683,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             font-size: 13px;
             color: #666;
             display: -webkit-box;
+            line-clamp: 2;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1576,13 +2144,14 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         .movie-card {
-            background: white;
-            border-radius: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #f5faff 100%);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 16px 36px rgba(17, 42, 112, 0.09);
             cursor: default;
             transition: 0.3s;
             position: relative;
+            border: 1px solid rgba(26, 115, 232, 0.12);
         }
 
         .movie-card.locked {
@@ -1629,8 +2198,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         .movie-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 20px 40px rgba(17, 42, 112, 0.16);
+            border-color: rgba(26, 115, 232, 0.25);
         }
 
         .movie-card img {
@@ -1648,6 +2218,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             margin-bottom: 4px;
             color: #1a1a2e;
             display: -webkit-box;
+            line-clamp: 1;
             -webkit-line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1657,6 +2228,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             font-size: 13px;
             color: #666;
             display: -webkit-box;
+            line-clamp: 2;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1711,6 +2283,47 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             background: #c62828;
         }
 
+        @keyframes floatCloud {
+
+            0%,
+            100% {
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate3d(8px, -12px, 0) scale(1.04);
+            }
+        }
+
+        @keyframes bob {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        @keyframes flyAcrossScreen {
+            0% {
+                opacity: 0;
+                transform: translate(-220px, -220px) scale(0.8);
+            }
+
+            40% {
+                opacity: 1;
+                transform: translate(40px, 30px) scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
         .loading-spinner {
             text-align: center;
             padding: 60px 20px;
@@ -1728,8 +2341,13 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .report-fab {
@@ -1915,7 +2533,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             text-align: left;
             pointer-events: none;
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.24);
+            border: 1px solid rgba(255, 255, 255, 0.24);
         }
 
         .toast-report.show {
@@ -2110,6 +2728,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 opacity: 0;
                 transform: scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
@@ -2121,6 +2740,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 transform: translateY(30px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -2131,6 +2751,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -2358,9 +2979,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             .modal-box {
                 padding: 20px 16px;
             }
+
             .modal-box h2 {
                 font-size: 18px;
             }
+
             .modal-box .action-row {
                 flex-direction: column;
             }
@@ -2374,19 +2997,24 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 max-width: 100%;
                 padding: 0 16px;
             }
+
             .newsfeed-sidebar-mobile {
                 display: block;
             }
+
             .newsfeed-sidebar-desktop {
                 display: none;
             }
+
             .newsfeed-wrapper {
                 flex-direction: column;
             }
+
             .filter-sidebar .filter-btn-group {
                 flex-direction: row;
                 flex-wrap: wrap;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn {
                 width: auto;
                 flex: 1;
@@ -2395,15 +3023,19 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 padding: 8px 12px;
                 font-size: 13px;
             }
+
             .movie-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
             .event-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
             .movie-layout {
                 grid-template-columns: 1fr;
             }
+
             .movie-categories {
                 position: relative;
                 top: 0;
@@ -2412,25 +3044,30 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 gap: 6px;
                 padding: 14px 16px;
             }
+
             .movie-categories .category-title {
                 width: 100%;
                 margin-bottom: 6px;
                 font-size: 14px;
                 padding-bottom: 6px;
             }
+
             .movie-categories .category-list {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 4px;
             }
+
             .movie-categories .category-list li {
                 padding: 5px 14px;
                 font-size: 13px;
                 border-radius: 20px;
             }
+
             .movie-categories .category-list li .count {
                 display: none;
             }
+
             .report-fab {
                 width: 50px;
                 height: 50px;
@@ -2444,68 +3081,87 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             .container {
                 padding: 0 12px;
             }
+
             .logo {
                 font-size: 18px;
             }
+
             .logo img {
                 height: 32px;
             }
+
             .post-footer button {
                 padding: 6px 10px;
                 font-size: 12px;
             }
+
             .post-actions {
                 gap: 8px;
                 flex-wrap: wrap;
             }
+
             .post-actions button {
                 font-size: 13px;
                 padding: 4px 8px;
             }
+
             .create-post-top textarea {
                 font-size: 14px;
             }
+
             #authStatus .user-name {
                 display: none;
             }
+
             .movie-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 12px;
             }
+
             .movie-card img {
                 height: 140px;
             }
+
             .event-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
             .event-card .event-poster {
                 height: 140px;
             }
+
             .dashboard-link {
                 font-size: 11px;
                 padding: 4px 10px;
             }
+
             .verified-badge {
                 font-size: 8px;
                 padding: 0px 5px;
             }
+
             .movie-toolbar {
                 flex-direction: column;
             }
+
             .contact-btn {
                 width: 100%;
                 justify-content: center;
             }
+
             .search-box {
                 width: 100%;
             }
+
             .search-box-wrapper {
                 width: 100%;
                 min-width: unset;
             }
+
             .report-modal {
                 padding: 24px 20px;
             }
+
             .report-fab {
                 width: 44px;
                 height: 44px;
@@ -2513,20 +3169,25 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 bottom: 16px;
                 right: 16px;
             }
+
             .movie-card .movie-info .view-link {
                 font-size: 12px;
                 padding: 4px 12px;
             }
+
             .event-popup {
                 max-width: 100%;
                 border-radius: 12px;
             }
+
             .event-popup .event-popup-body {
                 padding: 16px;
             }
+
             .event-popup .event-popup-body .title {
                 font-size: 20px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn {
                 min-width: 80px;
                 font-size: 12px;
@@ -2538,48 +3199,62 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             .movie-grid {
                 grid-template-columns: 1fr;
             }
+
             .event-grid {
                 grid-template-columns: 1fr;
             }
+
             .movie-card img {
                 height: 180px;
             }
+
             .event-card .event-poster {
                 height: 180px;
             }
+
             .movie-categories .category-list li {
                 font-size: 11px;
                 padding: 3px 10px;
             }
+
             .empty-state {
                 padding: 40px 16px;
             }
+
             .empty-state .icon {
                 font-size: 50px;
             }
+
             .empty-state h3 {
                 font-size: 18px;
             }
+
             .upload-preview img,
             .upload-preview video {
                 max-height: 200px;
             }
+
             .verified-badge {
                 font-size: 7px;
                 padding: 0px 4px;
             }
+
             .account-deleted-content {
                 padding: 30px 20px;
             }
+
             .login-required-popup {
                 padding: 30px 20px;
             }
+
             .report-modal {
                 padding: 20px 16px;
             }
+
             .report-modal .modal-header h2 {
                 font-size: 18px;
             }
+
             .report-fab {
                 width: 40px;
                 height: 40px;
@@ -2587,28 +3262,90 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 bottom: 12px;
                 right: 12px;
             }
+
             .modal-box {
                 padding: 16px;
             }
+
             .modal-box h2 {
                 font-size: 17px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn {
                 min-width: 60px;
                 font-size: 11px;
                 padding: 4px 8px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn .badge {
                 font-size: 9px;
                 padding: 0 4px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn .icon {
                 font-size: 14px;
             }
         }
     </style>
 </head>
+
 <body>
+    <div class="page-loading-overlay" id="pageLoadingOverlay" aria-hidden="true">
+        <img class="flight-image" id="flightImage" src="story_plane_dora.png" alt="Loading">
+
+    </div>
+
+    <!-- ===== DORAEMON PAINTER SLIDE-IN MODAL ===== -->
+    <div class="doraemon-modal-overlay" id="doraemonNotification" role="dialog" aria-modal="true"
+        aria-labelledby="doraemonBoardTitle">
+        <div class="doraemon-modal-backdrop" onclick="closeDoraemonNotification()"></div>
+
+        <div class="doraemon-modal-card">
+            <!-- Doraemon Artist Mascot holding paintbrush -->
+            <div class="doraemon-artist-wrapper">
+                <img class="doraemon-artist-img" src="doraemon_ve.png" alt="Doraemon Họa Sĩ" loading="eager">
+                <div class="paint-sparkle p1">✨</div>
+                <div class="paint-sparkle p2">🎨</div>
+            </div>
+
+            <!-- Main Canvas Board painted by Doraemon -->
+            <div class="doraemon-board-canvas">
+                <!-- Red Collar Header with Bell & Close button -->
+                <div class="doraemon-board-header">
+                    <div class="doraemon-bell-badge">
+                        <span class="bell-icon">🔔</span>
+                    </div>
+                    <div class="board-header-title" id="doraemonBoardTitle">
+                        <span>THÔNG BÁO</span>
+                    </div>
+                    <button class="dora-close-btn" id="closeDoraemonModalBtn" onclick="closeDoraemonNotification()"
+                        aria-label="Đóng thông báo">
+                        <span aria-hidden="true">✕</span>
+                    </button>
+                </div>
+
+                <!-- Body Content -->
+                <div class="doraemon-board-body">
+                    <h3 class="board-welcome-title"> Chào mừng bạn đến với Doraemon Fansub!</h3>
+                    <p class="board-welcome-text">
+                        Cảm ơn bạn đã ghé thăm <strong>Doraemon Fansub Việt Nam</strong>.
+                        Fanpage Dora FanClub đã bị mất, các bạn hãy vào ủng hộ Fanpage mới ở dưới!
+                    </p>
+
+                    <div class="board-action-buttons">
+                        <a href="https://www.facebook.com/profile.php?id=61590244395004"
+                            onclick="closeDoraemonNotification(); if(typeof switchTab==='function') switchTab('movies');"
+                            class="btn-dora-primary">
+                            Fanpage
+                        </a>
+                        <button onclick="closeDoraemonNotification()" class="btn-dora-outline">
+                            Xem phim ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== ACCOUNT DELETED MODAL ===== -->
     <div class="account-deleted-modal" id="accountDeletedModal">
@@ -2620,7 +3357,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 <strong>Vui lòng liên hệ page để được hỗ trợ khôi phục.</strong>
             </p>
             <div class="action-group">
-                <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank" rel="noopener noreferrer" class="btn-facebook">
+                <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank" rel="noopener noreferrer"
+                    class="btn-facebook">
                     💬 Liên hệ Facebook
                 </a>
                 <button onclick="closeAccountDeletedModal()" class="btn-close-modal">
@@ -2661,6 +3399,28 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         <div class="container">
 
             <!-- ===== TABS ===== -->
+            <section class="hero-panel" aria-label="Giới thiệu Doraemon Fansub">
+                <div class="hero-copy">
+                    <div class="hero-badge">Doraemon Fansub Việt Nam</div>
+                    <h1 class="hero-title">Mỗi ngày là một cuộc phiêu lưu mới cùng <span>Doraemon</span></h1>
+                    <p class="hero-subtitle">Xem phim, chia sẻ khoảnh khắc và kết nối cùng những người yêu thích
+                        Doraemon trong một không gian sáng đẹp, ấm áp và đầy màu sắc.
+
+                    </p>
+                    <div class="hero-tags">
+                        <span><i class="fa-solid fa-film"></i> Phim mới</span>
+                        <span><i class="fa-solid fa-comment"></i> Bài viết vui</span>
+                        <span><i class="fa-solid fa-calendar-alt"></i> Sự kiện hot</span>
+                    </div>
+                </div>
+                <div class="hero-visual" aria-hidden="true">
+                    <img class="hero-robot" src="story_plane_dora.png" alt="Robot">
+                    <div class="hero-float hero-float-1">☁️</div>
+                    <div class="hero-float hero-float-2">⭐</div>
+                    <div class="hero-float hero-float-3">🌤️</div>
+                </div>
+            </section>
+
             <div class="tabs">
                 <button class="tab-btn active" data-tab="newsfeed"><i class="fas fa-newspaper"></i> Mới nhất</button>
                 <button class="tab-btn" data-tab="movies"><i class="fa-solid fa-film"></i> Phim</button>
@@ -2680,7 +3440,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                                 <span class="badge" id="badgeAll">0</span>
                             </button>
                             <button class="filter-btn" data-filter="pinned" onclick="applyFilter('pinned')">
-                               <span class="icon"><i class="fa-solid fa-thumbtack"></i></span> Đã ghim
+                                <span class="icon"><i class="fa-solid fa-thumbtack"></i></span> Đã ghim
                                 <span class="badge" id="badgePinned">0</span>
                             </button>
                             <button class="filter-btn" data-filter="liked" onclick="applyFilter('liked')">
@@ -2715,14 +3475,14 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                             <div class="create-post-bottom">
                                 <div class="post-actions">
                                     <button onclick="openUploadWidget('image')">
-    <i class="fa-solid fa-paperclip"></i> Ảnh
-</button>
-                       <button onclick="openUploadWidget('video')">
-    <i class="fas fa-video"></i> Video
-</button>
+                                        <i class="fa-solid fa-paperclip"></i> Ảnh
+                                    </button>
+                                    <button onclick="openUploadWidget('video')">
+                                        <i class="fas fa-video"></i> Video
+                                    </button>
                                     <button onclick="showToast('😊 Chức năng đang phát triển!')">
-    <i class="fas fa-smile"></i> Cảm xúc
-</button>
+                                        <i class="fas fa-smile"></i> Cảm xúc
+                                    </button>
                                 </div>
                                 <button class="post-btn" onclick="createPost()">Đăng</button>
                             </div>
@@ -2764,22 +3524,28 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                     <div class="movie-categories">
                         <div class="category-title"><i class="fas fa-folder-open"></i>Phân loại</div>
                         <ul class="category-list" id="categoryList">
-                            <li class="active" data-category="all"><i class="fas fa-border-all"></i> Tất cả <span class="count" id="countAll">0</span></li>
-                            <li data-category="movie"><i class="fas fa-play-circle"></i> Movie <span class="count" id="countMovie">0</span></li>
-                            <li data-category="short"><i class="fas fa-clapperboard"></i> Short Movie <span class="count" id="countShort">0</span></li>
-                            <li data-category="seri"><i class="fas fa-tv"></i> Seri <span class="count" id="countSeri">0</span></li>
+                            <li class="active" data-category="all"><i class="fas fa-border-all"></i> Tất cả <span
+                                    class="count" id="countAll">0</span></li>
+                            <li data-category="movie"><i class="fas fa-play-circle"></i> Movie <span class="count"
+                                    id="countMovie">0</span></li>
+                            <li data-category="short"><i class="fas fa-clapperboard"></i> Short Movie <span
+                                    class="count" id="countShort">0</span></li>
+                            <li data-category="seri"><i class="fas fa-tv"></i> Seri <span class="count"
+                                    id="countSeri">0</span></li>
                         </ul>
                     </div>
                     <div>
                         <div class="movie-toolbar">
                             <div class="search-box-wrapper">
                                 <div class="search-box">
-                                    <input type="text" id="movieSearch" placeholder="🔍 Tìm kiếm phim theo tên, thể loại..." oninput="searchMovies()">
+                                    <input type="text" id="movieSearch"
+                                        placeholder="🔍 Tìm kiếm phim theo tên, thể loại..." oninput="searchMovies()">
                                     <button class="search-btn" onclick="searchMovies()">🔍</button>
                                 </div>
                                 <button class="clear-search" id="clearSearchBtn" onclick="clearSearch()">✕</button>
                             </div>
-                            <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank" rel="noopener noreferrer" class="contact-btn">
+                            <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank"
+                                rel="noopener noreferrer" class="contact-btn">
                                 💬 Liên hệ
                             </a>
                         </div>
@@ -2797,7 +3563,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             <div id="tab-events" class="tab-content">
                 <div style="margin-bottom: 20px;">
                     <h2 style="font-size: 24px; font-weight: 700; color: #1a1a2e;">🎮 Sự kiện & Mini Game</h2>
-                    <p style="color: #666; margin-top: 4px;">Tham gia các sự kiện và mini game hấp dẫn từ cộng đồng Doraemon!</p>
+                    <p style="color: #666; margin-top: 4px;">Tham gia các sự kiện và mini game hấp dẫn từ cộng đồng
+                        Doraemon!</p>
                 </div>
                 <div class="event-grid" id="eventGrid">
                     <div class="loading-spinner">
@@ -2871,7 +3638,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                 </div>
                 <div class="form-group">
                     <label>Đường dẫn (URL)</label>
-                    <input type="url" id="reportUrl" placeholder="https://doraemonfansub.com/..." value="https://doraemonfansub.com/" />
+                    <input type="url" id="reportUrl" placeholder="https://doraemonfansub.com/..."
+                        value="https://doraemonfansub.com/" />
                 </div>
                 <div class="form-group">
                     <label>Email liên hệ</label>
@@ -2925,6 +3693,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         let isLoggedIn = false;
         let isAdmin = false;
         let currentUserEmail = '';
+        let authReady = false;
         let adminEmails = new Set();
 
         // ============================================================
@@ -3049,14 +3818,83 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         // TỰ ĐỘNG MỞ TAB THEO URL HASH
         // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
+        function startLoadingOverlay() {
+            const overlay = document.getElementById('pageLoadingOverlay');
+            const flightImage = document.getElementById('flightImage');
+            const heroRobot = document.querySelector('.hero-robot');
+
+            if (!overlay || !flightImage) {
+                return;
+            }
+
+            if (heroRobot) {
+                heroRobot.classList.add('hidden-by-loading');
+            }
+
+            const startX = window.innerWidth * 0.08;
+            const startY = -120;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            flightImage.style.left = `${startX}px`;
+            flightImage.style.top = `${startY}px`;
+            flightImage.classList.remove('animate');
+
+            requestAnimationFrame(() => {
+                flightImage.style.left = `${centerX}px`;
+                flightImage.style.top = `${centerY}px`;
+                flightImage.classList.add('animate');
+            });
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                if (heroRobot) {
+                    heroRobot.classList.remove('hidden-by-loading');
+                }
+                setTimeout(() => {
+                    overlay.remove();
+                    showDoraemonNotification();
+                }, 400);
+            }, 1250);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
             const hash = window.location.hash.replace('#', '');
             if (hash && (hash === 'newsfeed' || hash === 'movies' || hash === 'events')) {
                 switchTab(hash);
             }
+            startLoadingOverlay();
         });
 
-        window.addEventListener('hashchange', function() {
+        function showDoraemonNotification() {
+            const notification = document.getElementById('doraemonNotification');
+            if (notification) {
+                notification.classList.remove('hidden');
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 100);
+            }
+        }
+
+        function closeDoraemonNotification() {
+            const notification = document.getElementById('doraemonNotification');
+            if (notification) {
+                notification.classList.remove('show');
+                notification.classList.add('hidden');
+                setTimeout(() => {
+                    notification.style.visibility = 'hidden';
+                }, 400);
+            }
+        }
+
+        // Đóng modal bằng phím ESC
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeDoraemonNotification();
+            }
+        });
+
+        window.addEventListener('hashchange', function () {
             const hash = window.location.hash.replace('#', '');
             if (hash && (hash === 'newsfeed' || hash === 'movies' || hash === 'events')) {
                 switchTab(hash);
@@ -3067,7 +3905,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // GẮN SỰ KIỆN CHO CÁC NÚT TAB
         // ============================================================
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const tab = this.dataset.tab;
                 switchTab(tab);
             });
@@ -3145,7 +3983,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         function showAccountDeletedModal() {
             accountDeletedModal.classList.add('active');
-            auth.signOut().catch(() => {});
+            auth.signOut().catch(() => { });
         }
 
         // ============================================================
@@ -3160,7 +3998,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
 
         // Click outside để đóng
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const modal = document.getElementById('accountDeletedModal');
             if (modal && modal.classList.contains('active')) {
                 if (e.target === modal) {
@@ -3170,7 +4008,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         });
 
         // ESC để đóng
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeAccountDeletedModal();
                 closeEventPopup();
@@ -3180,10 +4018,28 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             }
         });
 
+        function waitForAuthUser() {
+            if (auth.currentUser) {
+                return Promise.resolve(auth.currentUser);
+            }
+
+            if (authReady) {
+                return Promise.resolve(null);
+            }
+
+            return new Promise((resolve) => {
+                const unsubscribe = auth.onAuthStateChanged((user) => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        }
+
         // ============================================================
         // AUTH STATE
         // ============================================================
         auth.onAuthStateChanged(async (user) => {
+            authReady = true;
             await loadAdminList();
 
             if (user) {
@@ -3219,6 +4075,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                     reportEmail.value = user.email || '';
                 }
 
+                if (tabCache.movies.loaded) {
+                    renderMoviesByCategory(currentCategory);
+                }
+
                 if (!tabCache.newsfeed.loaded) {
                     await loadPosts();
                     tabCache.newsfeed.loaded = true;
@@ -3248,6 +4108,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
                     reportEmail.value = '';
                 }
 
+                if (tabCache.movies.loaded) {
+                    renderMoviesByCategory(currentCategory);
+                }
+
                 if (!tabCache.newsfeed.loaded) {
                     await loadPosts();
                     tabCache.newsfeed.loaded = true;
@@ -3266,7 +4130,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         // LOGOUT
         // ============================================================
-        window.logoutUser = async function() {
+        window.logoutUser = async function () {
             try {
                 await auth.signOut();
                 window.location.reload();
@@ -3459,12 +4323,12 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         // TỰ ĐỘNG TĂNG CHIỀU CAO TEXTAREA
         // ============================================================
-        postInput.addEventListener('input', function() {
+        postInput.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 200) + 'px';
         });
 
-        postInput.addEventListener('keydown', function(e) {
+        postInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 createPost();
@@ -3741,7 +4605,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         // TOGGLE READ MORE
         // ============================================================
-        window.toggleReadMore = function(postId) {
+        window.toggleReadMore = function (postId) {
             const wrapper = document.getElementById(`content-wrapper-${postId}`);
             const btn = document.getElementById(`readmore-btn-${postId}`);
             if (!wrapper || !btn) return;
@@ -3951,7 +4815,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             if (!post) return;
             const content = post.querySelector('.post-content')?.textContent || '';
             if (navigator.share) {
-                navigator.share({ title: 'Doraemon', text: content }).catch(() => {});
+                navigator.share({ title: 'Doraemon', text: content }).catch(() => { });
             } else {
                 navigator.clipboard.writeText(content)
                     .then(() => showToast('📤 Đã sao chép nội dung!'))
@@ -4004,7 +4868,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         // SỬA BÀI VIẾT CÁ NHÂN (POPUP MODAL)
         // ============================================================
-        window.editUserPost = async function(postId) {
+        window.editUserPost = async function (postId) {
             if (!isLoggedIn) {
                 showToast('🔑 Vui lòng đăng nhập để sửa bài viết!', true);
                 window.location.href = 'login.html';
@@ -4086,7 +4950,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         closeEditPostModal?.addEventListener('click', closeEditPostModalFunc);
         cancelEditPostBtn?.addEventListener('click', closeEditPostModalFunc);
 
-        editPostModal?.addEventListener('click', function(e) {
+        editPostModal?.addEventListener('click', function (e) {
             if (e.target === this) closeEditPostModalFunc();
         });
 
@@ -4185,7 +5049,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         // SUBMIT SỬA BÀI VIẾT
         // ============================================================
-        submitEditPostBtn?.addEventListener('click', async function() {
+        submitEditPostBtn?.addEventListener('click', async function () {
             const content = editPostContent.value.trim();
 
             if (!content) {
@@ -4247,8 +5111,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         let currentMoviePage = 1;
         const moviesPerPage = 21;
 
-        function openMovieInNewTab(movieId) {
-            if (!isLoggedIn) {
+        async function openMovieInNewTab(movieId) {
+            const currentUser = await waitForAuthUser();
+            if (!currentUser) {
                 showLoginRequired();
                 return;
             }
@@ -4447,7 +5312,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
 
             let html = `<div class="movie-grid">`;
             pageMovies.forEach(m => {
-                const showLock = !isLoggedIn;
+                const showLock = authReady && !isLoggedIn;
 
                 html += `
                         <div class="movie-card ${showLock ? 'locked' : ''}">
@@ -4495,7 +5360,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             clearSearchBtn.classList.remove('visible');
         }
 
-        window.changeMoviePage = function(page) {
+        window.changeMoviePage = function (page) {
             currentMoviePage = page;
             const html = renderMoviesByCategoryHTML(currentCategory, currentMoviePage);
             movieList.innerHTML = html;
@@ -4503,7 +5368,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             window.scrollTo({ top: document.getElementById('tab-movies').offsetTop - 80, behavior: 'smooth' });
         }
 
-        document.getElementById('categoryList').addEventListener('click', function(e) {
+        document.getElementById('categoryList').addEventListener('click', function (e) {
             const li = e.target.closest('li');
             if (!li) return;
 
@@ -4672,7 +5537,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
 
                 db.collection('events').doc(eventId).update({
                     views: (event.views || 0) + 1
-                }).catch(() => {});
+                }).catch(() => { });
 
                 const statusMap = {
                     'upcoming': '⏳ Sắp diễn ra',
@@ -4717,7 +5582,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             eventPopupContent.innerHTML = '';
         }
 
-        eventPopup.addEventListener('click', function(e) {
+        eventPopup.addEventListener('click', function (e) {
             if (e.target === this) closeEventPopup();
         });
 
@@ -4746,7 +5611,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             document.body.appendChild(overlay);
             document.body.style.overflow = 'hidden';
 
-            overlay.addEventListener('click', function(e) {
+            overlay.addEventListener('click', function (e) {
                 if (e.target === overlay) {
                     closeLoginRequiredPopup();
                 }
@@ -4764,7 +5629,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         // ============================================================
         // BÁO LỖI
         // ============================================================
-        reportFab.addEventListener('click', function() {
+        reportFab.addEventListener('click', function () {
             reportModal.classList.add('active');
             document.body.style.overflow = 'hidden';
             reportTitle.value = '';
@@ -4779,7 +5644,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             document.body.style.overflow = '';
         }
 
-        reportModal.addEventListener('click', function(e) {
+        reportModal.addEventListener('click', function (e) {
             if (e.target === reportModal) {
                 closeReportModal();
             }
@@ -4864,4 +5729,5 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         console.log('📌 Sử dụng URL hash để lưu trạng thái tab');
     </script>
 </body>
+
 </html>

@@ -531,6 +531,8 @@
         let movieId = null;
         let isLoggedIn = false;
         let isBanned = false;
+        let authReady = false;
+        let authStatePromise = null;
 
         function getMovieIdFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -548,9 +550,39 @@
             }
         }
 
+        function waitForAuthUser() {
+            if (auth.currentUser) {
+                authReady = true;
+                return Promise.resolve(auth.currentUser);
+            }
+
+            if (authReady) {
+                return Promise.resolve(null);
+            }
+
+            if (!authStatePromise) {
+                authStatePromise = new Promise((resolve) => {
+                    const unsubscribe = auth.onAuthStateChanged((user) => {
+                        authReady = true;
+                        unsubscribe();
+                        resolve(user);
+                    });
+                });
+            }
+
+            return authStatePromise;
+        }
+
         async function loadMovieDetail() {
             movieId = getMovieIdFromURL();
             const container = document.getElementById('movieContent');
+
+            container.innerHTML = `
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p style="color: #999; font-size: 16px;">Đang tải phim, vui lòng chờ...</p>
+                    </div>
+                `;
 
             if (!movieId) {
                 container.innerHTML = `
@@ -700,7 +732,22 @@
             }, 3000);
         }
 
-        auth.onAuthStateChanged(async (user) => {
+        let lastAuthUserId = null;
+        let authStateInitialized = false;
+
+        async function handleMovieAuthState(user) {
+            if (!user && !authReady) {
+                return;
+            }
+
+            const userId = user?.uid || null;
+            if (authStateInitialized && lastAuthUserId === userId) {
+                return;
+            }
+
+            lastAuthUserId = userId;
+            authStateInitialized = true;
+
             if (user) {
                 isBanned = await checkBannedUser(user.email);
                 if (isBanned) {
@@ -729,7 +776,17 @@
                         </div>
                     `;
             }
+        }
+
+        auth.onAuthStateChanged((user) => {
+            authReady = true;
+            handleMovieAuthState(user);
         });
+
+        (async function initializeMovieAuth() {
+            const initialUser = await waitForAuthUser();
+            await handleMovieAuthState(initialUser);
+        })();
 
         document.addEventListener('click', function(e) {
             const overlay = document.getElementById('loginRequiredOverlay');
