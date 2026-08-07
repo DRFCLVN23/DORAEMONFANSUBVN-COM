@@ -19,6 +19,11 @@
     <meta name="description" content="Xem phim Doraemon và nhiều bộ phim hay khác - Doraemon Fansub Việt Nam" />
     <meta name="keywords" content="Doraemon, Anime, Vietsub, Xem phim, Doraemon Fansub" />
     <meta name="robots" content="index, follow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
@@ -942,6 +947,7 @@
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
+            position: relative;
         }
 
         .post-actions button {
@@ -963,6 +969,191 @@
             background: rgba(26, 115, 232, 0.16);
             border-color: rgba(26, 115, 232, 0.28);
             transform: translateY(-1px);
+        }
+
+        /* ===== EMOJI PICKER POPOVER & MOBILE BOTTOM SHEET ===== */
+        .emoji-picker-popover {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 0;
+            z-index: 2000;
+            width: 350px;
+            max-width: 92vw;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1.5px solid rgba(26, 115, 232, 0.25);
+            box-shadow: 0 16px 48px rgba(13, 40, 95, 0.22);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: emojiPop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .emoji-picker-popover.active {
+            display: flex;
+        }
+
+        @keyframes emojiPop {
+            0% { opacity: 0; transform: translateY(12px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .emoji-picker-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+        }
+
+        .emoji-picker-title {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .emoji-picker-close {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: none !important;
+            color: white !important;
+            width: 26px;
+            height: 26px;
+            padding: 0 !important;
+            border-radius: 50% !important;
+            font-size: 14px !important;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .emoji-picker-close:hover {
+            background: rgba(255, 255, 255, 0.4) !important;
+            transform: scale(1.1) !important;
+        }
+
+        .emoji-picker-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+            background: #f0f4fa;
+            border-bottom: 1px solid rgba(26, 115, 232, 0.12);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .emoji-picker-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .emoji-tab-btn {
+            background: transparent !important;
+            border: none !important;
+            padding: 6px 10px !important;
+            border-radius: 12px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #4a5568 !important;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .emoji-tab-btn:hover {
+            background: rgba(26, 115, 232, 0.1) !important;
+            color: #1a73e8 !important;
+        }
+
+        .emoji-tab-btn.active {
+            background: #1a73e8 !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3) !important;
+        }
+
+        .emoji-picker-search {
+            padding: 8px 12px;
+            background: #ffffff;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .emoji-picker-search input {
+            width: 100%;
+            padding: 8px 14px;
+            border-radius: 16px;
+            border: 1px solid #cbd5e1;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .emoji-picker-search input:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+        }
+
+        .emoji-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            padding: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        .emoji-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            padding: 6px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.15s, background 0.15s;
+        }
+
+        .emoji-item:hover {
+            background: #e8f0fe;
+            transform: scale(1.3);
+        }
+
+        /* Mobile bottom sheet view */
+        @media (max-width: 600px) {
+            .emoji-picker-popover {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100vw;
+                max-width: 100vw;
+                border-radius: 24px 24px 0 0;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+                z-index: 100000;
+                animation: emojiSheetUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.2);
+            }
+
+            @keyframes emojiSheetUp {
+                0% { transform: translateY(100%); }
+                100% { transform: translateY(0); }
+            }
+
+            .emoji-picker-grid {
+                grid-template-columns: repeat(8, 1fr);
+                max-height: 280px;
+                padding: 12px;
+            }
+
+            .emoji-item {
+                font-size: 26px;
+                padding: 8px 0;
+            }
         }
 
         .post-btn {
@@ -1333,18 +1524,129 @@
 
         .post-image {
             width: 100%;
-            border-radius: 12px;
+            border-radius: 16px;
             margin: 10px 0;
-            max-height: 400px;
+            max-height: 440px;
             object-fit: cover;
+            cursor: zoom-in;
+            transition: transform 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .post-image:hover {
+            transform: scale(1.012);
+            filter: brightness(1.03);
+            box-shadow: 0 12px 30px rgba(17, 42, 112, 0.15);
         }
 
         .post-video {
             width: 100%;
-            border-radius: 12px;
+            border-radius: 16px;
             margin: 10px 0;
-            max-height: 400px;
+            max-height: 440px;
             background: #000;
+        }
+
+        /* ===== IMAGE LIGHTBOX MODAL ===== */
+        .image-lightbox-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-lightbox-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 20, 40, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .lightbox-content {
+            position: relative;
+            z-index: 2;
+            max-width: 92vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: lightboxZoom 0.35s cubic-bezier(0.2, 0.9, 0.2, 1);
+        }
+
+        @keyframes lightboxZoom {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            user-select: none;
+        }
+
+        .lightbox-close-btn {
+            position: absolute;
+            top: -48px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-close-btn:hover {
+            background: rgba(233, 69, 96, 0.9);
+            border-color: #e94560;
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .lightbox-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .lightbox-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-btn:hover {
+            background: #1a73e8;
+            border-color: #1a73e8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 115, 232, 0.4);
         }
 
         .post-stats {
@@ -3336,7 +3638,12 @@
                         <a href="https://www.facebook.com/profile.php?id=61590244395004"
                             onclick="closeDoraemonNotification(); if(typeof switchTab==='function') switchTab('movies');"
                             class="btn-dora-primary">
-                            Fanpage
+                            Fanpage 1
+                        </a>
+                        <a href="https://www.facebook.com/GocNhoCuaMeoUDorafanclubvietnam/"
+                            onclick="closeDoraemonNotification(); if(typeof switchTab==='function') switchTab('movies');"
+                            class="btn-dora-primary">
+                            Fanpage 2
                         </a>
                         <button onclick="closeDoraemonNotification()" class="btn-dora-outline">
                             Xem phim ngay
@@ -3474,15 +3781,36 @@
                             </div>
                             <div class="create-post-bottom">
                                 <div class="post-actions">
-                                    <button onclick="openUploadWidget('image')">
+                                    <button type="button" onclick="openUploadWidget('image')">
                                         <i class="fa-solid fa-paperclip"></i> Ảnh
                                     </button>
-                                    <button onclick="openUploadWidget('video')">
+                                    <button type="button" onclick="openUploadWidget('video')">
                                         <i class="fas fa-video"></i> Video
                                     </button>
-                                    <button onclick="showToast('😊 Chức năng đang phát triển!')">
+                                    <button type="button" id="emojiPickerBtn" onclick="toggleEmojiPicker(event)">
                                         <i class="fas fa-smile"></i> Cảm xúc
                                     </button>
+
+                                    <!-- Emoji Picker Popover -->
+                                    <div class="emoji-picker-popover" id="emojiPickerPopover">
+                                        <div class="emoji-picker-header">
+                                            <div class="emoji-picker-title">😊 Chọn biểu tượng cảm xúc</div>
+                                            <button type="button" class="emoji-picker-close" onclick="closeEmojiPicker()">✕</button>
+                                        </div>
+                                        <div class="emoji-picker-tabs">
+                                            <button type="button" class="emoji-tab-btn active" data-cat="smileys" onclick="switchEmojiTab('smileys', this)">😀 Biểu cảm</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="hearts" onclick="switchEmojiTab('hearts', this)">❤️ Cảm xúc</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="animals" onclick="switchEmojiTab('animals', this)">🐱 Động vật</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="food" onclick="switchEmojiTab('food', this)">🍕 Đồ ăn</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="activities" onclick="switchEmojiTab('activities', this)">🎮 Giải trí</button>
+                                        </div>
+                                        <div class="emoji-picker-search">
+                                            <input type="text" id="emojiSearchInput" placeholder="🔍 Tìm emoji (vd: cười, tim, mèo)..." oninput="filterEmojis()">
+                                        </div>
+                                        <div class="emoji-picker-grid" id="emojiPickerGrid">
+                                            <!-- Emojis populated by JS -->
+                                        </div>
+                                    </div>
                                 </div>
                                 <button class="post-btn" onclick="createPost()">Đăng</button>
                             </div>
@@ -3614,6 +3942,23 @@
                     <button type="button" class="btn-cancel" id="cancelEditPostBtn">❌ Hủy</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ===== LIGHTBOX PHÓNG TO ẢNH BÀI VIẾT ===== -->
+    <div class="image-lightbox-modal" id="imageLightboxModal" role="dialog" aria-modal="true">
+        <div class="lightbox-overlay" onclick="closeImageLightbox()"></div>
+        <div class="lightbox-content">
+            <button type="button" class="lightbox-close-btn" onclick="closeImageLightbox()" title="Đóng (ESC)">✕</button>
+            <img id="lightboxImage" src="" alt="Ảnh phóng to">
+            <div class="lightbox-actions">
+                <a id="lightboxDownloadBtn" href="" target="_blank" download rel="noopener noreferrer" class="lightbox-btn">
+                    <i class="fas fa-download"></i> Tải ảnh gốc
+                </a>
+                <button type="button" onclick="closeImageLightbox()" class="lightbox-btn" style="background:rgba(255,255,255,0.25);border:none;cursor:pointer;">
+                    ✕ Đóng
+                </button>
+            </div>
         </div>
     </div>
 
@@ -3776,6 +4121,14 @@
         // ============================================================
         // TAB SWITCH
         // ============================================================
+        function playHeroRobotAnimation() {
+            const heroRobot = document.querySelector('.hero-robot');
+            if (!heroRobot) return;
+            heroRobot.style.animation = 'none';
+            void heroRobot.offsetWidth;
+            heroRobot.style.animation = 'flyAcrossScreen 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards, bob 3s ease-in-out 1.4s infinite';
+        }
+
         function switchTab(tab) {
             currentTab = tab;
 
@@ -3800,6 +4153,10 @@
             }
 
             window.location.hash = tab;
+
+            if (tab === 'movies' || tab === 'events' || tab === 'newsfeed') {
+                playHeroRobotAnimation();
+            }
 
             if (!tabCache[tab].loaded) {
                 if (tab === 'movies') {
@@ -3887,10 +4244,37 @@
             }
         }
 
+        // ============================================================
+        // LIGHTBOX PHÓNG TO ẢNH BÀI VIẾT
+        // ============================================================
+        window.openImageLightbox = function (imgUrl) {
+            const modal = document.getElementById('imageLightboxModal');
+            const lightboxImg = document.getElementById('lightboxImage');
+            const downloadBtn = document.getElementById('lightboxDownloadBtn');
+
+            if (!modal || !lightboxImg) return;
+
+            lightboxImg.src = imgUrl;
+            if (downloadBtn) downloadBtn.href = imgUrl;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeImageLightbox = function () {
+            const modal = document.getElementById('imageLightboxModal');
+            if (!modal) return;
+
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
         // Đóng modal bằng phím ESC
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeDoraemonNotification();
+                closeImageLightbox();
+                closeEmojiPicker();
             }
         });
 
@@ -4526,7 +4910,7 @@
                 let fileHtml = '';
                 if (p.fileUrl) {
                     if (p.fileType === 'image') {
-                        fileHtml = `<img src="${p.fileUrl}" class="post-image" alt="Hình ảnh" loading="lazy">`;
+                        fileHtml = `<img src="${p.fileUrl}" class="post-image" alt="Hình ảnh" loading="lazy" onclick="openImageLightbox('${p.fileUrl}')" title="Click để xem ảnh phóng to">`;
                     } else if (p.fileType === 'video') {
                         fileHtml =
                             `<video controls class="post-video"><source src="${p.fileUrl}">Trình duyệt không hỗ trợ video</video>`;
@@ -5714,6 +6098,106 @@
             clearTimeout(toastReport._timer);
             toastReport._timer = setTimeout(() => toastReport.classList.remove('show'), 4000);
         }
+
+        // ============================================================
+        // BỘ CHỌN BIỂU TƯỢNG CẢM XÚC (EMOJI PICKER SYSTEM)
+        // ============================================================
+        const EMOJI_DATA = {
+            smileys: [
+                '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '🤬', '😈', '👿', '💀', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖'
+            ],
+            hearts: [
+                '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '✨', '🌟', '💫', '🔥', '💥', '⚡', '💯', '👍', '👎', '👏', '🙌', '🤲', '🤝', '👊', '✊', '🤛', '🤜', '🤞', '✌️', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '🖐️', '✋', '🖖', '🤏'
+            ],
+            animals: [
+                '🐱', '🐶', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐕', '🐩', '🐈', '🕊️', '🐇', '🐿️', '🐾'
+            ],
+            food: [
+                '🥞', '🧇', '🥓', '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🥙', '🧆', '🍳', '🥘', '🍲', '🥣', '🥗', '🍿', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯', '🍼', '🥛', '☕', '🍵', '🍶', '🍾', '🍷', '🍸', '🍹', '🍺', '🍻', '🥂', '🥃', '🥤', '🧃', '🍉', '🍊', '🍋', '🍌', '🍍', '🥭', '🍎', '🍏', '梨', '🍑', '🍒', '🍓', '🥝', '🍅', '🥥', '🥑', '🍆', '🥔', '🥕', '🌽', '🌶️', '🥒', '🥬', '🥦', '🧄', '🧅', '🍄', 'peanut', '🌰'
+            ],
+            activities: [
+                '🎮', '🎯', '🎲', '🎰', '🎳', '🎨', '🎭', '🎪', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎬', '🏹', '🥊', '🥋', '🎽', '🛹', '🛷', '⛸️', '🥌', '🎿', '⚽', '⚾', '🥎', '🏀', '🏐', '🏈', '🏉', '🎾', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🏏', '🥍', '⛳', '🎣', '🤿', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🎫', '🎟️'
+            ]
+        };
+
+        let currentEmojiTab = 'smileys';
+
+        function renderEmojis(tab = 'smileys', filterText = '') {
+            const grid = document.getElementById('emojiPickerGrid');
+            if (!grid) return;
+
+            let list = EMOJI_DATA[tab] || EMOJI_DATA.smileys;
+            if (filterText.trim()) {
+                const query = filterText.trim().toLowerCase();
+                const allList = Object.values(EMOJI_DATA).flat();
+                list = allList.filter(e => e.includes(query));
+            }
+
+            grid.innerHTML = list.map(emoji => `
+                <span class="emoji-item" onclick="selectEmoji('${emoji}')" title="${emoji}">${emoji}</span>
+            `).join('');
+        }
+
+        window.toggleEmojiPicker = function (e) {
+            if (e) e.stopPropagation();
+            const popover = document.getElementById('emojiPickerPopover');
+            if (!popover) return;
+
+            const isShowing = popover.classList.contains('active');
+            if (isShowing) {
+                closeEmojiPicker();
+            } else {
+                popover.classList.add('active');
+                renderEmojis(currentEmojiTab);
+            }
+        };
+
+        window.closeEmojiPicker = function () {
+            const popover = document.getElementById('emojiPickerPopover');
+            if (popover) popover.classList.remove('active');
+        };
+
+        window.switchEmojiTab = function (category, btnEl) {
+            currentEmojiTab = category;
+            document.querySelectorAll('.emoji-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const searchInput = document.getElementById('emojiSearchInput');
+            if (searchInput) searchInput.value = '';
+
+            renderEmojis(category);
+        };
+
+        window.filterEmojis = function () {
+            const searchInput = document.getElementById('emojiSearchInput');
+            const val = searchInput ? searchInput.value : '';
+            renderEmojis(currentEmojiTab, val);
+        };
+
+        window.selectEmoji = function (emoji) {
+            const postInput = document.getElementById('postInput');
+            if (!postInput) return;
+
+            const start = postInput.selectionStart || postInput.value.length;
+            const end = postInput.selectionEnd || postInput.value.length;
+            const text = postInput.value;
+
+            postInput.value = text.substring(0, start) + emoji + text.substring(end);
+            postInput.selectionStart = postInput.selectionEnd = start + emoji.length;
+            postInput.focus();
+
+            postInput.dispatchEvent(new Event('input'));
+            showToast('😊 Đã chọn biểu tượng ' + emoji);
+        };
+
+        document.addEventListener('click', function (e) {
+            const popover = document.getElementById('emojiPickerPopover');
+            if (popover && popover.classList.contains('active')) {
+                if (!popover.contains(e.target) && !e.target.closest('#emojiPickerBtn')) {
+                    closeEmojiPicker();
+                }
+            }
+        });
 
         // ============================================================
         // INIT
