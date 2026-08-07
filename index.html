@@ -996,8 +996,15 @@
         }
 
         @keyframes emojiPop {
-            0% { opacity: 0; transform: translateY(12px) scale(0.95); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
+            0% {
+                opacity: 0;
+                transform: translateY(12px) scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .emoji-picker-header {
@@ -1140,8 +1147,13 @@
             }
 
             @keyframes emojiSheetUp {
-                0% { transform: translateY(100%); }
-                100% { transform: translateY(0); }
+                0% {
+                    transform: translateY(100%);
+                }
+
+                100% {
+                    transform: translateY(0);
+                }
             }
 
             .emoji-picker-grid {
@@ -1584,8 +1596,15 @@
         }
 
         @keyframes lightboxZoom {
-            0% { transform: scale(0.85); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(0.85);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .lightbox-content img {
@@ -3795,17 +3814,25 @@
                                     <div class="emoji-picker-popover" id="emojiPickerPopover">
                                         <div class="emoji-picker-header">
                                             <div class="emoji-picker-title">😊 Chọn biểu tượng cảm xúc</div>
-                                            <button type="button" class="emoji-picker-close" onclick="closeEmojiPicker()">✕</button>
+                                            <button type="button" class="emoji-picker-close"
+                                                onclick="closeEmojiPicker()">✕</button>
                                         </div>
                                         <div class="emoji-picker-tabs">
-                                            <button type="button" class="emoji-tab-btn active" data-cat="smileys" onclick="switchEmojiTab('smileys', this)">😀 Biểu cảm</button>
-                                            <button type="button" class="emoji-tab-btn" data-cat="hearts" onclick="switchEmojiTab('hearts', this)">❤️ Cảm xúc</button>
-                                            <button type="button" class="emoji-tab-btn" data-cat="animals" onclick="switchEmojiTab('animals', this)">🐱 Động vật</button>
-                                            <button type="button" class="emoji-tab-btn" data-cat="food" onclick="switchEmojiTab('food', this)">🍕 Đồ ăn</button>
-                                            <button type="button" class="emoji-tab-btn" data-cat="activities" onclick="switchEmojiTab('activities', this)">🎮 Giải trí</button>
+                                            <button type="button" class="emoji-tab-btn active" data-cat="smileys"
+                                                onclick="switchEmojiTab('smileys', this)">😀 Biểu cảm</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="hearts"
+                                                onclick="switchEmojiTab('hearts', this)">❤️ Cảm xúc</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="animals"
+                                                onclick="switchEmojiTab('animals', this)">🐱 Động vật</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="food"
+                                                onclick="switchEmojiTab('food', this)">🍕 Đồ ăn</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="activities"
+                                                onclick="switchEmojiTab('activities', this)">🎮 Giải trí</button>
                                         </div>
                                         <div class="emoji-picker-search">
-                                            <input type="text" id="emojiSearchInput" placeholder="🔍 Tìm emoji (vd: cười, tim, mèo)..." oninput="filterEmojis()">
+                                            <input type="text" id="emojiSearchInput"
+                                                placeholder="🔍 Tìm emoji (vd: cười, tim, mèo)..."
+                                                oninput="filterEmojis()">
                                         </div>
                                         <div class="emoji-picker-grid" id="emojiPickerGrid">
                                             <!-- Emojis populated by JS -->
@@ -3848,43 +3875,68 @@
 
             <!-- ===== TAB MOVIES ===== -->
             <div id="tab-movies" class="tab-content">
-                <div class="movie-layout">
-                    <div class="movie-categories">
-                        <div class="category-title"><i class="fas fa-folder-open"></i>Phân loại</div>
-                        <ul class="category-list" id="categoryList">
-                            <li class="active" data-category="all"><i class="fas fa-border-all"></i> Tất cả <span
-                                    class="count" id="countAll">0</span></li>
-                            <li data-category="movie"><i class="fas fa-play-circle"></i> Movie <span class="count"
-                                    id="countMovie">0</span></li>
-                            <li data-category="short"><i class="fas fa-clapperboard"></i> Short Movie <span
-                                    class="count" id="countShort">0</span></li>
-                            <li data-category="seri"><i class="fas fa-tv"></i> Seri <span class="count"
-                                    id="countSeri">0</span></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <div class="movie-toolbar">
-                            <div class="search-box-wrapper">
-                                <div class="search-box">
-                                    <input type="text" id="movieSearch"
-                                        placeholder="🔍 Tìm kiếm phim theo tên, thể loại..." oninput="searchMovies()">
-                                    <button class="search-btn" onclick="searchMovies()">🔍</button>
-                                </div>
-                                <button class="clear-search" id="clearSearchBtn" onclick="clearSearch()">✕</button>
-                            </div>
-                            <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank"
-                                rel="noopener noreferrer" class="contact-btn">
-                                💬 Liên hệ
-                            </a>
-                        </div>
-                        <div id="movieList">
-                            <div class="loading-spinner">
-                                <div class="spinner"></div>
-                                <p>Đang tải phim...</p>
-                            </div>
-                        </div>
-                    </div>
+                <!-- MAINTENANCE BANNER -->
+                <div id="movies-maintenance-banner" style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-start;
+                    padding: 12px 24px 32px;
+                    text-align: center;
+                ">
+                    <img src="bao_tri.png" alt="Đang bảo trì" style="
+                        max-width: 700px;
+                        width: 100%;
+                        height: auto;
+                        display: block;
+                        margin: 0 auto;
+                        filter: drop-shadow(0 8px 32px rgba(80,60,180,0.35));
+                        animation: maintFloat 3s ease-in-out infinite;
+                    ">
+                    <div style="
+                        margin-top: 24px;
+                        font-size: 20px;
+                        font-weight: 900;
+                        letter-spacing: 4px;
+                        color: black;
+                        text-shadow: 0 0 24px rgba(167,139,250,0.7), 0 2px 8px rgba(0,0,0,0.5);
+                        animation: maintPulseText 2s ease-in-out infinite;
+                    "><i class="fa-solid fa-film"></i> KHO PHIM ĐANG BẢO TRÌ, VUI LÒNG QUAY LẠI SAU</div>
                 </div>
+                <style>
+                    @keyframes maintFloat {
+
+                        0%,
+                        100% {
+                            transform: translateY(0px);
+                        }
+
+                        50% {
+                            transform: translateY(-12px);
+                        }
+                    }
+
+                    @keyframes maintPulseText {
+
+                        0%,
+                        100% {
+                            opacity: 1;
+                        }
+
+                        50% {
+                            opacity: 0.65;
+                        }
+                    }
+                </style>
+                <!-- Hidden movie UI (không hiển thị, không load) -->
+                <div id="movieList" style="display:none;"></div>
+                <ul class="category-list" id="categoryList" style="display:none;"></ul>
+                <input type="text" id="movieSearch" style="display:none;">
+                <button id="clearSearchBtn" style="display:none;"></button>
+                <span id="countAll" style="display:none;">0</span>
+                <span id="countMovie" style="display:none;">0</span>
+                <span id="countShort" style="display:none;">0</span>
+                <span id="countSeri" style="display:none;">0</span>
             </div>
 
             <!-- ===== TAB EVENTS ===== -->
@@ -3949,13 +4001,16 @@
     <div class="image-lightbox-modal" id="imageLightboxModal" role="dialog" aria-modal="true">
         <div class="lightbox-overlay" onclick="closeImageLightbox()"></div>
         <div class="lightbox-content">
-            <button type="button" class="lightbox-close-btn" onclick="closeImageLightbox()" title="Đóng (ESC)">✕</button>
+            <button type="button" class="lightbox-close-btn" onclick="closeImageLightbox()"
+                title="Đóng (ESC)">✕</button>
             <img id="lightboxImage" src="" alt="Ảnh phóng to">
             <div class="lightbox-actions">
-                <a id="lightboxDownloadBtn" href="" target="_blank" download rel="noopener noreferrer" class="lightbox-btn">
+                <a id="lightboxDownloadBtn" href="" target="_blank" download rel="noopener noreferrer"
+                    class="lightbox-btn">
                     <i class="fas fa-download"></i> Tải ảnh gốc
                 </a>
-                <button type="button" onclick="closeImageLightbox()" class="lightbox-btn" style="background:rgba(255,255,255,0.25);border:none;cursor:pointer;">
+                <button type="button" onclick="closeImageLightbox()" class="lightbox-btn"
+                    style="background:rgba(255,255,255,0.25);border:none;cursor:pointer;">
                     ✕ Đóng
                 </button>
             </div>
@@ -4160,7 +4215,8 @@
 
             if (!tabCache[tab].loaded) {
                 if (tab === 'movies') {
-                    loadMovies();
+                    // KHO PHIM ĐANG BẢO TRÌ - không load dữ liệu
+                    // loadMovies();  <-- tạm thời tắt
                 }
                 if (tab === 'newsfeed') {
                     loadPosts();
