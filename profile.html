@@ -626,6 +626,26 @@
                         </div>
                         <button type="submit" class="btn-primary" id="saveBtn">💾 Lưu thay đổi</button>
                     </form>
+
+                    <div id="passwordSection" style="display:none; margin-top:24px;">
+                        <h3 style="margin-bottom:12px; font-size:16px; font-weight:600; color:#1a1a2e;">🔒 Đổi mật khẩu</h3>
+                        <form id="passwordForm" onsubmit="return false;">
+                            <div class="form-group">
+                                <label>Mật khẩu hiện tại</label>
+                                <input type="password" id="currentPassword" placeholder="Nhập mật khẩu hiện tại" />
+                            </div>
+                            <div class="form-group">
+                                <label>Mật khẩu mới</label>
+                                <input type="password" id="newPassword" placeholder="Tối thiểu 6 ký tự" />
+                            </div>
+                            <div class="form-group">
+                                <label>Xác nhận mật khẩu mới</label>
+                                <input type="password" id="confirmNewPassword" placeholder="Nhập lại mật khẩu mới" />
+                            </div>
+                            <button type="button" class="btn-primary" id="changePasswordBtn">🔒 Đổi mật khẩu</button>
+                        </form>
+                    </div>
+
                     <button class="btn-secondary" onclick="logoutUser()">🚪 Đăng xuất</button>
                 </div>
             </div>
@@ -689,6 +709,11 @@
         const editBio = document.getElementById('editBio');
         const saveBtn = document.getElementById('saveBtn');
         const editSection = document.getElementById('editSection');
+        const passwordSection = document.getElementById('passwordSection');
+        const currentPasswordInput = document.getElementById('currentPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
 
         const statPosts = document.getElementById('statPosts');
         const statLikes = document.getElementById('statLikes');
@@ -875,9 +900,16 @@
                 avatarOverlay.style.display = 'block';
                 editName.value = displayName;
                 editBio.value = data.bio || '';
+
+                if (currentUser.providerData.some(p => p.providerId === 'password')) {
+                    passwordSection.style.display = 'block';
+                } else {
+                    passwordSection.style.display = 'none';
+                }
             } else {
                 editSection.style.display = 'none';
                 avatarOverlay.style.display = 'none';
+                passwordSection.style.display = 'none';
             }
 
             if (viewingUserId) {
@@ -960,6 +992,69 @@
 
             saveBtn.disabled = false;
             saveBtn.textContent = '💾 Lưu thay đổi';
+        });
+
+        // ============================================================
+        // CHANGE PASSWORD
+        // ============================================================
+        changePasswordBtn?.addEventListener('click', async function() {
+            if (!currentUser || !isViewingSelf) {
+                showToast('⚠️ Bạn không có quyền đổi mật khẩu!', true);
+                return;
+            }
+
+            const currentPassword = currentPasswordInput.value.trim();
+            const newPassword = newPasswordInput.value.trim();
+            const confirmPassword = confirmNewPasswordInput.value.trim();
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('⚠️ Vui lòng điền đủ các trường mật khẩu!', true);
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showToast('⚠️ Mật khẩu mới và xác nhận không khớp!', true);
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showToast('⚠️ Mật khẩu mới phải ít nhất 6 ký tự.', true);
+                return;
+            }
+
+            changePasswordBtn.disabled = true;
+            changePasswordBtn.textContent = '⏳ Đang đổi mật khẩu...';
+
+            try {
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    currentUser.email,
+                    currentPassword
+                );
+
+                await currentUser.reauthenticateWithCredential(credential);
+                await currentUser.updatePassword(newPassword);
+
+                showToast('✅ Đổi mật khẩu thành công!');
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+                confirmNewPasswordInput.value = '';
+            } catch (e) {
+                console.error('Lỗi đổi mật khẩu:', e);
+                if (e.code === 'auth/wrong-password') {
+                    showToast('❌ Mật khẩu hiện tại không đúng.', true);
+                } else if (e.code === 'auth/weak-password') {
+                    showToast('❌ Mật khẩu quá yếu, hãy dùng ít nhất 6 ký tự.', true);
+                } else if (e.code === 'auth/requires-recent-login') {
+                    showToast('❌ Vui lòng đăng nhập lại để đổi mật khẩu.', true);
+                } else if (e.code === 'auth/invalid-credential') {
+                    showToast('❌ Thông tin xác thực không hợp lệ. Vui lòng thử lại.', true);
+                } else {
+                    showToast('❌ Đổi mật khẩu thất bại. Vui lòng thử lại sau.', true);
+                }
+            } finally {
+                changePasswordBtn.disabled = false;
+                changePasswordBtn.textContent = '🔒 Đổi mật khẩu';
+            }
         });
 
         // ============================================================
