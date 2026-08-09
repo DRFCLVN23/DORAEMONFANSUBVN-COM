@@ -550,6 +550,23 @@
             }
         }
 
+        const TWO_FACTOR_SESSION_KEY = 'twoFactorVerifiedUid';
+
+        function getTwoFactorVerifiedUid() {
+            return localStorage.getItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        async function getUserTwoFactorData(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.exists ? doc.data()?.twoFactor || null : null;
+            } catch (e) {
+                console.error('Lỗi kiểm tra 2FA:', e);
+                return null;
+            }
+        }
+
         function waitForAuthUser() {
             if (auth.currentUser) {
                 authReady = true;
@@ -749,6 +766,13 @@
             authStateInitialized = true;
 
             if (user) {
+                const twoFactor = await getUserTwoFactorData(user.uid);
+                if (twoFactor?.enabled && twoFactor.secret && getTwoFactorVerifiedUid() !== user.uid) {
+                    await auth.signOut();
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 isBanned = await checkBannedUser(user.email);
                 if (isBanned) {
                     showLoginRequired();

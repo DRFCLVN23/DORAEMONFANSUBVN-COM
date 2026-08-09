@@ -460,22 +460,13 @@
             animation: floatCloud 7s ease-in-out infinite;
         }
 
-        body::after {
-            bottom: -80px;
-            left: -60px;
-            width: 320px;
-            height: 320px;
-            background: radial-gradient(circle, rgba(26, 115, 232, 0.16), transparent 72%);
-            animation: floatCloud 8.5s ease-in-out infinite reverse;
-        }
-
         header {
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
-            padding: 18px 0;
+            background: linear-gradient(135deg, #67b7ff, #2f78c1);
+            padding: 8px 0;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 18px 60px rgba(18, 43, 107, 0.20);
+            box-shadow: 0 10px 30px rgba(18, 43, 107, 0.16);
             overflow: hidden;
         }
 
@@ -506,23 +497,68 @@
         }
 
         .logo {
-            display: flex;
+            position: relative;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            font-weight: 800;
-            color: white;
+            justify-content: center;
+            padding: 4px;
+            border-radius: 999px;
+            min-height: auto;
             text-decoration: none;
-            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 18px rgba(2, 6, 23, 0.10);
+            overflow: visible;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 999px;
+            background: conic-gradient(from 240deg, #ff3ec4, #6b36ff, #16b6ff, #48ff9a, #fff859, #ff7d2f, #ff3ec4);
+            opacity: 0.35;
+            filter: blur(14px);
+            z-index: -1;
+            animation: rainbowSpin 3.6s linear infinite;
+        }
+
+        .logo:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.18);
+        }
+
+        .logo:hover::after {
+            opacity: 0.5;
+        }
+
+        .logo:hover img {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 14px rgba(255, 235, 170, 0.6));
         }
 
         .logo img {
-            height: 44px;
+            display: block;
+            height: 48px;
             width: auto;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.35);
-            box-shadow: 0 0 18px rgba(255, 255, 255, 0.25);
+            max-width: 120px;
+            border-radius: 24px;
+            object-fit: contain;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 10px rgba(255, 235, 170, 0.35), 0 4px 12px rgba(0, 0, 0, 0.12);
+            transition: transform 0.25s ease, filter 0.25s ease;
+            filter: drop-shadow(0 0 8px rgba(255, 235, 170, 0.45));
+        }
+
+        .logo:hover img {
+            transform: scale(1.04);
+        }
+
+        @keyframes rainbowSpin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .header-actions {
@@ -3679,9 +3715,8 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <a href="index.html" class="logo">
+                <a href="index.html" class="logo" aria-label="Doraemon Fansub">
                     <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Doraemon Fansub" loading="lazy">
-                    Doraemon
                 </a>
                 <div class="header-actions">
                     <div id="authStatus">
@@ -4419,6 +4454,48 @@
             });
         }
 
+        const TWO_FACTOR_SESSION_KEY = 'twoFactorVerifiedUid';
+
+        function setTwoFactorVerifiedUid(uid) {
+            if (!uid) return;
+            localStorage.setItem(TWO_FACTOR_SESSION_KEY, uid);
+        }
+
+        function getTwoFactorVerifiedUid() {
+            return localStorage.getItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function clearTwoFactorVerifiedUid() {
+            localStorage.removeItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function isTwoFactorVerifiedForUser(uid) {
+            return uid && getTwoFactorVerifiedUid() === uid;
+        }
+
+        async function getUserTwoFactorData(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.exists ? doc.data()?.twoFactor || null : null;
+            } catch (e) {
+                console.error('Lỗi kiểm tra 2FA:', e);
+                return null;
+            }
+        }
+
+        async function ensureTwoFactorVerified(user) {
+            if (!user) return false;
+            const twoFactor = await getUserTwoFactorData(user.uid);
+            if (twoFactor?.enabled && twoFactor.secret) {
+                if (!isTwoFactorVerifiedForUser(user.uid)) {
+                    window.location.href = 'login.html';
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // ============================================================
         // AUTH STATE
         // ============================================================
@@ -4427,6 +4504,9 @@
             await loadAdminList();
 
             if (user) {
+                if (await ensureTwoFactorVerified(user)) {
+                    return;
+                }
                 const isBanned = await checkBannedUser(user.email);
                 if (isBanned) {
                     showAccountDeletedModal();
@@ -4516,6 +4596,7 @@
         // ============================================================
         window.logoutUser = async function () {
             try {
+                clearTwoFactorVerifiedUid();
                 await auth.signOut();
                 window.location.reload();
             } catch (error) {

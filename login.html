@@ -219,18 +219,18 @@
         }
 
         .logo img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
+            width: 120px;
+            height: auto;
+            border-radius: 0;
+            object-fit: contain;
             margin-bottom: 10px;
-            border: 3px solid #ffeb3b;
-            box-shadow: 0 8px 30px rgba(255, 235, 59, 0.2);
-            transition: transform 0.4s ease;
+            border: none;
+            box-shadow: none;
+            transition: transform 0.2s ease;
         }
 
         .logo img:hover {
-            transform: scale(1.05) rotate(-3deg);
+            transform: scale(1.03);
         }
 
         .logo h1 {
@@ -363,6 +363,34 @@
         }
 
         .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: #f1f5f9;
+            color: #1a1a2e;
+            border: 2px solid #d2e3fc;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-secondary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
@@ -553,6 +581,15 @@
             </div>
         </form>
 
+        <div id="twoFactorSection" style="display:none; margin-top:16px;">
+            <div class="form-group">
+                <label>🔐 Mã xác thực 2 lớp</label>
+                <input type="text" id="twoFactorCode" placeholder="Nhập mã 6 chữ số" maxlength="6" autocomplete="one-time-code" />
+            </div>
+            <button type="button" class="btn-primary" id="verifyTwoFactorBtn">✅ Xác thực 2 lớp</button>
+            <button type="button" class="btn-secondary" id="cancelTwoFactorBtn">↩️ Hủy và đăng nhập lại</button>
+        </div>
+
         <!-- REGISTER -->
         <form id="registerForm" onsubmit="return false;">
             <div class="form-group">
@@ -662,6 +699,125 @@
             successMsg.style.display = 'none';
         }
 
+        async function hmacSha1(keyBytes, messageBytes) {
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyBytes,
+                { name: 'HMAC', hash: 'SHA-1' },
+                false,
+                ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageBytes);
+            return new Uint8Array(signature);
+        }
+
+        function base32ToBytes(base32) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let bits = '';
+            let bytes = [];
+            base32 = base32.replace(/=+$/, '').toUpperCase();
+            for (let char of base32) {
+                const val = alphabet.indexOf(char);
+                if (val === -1) continue;
+                bits += val.toString(2).padStart(5, '0');
+            }
+            for (let i = 0; i + 8 <= bits.length; i += 8) {
+                bytes.push(parseInt(bits.slice(i, i + 8), 2));
+            }
+            return new Uint8Array(bytes);
+        }
+
+        function leftPad(str, length) {
+            return str.toString().padStart(length, '0');
+        }
+
+        async function verifyTOTP(secret, code) {
+            if (!secret || !code) return false;
+            code = code.trim();
+            const now = Math.floor(Date.now() / 1000 / 30);
+            for (let delta = -1; delta <= 1; delta++) {
+                const counter = now + delta;
+                const counterBytes = new ArrayBuffer(8);
+                const view = new DataView(counterBytes);
+                view.setUint32(4, counter, false);
+                const hash = await hmacSha1(base32ToBytes(secret), new Uint8Array(counterBytes));
+                const offset = hash[hash.length - 1] & 0xf;
+                const binary = ((hash[offset] & 0x7f) << 24) |
+                    ((hash[offset + 1] & 0xff) << 16) |
+                    ((hash[offset + 2] & 0xff) << 8) |
+                    (hash[offset + 3] & 0xff);
+                if (leftPad(binary % 10 ** 6, 6) === code) return true;
+            }
+            return false;
+        }
+
+        const TWO_FACTOR_SESSION_KEY = 'twoFactorVerifiedUid';
+
+        function setTwoFactorVerifiedUid(uid) {
+            if (!uid) return;
+            localStorage.setItem(TWO_FACTOR_SESSION_KEY, uid);
+        }
+
+        function getTwoFactorVerifiedUid() {
+            return localStorage.getItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function clearTwoFactorVerifiedUid() {
+            localStorage.removeItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function isTwoFactorVerifiedForUser(uid) {
+            return uid && getTwoFactorVerifiedUid() === uid;
+        }
+
+        async function getUserTwoFactorData(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.exists ? doc.data()?.twoFactor || null : null;
+            } catch (e) {
+                console.error('Lỗi kiểm tra 2FA:', e);
+                return null;
+            }
+        }
+
+        async function ensureLoginPageTwoFactorState(user) {
+            if (!user) return false;
+            const twoFactor = await getUserTwoFactorData(user.uid);
+            if (twoFactor?.enabled && twoFactor.secret) {
+                if (!isTwoFactorVerifiedForUser(user.uid)) {
+                    showTwoFactorStep(twoFactor.secret, user.uid);
+                    return true;
+                }
+            } else if (isTwoFactorVerifiedForUser(user.uid)) {
+                clearTwoFactorVerifiedUid();
+            }
+            return false;
+        }
+
+        let pending2faSecret = null;
+        let pending2faUid = null;
+        let twoFactorLoginInProgress = false;
+
+        function showTwoFactorStep(secret, userUid) {
+            pending2faSecret = secret;
+            pending2faUid = userUid;
+            twoFactorLoginInProgress = true;
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('twoFactorSection').style.display = 'block';
+            document.getElementById('twoFactorCode').value = '';
+            showSuccess('✅ Đăng nhập thành công. Vui lòng nhập mã 2FA.');
+        }
+
+        function resetTwoFactorStep() {
+            pending2faSecret = null;
+            pending2faUid = null;
+            twoFactorLoginInProgress = false;
+            document.getElementById('twoFactorSection').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('twoFactorCode').value = '';
+        }
+
         // ============================================================
         // KIỂM TRA BANNED
         // ============================================================
@@ -719,6 +875,7 @@
                 return;
             }
 
+            twoFactorLoginInProgress = true;
             showLoading();
             this.disabled = true;
 
@@ -735,6 +892,14 @@
                     }
 
                     await saveUserToFirestore(user, false);
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    const userData = userDoc.exists ? userDoc.data() : {};
+
+                    if (userData?.twoFactor?.enabled && userData.twoFactor.secret) {
+                        showTwoFactorStep(userData.twoFactor.secret, user.uid);
+                        return;
+                    }
+
                     showSuccess('✅ Đăng nhập thành công! Đang chuyển hướng...');
                     setTimeout(() => window.location.href = 'index.html', 1500);
                 })
@@ -774,6 +939,7 @@
             auth.signInWithPopup(provider)
                 .then(async (result) => {
                     const user = result.user;
+                    twoFactorLoginInProgress = true;
 
                     // Kiểm tra banned
                     const isBanned = await checkBannedUser(user.email);
@@ -784,6 +950,14 @@
                     }
 
                     await saveUserToFirestore(user, true);
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    const userData = userDoc.exists ? userDoc.data() : {};
+
+                    if (userData?.twoFactor?.enabled && userData.twoFactor.secret) {
+                        showTwoFactorStep(userData.twoFactor.secret, user.uid);
+                        return;
+                    }
+
                     showSuccess('✅ Đăng nhập thành công! Đang chuyển hướng...');
                     setTimeout(() => window.location.href = 'index.html', 1500);
                 })
@@ -944,10 +1118,45 @@
 
         document.getElementById('backToLogin2').addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('loginForm').style.display = 'block';
+            resetTwoFactorStep();
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('forgotForm').style.display = 'none';
             clearMessages();
+        });
+
+        document.getElementById('verifyTwoFactorBtn').addEventListener('click', async function() {
+            const code = document.getElementById('twoFactorCode').value.trim();
+            if (!pending2faUid || !pending2faSecret) {
+                showError('❌ Vui lòng nhập email và mật khẩu trước.');
+                resetTwoFactorStep();
+                return;
+            }
+            if (!code) {
+                showError('📝 Vui lòng nhập mã 2FA.');
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = '⏳ Đang xác thực...';
+
+            const valid = await verifyTOTP(pending2faSecret, code);
+            if (valid) {
+                setTwoFactorVerifiedUid(pending2faUid);
+                showSuccess('✅ Xác thực 2FA thành công! Đang chuyển hướng...');
+                setTimeout(() => window.location.href = 'index.html', 1500);
+            } else {
+                showError('❌ Mã 2FA không đúng. Vui lòng thử lại.');
+            }
+
+            this.disabled = false;
+            this.textContent = '✅ Xác thực 2 lớp';
+        });
+
+        document.getElementById('cancelTwoFactorBtn').addEventListener('click', async function() {
+            clearTwoFactorVerifiedUid();
+            await auth.signOut();
+            resetTwoFactorStep();
+            showError('✋ Đã hủy 2FA. Vui lòng đăng nhập lại.');
         });
 
         // ============================================================
@@ -981,6 +1190,13 @@
             }
         });
 
+        document.getElementById('twoFactorCode')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('verifyTwoFactorBtn').click();
+            }
+        });
+
         document.getElementById('registerConfirmPassword').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -998,8 +1214,13 @@
         // ============================================================
         // AUTH STATE - TỰ ĐỘNG CHUYỂN HƯỚNG
         // ============================================================
-        auth.onAuthStateChanged(function(user) {
-            if (user && window.location.pathname.includes('login.html')) {
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) return;
+
+            const requiresTwoFactor = await ensureLoginPageTwoFactorState(user);
+            if (requiresTwoFactor) return;
+
+            if (window.location.pathname.includes('login.html')) {
                 window.location.href = 'index.html';
             }
         });
