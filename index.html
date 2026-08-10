@@ -1914,6 +1914,31 @@
             color: #65676b;
         }
 
+        .comment-delete-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 8px;
+            transition: 0.2s;
+            margin-left: auto;
+            line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .comment-item:hover .comment-delete-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .comment-delete-btn:hover {
+            background: #fce8e6;
+            color: #c62828;
+        }
+
         .comment-input {
             display: flex;
             gap: 10px;
@@ -4363,19 +4388,30 @@
             return user.displayName || user.email?.split('@')[0] || 'Người dùng';
         }
 
+        // Lấy shortId từ Firestore, trả về chuỗi '#XXXXXXX'
         async function resolveUserName(user) {
-            if (!user) return 'Người dùng';
-            const fallbackName = getUserFallbackName(user);
-            if (user.displayName && user.displayName !== '') {
-                return user.displayName;
-            }
+            if (!user) return '#0000000';
             try {
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 const data = userDoc.data();
-                return data?.displayName || fallbackName;
+                if (data?.shortId) {
+                    return '#' + data.shortId;
+                }
             } catch (e) {
-                console.error('Lỗi lấy tên người dùng từ Firestore:', e);
-                return fallbackName;
+                console.error('Lỗi lấy shortId từ Firestore:', e);
+            }
+            // Fallback nếu chưa có shortId
+            return getUserFallbackName(user);
+        }
+
+        // Lấy shortId raw (không có #) từ Firestore
+        async function getShortId(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.data()?.shortId || null;
+            } catch (e) {
+                return null;
             }
         }
 
@@ -4731,9 +4767,11 @@
             try {
                 const user = auth.currentUser;
                 const currentUserName = await resolveUserName(user);
+                const currentShortId = await getShortId(user.uid);
                 const currentUserAvatar = user.photoURL || LOGO_URL;
                 const postData = {
                     user: currentUserName,
+                    shortId: currentShortId || '',
                     avatar: currentUserAvatar,
                     color: '1',
                     content: content || '📸 Chia sẻ hình ảnh',
@@ -4963,10 +5001,14 @@
                 const lineBreaks = (p.content || '').split('\n').length;
                 const isLongContent = contentLength > 300 || lineBreaks > 4;
 
-                const commentsHtml = await Promise.all((p.comments || []).map(async (c) => {
+                const commentsHtml = await Promise.all((p.comments || []).map(async (c, cIndex) => {
                     const isCommentAdmin = isUserAdmin(c.userEmail);
                     const commentProfileLink =
                         `profile.html?uid=${c.userId || ''}&email=${encodeURIComponent(c.userEmail || '')}`;
+                    const canDeleteComment = currentUserEmail && (
+                        c.userEmail === currentUserEmail || 
+                        isUserAdmin(currentUserEmail)
+                    );
                     return `
                             <div class="comment-item">
                                 <a href="${commentProfileLink}" class="avatar-link">
@@ -4975,10 +5017,11 @@
                                 <div class="comment-body">
                                     <div class="name">
                                         <a href="${commentProfileLink}" class="profile-link">
-                                            ${c.user || c.userEmail?.split('@')[0] || 'Người dùng'}
+                                            ${c.shortId ? '#' + c.shortId : (c.user || c.userEmail?.split('@')[0] || 'Người dùng')}
                                         </a>
                                         ${isCommentAdmin ? `<span class="verified-badge">✓ Admin</span>` : ''}
                                         <img src="${LOGO_URL}" class="logo-small" alt="logo" loading="lazy">
+                                        ${canDeleteComment ? `<button class="comment-delete-btn" onclick="deleteComment('${p.id}', ${cIndex})" title="Xóa bình luận">🗑️</button>` : ''}
                                     </div>
                                     <div class="text">${c.text || ''}</div>
                                     <div class="time">${c.time || 'Vừa xong'}</div>
@@ -5026,7 +5069,7 @@
                                 <div class="info">
                                     <div class="name">
                                         <a href="${profileLink}" class="profile-link">
-                                            ${p.user || p.userEmail?.split('@')[0] || 'Người dùng'}
+                                            ${p.shortId ? '#' + p.shortId : (p.user || p.userEmail?.split('@')[0] || 'Người dùng')}
                                         </a>
                                         ${isPostAdmin ? `<span class="verified-badge">✓ Admin</span>` : ''}
                                         <img src="${LOGO_URL}" class="logo-small" alt="logo" loading="lazy">
@@ -5067,6 +5110,53 @@
             }
             return html;
         }
+
+        // ============================================================
+        // XÓA BÌNH LUẬN
+        // ============================================================
+        window.deleteComment = async function (postId, commentIndex) {
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('🔑 Vui lòng đăng nhập!', true);
+                return;
+            }
+
+            if (!confirm('🗑️ Bạn có chắc muốn xóa bình luận này không?')) return;
+
+            try {
+                const docRef = db.collection('posts').doc(postId);
+                const doc = await docRef.get();
+                if (!doc.exists) return;
+
+                const data = doc.data();
+                const comments = data.comments || [];
+                const comment = comments[commentIndex];
+
+                if (!comment) {
+                    showToast('❌ Bình luận không tồn tại!', true);
+                    return;
+                }
+
+                // Kiểm tra quyền: chủ bình luận hoặc admin
+                const canDelete = comment.userEmail === user.email || isAdmin;
+                if (!canDelete) {
+                    showToast('⚠️ Bạn không có quyền xóa bình luận này!', true);
+                    return;
+                }
+
+                comments.splice(commentIndex, 1);
+                await docRef.update({ comments });
+
+                tabCache.newsfeed.loaded = false;
+                await loadPosts();
+                tabCache.newsfeed.loaded = true;
+
+                showToast('✅ Đã xóa bình luận!');
+            } catch (e) {
+                console.error('Lỗi xóa bình luận:', e);
+                showToast('❌ Xóa thất bại: ' + (e.message || ''), true);
+            }
+        };
 
         // ============================================================
         // TOGGLE READ MORE
@@ -5250,8 +5340,10 @@
                 const data = doc.data();
                 const comments = data.comments || [];
                 const commentUserName = await resolveUserName(user);
+                const commentShortId = await getShortId(user.uid);
                 comments.push({
                     user: commentUserName,
+                    shortId: commentShortId || '',
                     avatar: user.photoURL || LOGO_URL,
                     color: '1',
                     text: text,

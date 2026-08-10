@@ -425,6 +425,610 @@
             line-height: 1.6;
         }
 
+        .comment-section {
+            margin-top: 28px;
+            background: linear-gradient(135deg, rgba(26, 115, 232, 0.08), rgba(13, 71, 161, 0.08));
+            border: 1px solid rgba(26, 115, 232, 0.15);
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .comment-section h3 {
+            font-size: 18px;
+            margin-bottom: 14px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .comment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid rgba(26, 115, 232, 0.1);
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            min-height: 60px;
+            max-height: 140px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 12px;
+            background: rgba(10, 10, 10, 0.8);
+            color: white;
+            resize: vertical;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .comment-form textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+            background: rgba(20, 20, 30, 0.8);
+            box-shadow: 0 0 8px rgba(26, 115, 232, 0.2);
+        }
+
+        .image-preview-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+        }
+
+        .image-preview {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(26, 115, 232, 0.3);
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(255, 59, 48, 0.9);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comment-form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .reaction-picker {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reaction-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: white;
+            border-radius: 8px;
+            padding: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            gap: 4px;
+        }
+
+        .reaction-btn:hover {
+            background: rgba(26, 115, 232, 0.2);
+            transform: scale(1.05);
+        }
+
+        .reaction-btn.active {
+            background: rgba(26, 115, 232, 0.4);
+            border: 1px solid #1a73e8;
+        }
+
+        .reaction-btn img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .file-upload-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(26, 115, 232, 0.2);
+            color: white;
+            border: 1px solid rgba(26, 115, 232, 0.4);
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .file-upload-label:hover {
+            background: rgba(26, 115, 232, 0.3);
+            border-color: #1a73e8;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .comment-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-submit {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .comment-submit:hover {
+            background: linear-gradient(135deg, #1557b0, #0a3680);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+
+        .comment-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .comment-list {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .comment-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+            border-radius: 14px;
+            padding: 14px;
+            transition: 0.2s;
+        }
+
+        .comment-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(26, 115, 232, 0.3);
+        }
+
+        .comment-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .comment-user-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .comment-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a73e8, #42a5f5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .comment-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comment-user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .comment-user-name {
+            font-weight: 700;
+            color: white;
+            font-size: 14px;
+        }
+
+        .comment-time {
+            color: #9aa4b2;
+            font-size: 12px;
+        }
+
+        .comment-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .comment-btn {
+            background: none;
+            border: none;
+            color: #9aa4b2;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .comment-btn:hover {
+            color: #1a73e8;
+            background: rgba(26, 115, 232, 0.1);
+        }
+
+        .comment-image-container {
+            margin: 10px 0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .comment-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            border: 1px solid rgba(26, 115, 232, 0.2);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .comment-image:hover {
+            border-color: rgba(26, 115, 232, 0.4);
+            box-shadow: 0 0 12px rgba(26, 115, 232, 0.2);
+        }
+
+        .comment-text {
+            color: #e8ecf1;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 10px;
+        }
+
+        .comment-emotions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+        }
+
+        .comment-emotion-item {
+            background: rgba(26, 115, 232, 0.2);
+            border: 1px solid rgba(26, 115, 232, 0.3);
+            color: #1a73e8;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .comment-emotion-item img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .comment-emotion-picker-btn {
+            background: rgba(26, 115, 232, 0.1);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+            color: #1a73e8;
+            border-radius: 999px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comment-emotion-picker-btn:hover {
+            background: rgba(26, 115, 232, 0.2);
+            border-color: #1a73e8;
+        }
+
+        .emoji-picker-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 5000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .emoji-picker-modal.active {
+            display: flex;
+        }
+
+        .emoji-picker-content {
+            background: #1a1a2e;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 20px;
+            border-top: 1px solid rgba(26, 115, 232, 0.3);
+        }
+
+        .emoji-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .emoji-picker-header h3 {
+            font-size: 16px;
+            color: white;
+            font-weight: 700;
+        }
+
+        .emoji-picker-close {
+            background: none;
+            border: none;
+            color: #9aa4b2;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .emoji-picker-close:hover {
+            color: white;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+
+        .emoji-item {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            transition: 0.2s;
+        }
+
+        .emoji-item:hover {
+            background: rgba(26, 115, 232, 0.3);
+            border-color: #1a73e8;
+            transform: scale(1.1);
+        }
+
+        .reply-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            gap: 8px;
+        }
+
+        .reply-btn {
+            background: none;
+            border: none;
+            color: #1a73e8;
+            cursor: pointer;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .reply-btn:hover {
+            text-decoration: underline;
+            color: #42a5f5;
+        }
+
+        .view-replies-btn {
+            background: none;
+            border: none;
+            color: #1a73e8;
+            cursor: pointer;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .view-replies-btn:hover {
+            color: #42a5f5;
+        }
+
+        .replies-container {
+            margin-top: 12px;
+            margin-left: 24px;
+            padding-left: 12px;
+            border-left: 2px solid rgba(26, 115, 232, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .reply-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(26, 115, 232, 0.1);
+        }
+
+        .reply-form {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .reply-form-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a73e8, #42a5f5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            overflow: hidden;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+
+        .reply-form-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .reply-form-input-group {
+            display: flex;
+            flex: 1;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .reply-input {
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .reply-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .reply-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .reply-submit-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .reply-submit-btn:hover {
+            background: #1557b0;
+        }
+
+        .reply-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reply-cancel-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #9aa4b2;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .reply-cancel-btn:hover {
+            border-color: #9aa4b2;
+            color: white;
+        }
+
+        .comment-empty {
+            text-align: center;
+            color: #9aa4b2;
+            padding: 24px 0;
+            font-size: 14px;
+        }
+
         @media (max-width: 768px) {
             .movie-info h1 {
                 font-size: 22px;
@@ -527,12 +1131,20 @@
         const db = firebase.firestore();
 
         const LOGO_URL = 'https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png';
+        const REACTION_OPTIONS = [
+            { id: 'happy', label: 'Vui', image: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#FDD835"/><circle cx="24" cy="27" r="3" fill="#2C2C2C"/><circle cx="40" cy="27" r="3" fill="#2C2C2C"/><path d="M22 42c3 4 17 4 20 0" stroke="#2C2C2C" stroke-width="3" fill="none" stroke-linecap="round"/></svg>') },
+            { id: 'love', label: 'Yêu', image: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M32 55s-18-10.4-18-24a12 12 0 0 1 20-8 12 12 0 0 1 20 8c0 13.6-18 24-18 24Z" fill="#F06292"/></svg>') },
+            { id: 'wow', label: 'Wow', image: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#FFD54F"/><circle cx="24" cy="27" r="3" fill="#2C2C2C"/><circle cx="40" cy="27" r="3" fill="#2C2C2C"/><circle cx="32" cy="40" r="4" fill="#2C2C2C"/><path d="M21 21l4 4m18-4l-4 4" stroke="#2C2C2C" stroke-width="3" stroke-linecap="round"/></svg>') },
+            { id: 'sad', label: 'Buồn', image: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#8BC34A"/><circle cx="24" cy="27" r="3" fill="#2C2C2C"/><circle cx="40" cy="27" r="3" fill="#2C2C2C"/><path d="M22 44c3-4 17-4 20 0" stroke="#2C2C2C" stroke-width="3" fill="none" stroke-linecap="round"/></svg>') },
+            { id: 'fire', label: 'Hot', image: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M32 8c8 10 14 17 14 27a14 14 0 1 1-28 0c0-10 6-17 14-27Z" fill="#FF6F00"/><path d="M25 29c3 4 4 8 4 13h6c0-6-2-11-8-16Z" fill="#FFD54F"/></svg>') }
+        ];
         let currentMovie = null;
         let movieId = null;
         let isLoggedIn = false;
         let isBanned = false;
         let authReady = false;
         let authStatePromise = null;
+        let selectedCommentReaction = '';
 
         function getMovieIdFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -563,6 +1175,17 @@
                 return doc.exists ? doc.data()?.twoFactor || null : null;
             } catch (e) {
                 console.error('Lỗi kiểm tra 2FA:', e);
+                return null;
+            }
+        }
+
+        // Lấy shortId của user từ Firestore
+        async function getShortId(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.data()?.shortId || null;
+            } catch (e) {
                 return null;
             }
         }
@@ -677,6 +1300,7 @@
             if (metaTitle) metaTitle.content = `${movie.title || 'Xem phim'} - Doraemon Fansub`;
             if (metaDesc) metaDesc.content = movie.desc || 'Xem phim Doraemon và nhiều bộ phim hay khác';
 
+            const episodeLabel = movie.episode || movie.title || 'Tập phim';
             container.innerHTML = `
                     <div class="movie-player">
                         <div class="video-wrapper">
@@ -691,8 +1315,509 @@
                             </div>
                             <p class="desc">${movie.desc || ''}</p>
                         </div>
+
+                        <section class="comment-section">
+                            <h3>💬 Bình luận</h3>
+                            <form id="commentForm" class="comment-form" onsubmit="submitComment(event)">
+                                <textarea id="commentInput" placeholder="Viết bình luận của bạn..."></textarea>
+                                <div id="imagePreviewContainer" class="image-preview-container"></div>
+                                <div class="reaction-picker">
+                                    ${REACTION_OPTIONS.map(option => `
+                                        <button type="button" class="reaction-btn ${selectedCommentReaction === option.id ? 'active' : ''}" onclick="selectCommentReaction('${option.id}')" title="${option.label}">
+                                            <img src="${option.image}" alt="${option.label}">
+                                        </button>
+                                    `).join('')}
+                                </div>
+                                <div class="comment-form-actions">
+                                    <label class="file-upload-label">
+                                        📷 Thêm ảnh
+                                        <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageSelect(event)">
+                                    </label>
+                                    <button type="submit" class="comment-submit">Đăng</button>
+                                </div>
+                            </form>
+                            <div id="commentsList" class="comment-list"></div>
+                        </section>
+
+                        <!-- Emoji Picker Modal -->
+                        <div id="emojiPickerModal" class="emoji-picker-modal">
+                            <div class="emoji-picker-content">
+                                <div class="emoji-picker-header">
+                                    <h3>Bày tỏ cảm xúc</h3>
+                                    <button type="button" class="emoji-picker-close" onclick="closeEmojiPicker()">✕</button>
+                                </div>
+                                <div class="emoji-grid" id="emojiGrid"></div>
+                            </div>
+                        </div>
                     </div>
                 `;
+
+            loadComments(movie);
+        }
+
+        let selectedImages = [];
+        let replyingToCommentId = '';
+        let expandedReplies = new Set();
+
+        function handleImageSelect(event) {
+            const files = Array.from(event.target.files);
+            const container = document.getElementById('imagePreviewContainer');
+
+            files.forEach((file) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const data = {
+                            data: e.target.result,
+                            name: file.name,
+                            type: file.type
+                        };
+                        selectedImages.push(data);
+
+                        const preview = document.createElement('div');
+                        preview.className = 'image-preview';
+                        preview.innerHTML = `
+                            <img src="${data.data}" alt="preview">
+                            <button type="button" class="image-preview-remove" onclick="removeImage(${selectedImages.length - 1})">✕</button>
+                        `;
+                        container.appendChild(preview);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            event.target.value = '';
+        }
+
+        function removeImage(index) {
+            selectedImages.splice(index, 1);
+            const container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = selectedImages.map((img, i) => `
+                <div class="image-preview">
+                    <img src="${img.data}" alt="preview">
+                    <button type="button" class="image-preview-remove" onclick="removeImage(${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function selectCommentReaction(reactionId) {
+            selectedCommentReaction = selectedCommentReaction === reactionId ? '' : reactionId;
+            const buttons = document.querySelectorAll('.reaction-btn');
+            buttons.forEach((btn) => {
+                btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(`'${reactionId}'`) && selectedCommentReaction === reactionId);
+            });
+        }
+
+        async function loadComments(movie) {
+            const commentList = document.getElementById('commentsList');
+            if (!commentList) return;
+
+            commentList.innerHTML = '<div class="comment-empty">Đang tải bình luận...</div>';
+
+            try {
+                const snapshot = await db.collection('movie_comments')
+                    .where('movieId', '==', movieId)
+                    .get();
+
+                const comments = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => {
+                        const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                        const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                        return timeB - timeA;
+                    });
+
+                if (!comments.length) {
+                    commentList.innerHTML = '<div class="comment-empty">Chưa có bình luận nào. Hãy là người đầu tiên! 🎉</div>';
+                    return;
+                }
+
+                commentList.innerHTML = comments.map((comment) => {
+                    const timeText = comment.createdAt?.toDate
+                        ? new Date(comment.createdAt.toDate()).toLocaleString('vi-VN')
+                        : 'Vừa gửi';
+                    const displayId = comment.shortId
+                        ? '#' + comment.shortId
+                        : escapeHtml(comment.displayName || 'Người dùng');
+                    const userName = displayId;
+                    const userText = escapeHtml(comment.text || '');
+                    const isOwner = auth.currentUser?.uid === comment.userId;
+                    const avatarContent = comment.photoURL
+                        ? `<img src="${escapeHtml(comment.photoURL)}" alt="${displayId}">`
+                        : `<span>${(comment.shortId ? comment.shortId.charAt(0) : (comment.displayName || 'U').charAt(0)).toUpperCase()}</span>`;
+
+                    const imagesMarkup = comment.images && comment.images.length > 0
+                        ? `<div class="comment-image-container">${comment.images.map(img => 
+                            `<img src="${img.data}" alt="attachment" class="comment-image" onclick="openImageViewer('${img.data}')">`
+                          ).join('')}</div>`
+                        : '';
+
+                    const emotionCounts = comment.emotions || {};
+                    const hasEmotions = Object.keys(emotionCounts).length > 0;
+                    const emotionsMarkup = hasEmotions
+                        ? `<div class="comment-emotions">
+                            ${Object.entries(emotionCounts).map(([emotionId, users]) => {
+                                const emotion = REACTION_OPTIONS.find(r => r.id === emotionId);
+                                return emotion ? `
+                                    <div class="comment-emotion-item">
+                                        <img src="${emotion.image}" alt="${emotion.label}">
+                                        <span>${users.length}</span>
+                                    </div>
+                                ` : '';
+                            }).join('')}
+                            <button type="button" class="comment-emotion-picker-btn" onclick="openEmojiPicker('${comment.id}')">😊</button>
+                        </div>`
+                        : `<div class="comment-emotions">
+                            <button type="button" class="comment-emotion-picker-btn" onclick="openEmojiPicker('${comment.id}')">😊 Bày tỏ cảm xúc</button>
+                        </div>`;
+
+                    const replies = comment.replies || [];
+                    const hasReplies = replies.length > 0;
+                    const isReplyExpanded = expandedReplies.has(comment.id);
+                    
+                    const repliesMarkup = hasReplies ? `
+                        <div class="reply-section">
+                            <button type="button" class="view-replies-btn" onclick="toggleReplies('${comment.id}')">
+                                ${isReplyExpanded ? '▼' : '▶'} ${replies.length} trả lời
+                            </button>
+                        </div>
+                        ${isReplyExpanded ? `
+                            <div class="replies-container" id="replies-${comment.id}">
+                                ${replies.map(reply => {
+                                    const replyTimeText = reply.createdAt?.toDate
+                                        ? new Date(reply.createdAt.toDate()).toLocaleString('vi-VN')
+                                        : 'Vừa gửi';
+                                    const replyUserName = reply.shortId
+                                        ? '#' + escapeHtml(reply.shortId)
+                                        : escapeHtml(reply.displayName || 'Người dùng');
+                                    const replyText = escapeHtml(reply.text || '');
+                                    const replyAvatarContent = reply.photoURL
+                                        ? `<img src="${escapeHtml(reply.photoURL)}" alt="${replyUserName}">`
+                                        : `<span>${(reply.shortId || reply.displayName || 'U').charAt(0).toUpperCase()}</span>`;
+                                    const isReplyOwner = auth.currentUser?.uid === reply.userId;
+
+                                    return `
+                                        <div class="reply-item" id="reply-${reply.id}">
+                                            <div class="comment-head">
+                                                <div class="comment-user-section">
+                                                    <div class="comment-user-avatar">${replyAvatarContent}</div>
+                                                    <div class="comment-user-info">
+                                                        <div class="comment-user-name">${reply.shortId ? '#' + escapeHtml(reply.shortId) : escapeHtml(reply.displayName || 'Người dùng')}</div>
+                                                        <div class="comment-time">${replyTimeText}</div>
+                                                    </div>
+                                                </div>
+                                                ${isReplyOwner ? `
+                                                    <div class="comment-controls">
+                                                        <button type="button" class="comment-btn" onclick="deleteReply('${comment.id}', '${reply.id}')">🗑️ Xóa</button>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                            <div class="comment-text">${replyText}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : ''}
+                    ` : '';
+
+                    return `
+                        <article class="comment-item" id="comment-${comment.id}">
+                            <div class="comment-head">
+                                <div class="comment-user-section">
+                                    <div class="comment-user-avatar">${avatarContent}</div>
+                                    <div class="comment-user-info">
+                                        <div class="comment-user-name">${userName}</div>
+                                        <div class="comment-time">${timeText}</div>
+                                    </div>
+                                </div>
+                                ${isOwner ? `
+                                    <div class="comment-controls">
+                                        <button type="button" class="comment-btn" onclick="deleteComment('${comment.id}')">🗑️ Xóa</button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            ${userText ? `<div class="comment-text">${userText}</div>` : ''}
+                            ${imagesMarkup}
+                            ${emotionsMarkup}
+                            <div class="reply-section">
+                                <button type="button" class="reply-btn" onclick="startReply('${comment.id}')">💬 Trả lời</button>
+                            </div>
+                            ${replyingToCommentId === comment.id ? `
+                                <div class="reply-form">
+                                    <div class="reply-form-avatar">
+                                        ${auth.currentUser?.photoURL 
+                                            ? `<img src="${auth.currentUser.photoURL}" alt="You">` 
+                                            : `<span>${(auth.currentUser?.displayName || 'U').charAt(0).toUpperCase()}</span>`
+                                        }
+                                    </div>
+                                    <div class="reply-form-input-group">
+                                        <input type="text" id="replyInput-${comment.id}" class="reply-input" placeholder="Viết trả lời...">
+                                        <button type="button" class="reply-submit-btn" onclick="submitReply('${comment.id}')">Gửi</button>
+                                        <button type="button" class="reply-cancel-btn" onclick="cancelReply()">Hủy</button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${repliesMarkup}
+                        </article>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Lỗi tải bình luận:', e);
+                commentList.innerHTML = '<div class="comment-empty">Lỗi tải bình luận. Thử lại?</div>';
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (!confirm('Xóa bình luận này?')) return;
+
+            try {
+                await db.collection('movie_comments').doc(commentId).delete();
+                await loadComments(currentMovie);
+                showToast('✅ Bình luận đã xóa');
+            } catch (e) {
+                console.error('Lỗi xóa bình luận:', e);
+                showToast('⚠️ Không thể xóa bình luận');
+            }
+        }
+
+        function startReply(commentId) {
+            if (!auth.currentUser) {
+                showLoginRequired();
+                return;
+            }
+            replyingToCommentId = commentId;
+            loadComments(currentMovie);
+            setTimeout(() => {
+                const input = document.getElementById(`replyInput-${commentId}`);
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function cancelReply() {
+            replyingToCommentId = '';
+            loadComments(currentMovie);
+        }
+
+        async function submitReply(commentId) {
+            if (!auth.currentUser) {
+                showLoginRequired();
+                return;
+            }
+
+            const input = document.getElementById(`replyInput-${commentId}`);
+            const replyText = input.value.trim();
+
+            if (!replyText) {
+                showToast('✍️ Viết trả lời trước khi gửi');
+                return;
+            }
+
+            input.disabled = true;
+
+            try {
+                const docRef = db.collection('movie_comments').doc(commentId);
+                const doc = await docRef.get();
+                const replies = doc.data().replies || [];
+                const shortId = await getShortId(auth.currentUser.uid);
+
+                replies.push({
+                    id: Date.now().toString(),
+                    text: replyText,
+                    displayName: shortId ? '#' + shortId : (auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || 'Người dùng'),
+                    shortId: shortId || '',
+                    photoURL: auth.currentUser.photoURL || '',
+                    userId: auth.currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await docRef.update({ replies });
+                replyingToCommentId = '';
+                expandedReplies.add(commentId);
+                await loadComments(currentMovie);
+                showToast('💬 Trả lời đã gửi!');
+            } catch (e) {
+                console.error('Lỗi gửi trả lời:', e);
+                showToast('⚠️ Lỗi gửi trả lời. Thử lại?');
+                input.disabled = false;
+            }
+        }
+
+        function toggleReplies(commentId) {
+            if (expandedReplies.has(commentId)) {
+                expandedReplies.delete(commentId);
+            } else {
+                expandedReplies.add(commentId);
+            }
+            loadComments(currentMovie);
+        }
+
+        async function deleteReply(commentId, replyId) {
+            if (!confirm('Xóa trả lời này?')) return;
+
+            try {
+                const docRef = db.collection('movie_comments').doc(commentId);
+                const doc = await docRef.get();
+                let replies = doc.data().replies || [];
+                replies = replies.filter(r => r.id !== replyId);
+
+                await docRef.update({ replies });
+                await loadComments(currentMovie);
+                showToast('✅ Trả lời đã xóa');
+            } catch (e) {
+                console.error('Lỗi xóa trả lời:', e);
+                showToast('⚠️ Không thể xóa trả lời');
+            }
+        }
+
+        async function toggleCommentEmotion(commentId, emotionId) {
+            if (!auth.currentUser) {
+                showLoginRequired();
+                return;
+            }
+
+            try {
+                const docRef = db.collection('movie_comments').doc(commentId);
+                const doc = await docRef.get();
+                const emotions = doc.data().emotions || {};
+
+                if (!emotions[emotionId]) {
+                    emotions[emotionId] = [];
+                }
+
+                const userIndex = emotions[emotionId].indexOf(auth.currentUser.uid);
+                if (userIndex > -1) {
+                    emotions[emotionId].splice(userIndex, 1);
+                } else {
+                    emotions[emotionId].push(auth.currentUser.uid);
+                }
+
+                if (emotions[emotionId].length === 0) {
+                    delete emotions[emotionId];
+                }
+
+                await docRef.update({ emotions });
+                await loadComments(currentMovie);
+            } catch (e) {
+                console.error('Lỗi cập nhật cảm xúc:', e);
+            }
+        }
+
+        let currentEmojiCommentId = '';
+
+        function openEmojiPicker(commentId) {
+            currentEmojiCommentId = commentId;
+            const modal = document.getElementById('emojiPickerModal');
+            const grid = document.getElementById('emojiGrid');
+
+            grid.innerHTML = REACTION_OPTIONS.map(emotion => `
+                <div class="emoji-item" onclick="selectCommentEmoji('${emotion.id}')" title="${emotion.label}">
+                    <img src="${emotion.image}" alt="${emotion.label}" style="width: 32px; height: 32px;">
+                </div>
+            `).join('');
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEmojiPicker() {
+            const modal = document.getElementById('emojiPickerModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            currentEmojiCommentId = '';
+        }
+
+        async function selectCommentEmoji(emotionId) {
+            if (!currentEmojiCommentId) return;
+            await toggleCommentEmotion(currentEmojiCommentId, emotionId);
+            closeEmojiPicker();
+        }
+
+        function openImageViewer(imageSrc) {
+            const viewer = document.createElement('div');
+            viewer.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.9);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(5px);
+            `;
+            viewer.onclick = () => viewer.remove();
+            viewer.innerHTML = `
+                <img src="${imageSrc}" style="max-width: 90%; max-height: 90%; border-radius: 12px; cursor: pointer;" onclick="event.stopPropagation()">
+            `;
+            document.body.appendChild(viewer);
+        }
+
+        async function submitComment(event) {
+            event.preventDefault();
+
+            if (!auth.currentUser) {
+                showLoginRequired();
+                return;
+            }
+
+            const textarea = document.getElementById('commentInput');
+            const submitBtn = document.querySelector('.comment-submit');
+            const text = textarea.value.trim();
+
+            if (!text && selectedImages.length === 0) {
+                showToast('✍️ Viết bình luận hoặc thêm ảnh trước');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '...';
+
+            try {
+                const shortId = await getShortId(auth.currentUser.uid);
+                const commentData = {
+                    movieId: movieId,
+                    movieTitle: currentMovie?.title || '',
+                    episodeLabel: currentMovie?.episode || currentMovie?.title || 'Tập phim',
+                    text: text,
+                    reaction: selectedCommentReaction,
+                    displayName: shortId ? '#' + shortId : (auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || 'Người dùng'),
+                    shortId: shortId || '',
+                    photoURL: auth.currentUser.photoURL || '',
+                    userId: auth.currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    images: selectedImages,
+                    emotions: {},
+                    replies: []
+                };
+
+                await db.collection('movie_comments').add(commentData);
+
+                document.getElementById('commentInput').value = '';
+                selectedCommentReaction = '';
+                selectedImages = [];
+                document.getElementById('imagePreviewContainer').innerHTML = '';
+                document.getElementById('imageInput').value = '';
+                const buttons = document.querySelectorAll('.reaction-btn');
+                buttons.forEach((btn) => btn.classList.remove('active'));
+                await loadComments(currentMovie);
+                showToast('💬 Bình luận đã gửi!');
+            } catch (e) {
+                console.error('Lỗi gửi bình luận:', e);
+                showToast('⚠️ Lỗi gửi bình luận. Thử lại?');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Đăng';
+            }
         }
 
         function showLoginRequired() {
@@ -819,11 +1944,19 @@
                     closeLoginRequiredPopup();
                 }
             }
+
+            const emojiModal = document.getElementById('emojiPickerModal');
+            if (emojiModal && emojiModal.classList.contains('active')) {
+                if (e.target === emojiModal) {
+                    closeEmojiPicker();
+                }
+            }
         });
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeLoginRequiredPopup();
+                closeEmojiPicker();
             }
         });
 

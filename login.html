@@ -837,9 +837,31 @@
         }
 
         // ============================================================
+        // TẠO SHORT ID 7 CHỮ SỐ DUY NHẤT
+        // ============================================================
+        async function generateUniqueShortId() {
+            const max = 9999999;
+            const min = 1000000;
+            let attempts = 0;
+            while (attempts < 20) {
+                const id = Math.floor(Math.random() * (max - min + 1)) + min;
+                const idStr = id.toString();
+                // Kiểm tra xem id này đã được dùng chưa
+                const snap = await db.collection('users')
+                    .where('shortId', '==', idStr)
+                    .limit(1)
+                    .get();
+                if (snap.empty) return idStr;
+                attempts++;
+            }
+            // Fallback: dùng timestamp để đảm bảo duy nhất
+            return String(Date.now()).slice(-7);
+        }
+
+        // ============================================================
         // LƯU USER VÀO FIRESTORE
         // ============================================================
-        function saveUserToFirestore(user, isNew = false) {
+        async function saveUserToFirestore(user, isNew = false) {
             const userData = {
                 email: user.email,
                 displayName: user.displayName || user.email.split('@')[0],
@@ -850,6 +872,18 @@
 
             if (isNew) {
                 userData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            }
+
+            // Kiểm tra xem user đã có shortId chưa
+            try {
+                const existingDoc = await db.collection('users').doc(user.uid).get();
+                if (!existingDoc.exists || !existingDoc.data()?.shortId) {
+                    userData.shortId = await generateUniqueShortId();
+                    console.log('🆔 Đã tạo shortId:', userData.shortId);
+                }
+            } catch (e) {
+                console.error('Lỗi kiểm tra shortId:', e);
+                userData.shortId = await generateUniqueShortId();
             }
 
             return db.collection('users').doc(user.uid).set(userData, { merge: true })
