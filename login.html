@@ -858,14 +858,25 @@
             return String(Date.now()).slice(-7);
         }
 
+        function getGoogleIdForUser(user) {
+            if (!user) return '';
+            const googleProvider = (user.providerData || []).find(provider => provider.providerId === 'google.com');
+            if (googleProvider?.uid) return googleProvider.uid;
+            if (user.uid) return user.uid;
+            if (user.email) return user.email;
+            return '';
+        }
+
         // ============================================================
         // LƯU USER VÀO FIRESTORE
         // ============================================================
         async function saveUserToFirestore(user, isNew = false) {
+            const googleId = getGoogleIdForUser(user);
             const userData = {
                 email: user.email,
                 displayName: user.displayName || user.email.split('@')[0],
                 photoURL: user.photoURL || '',
+                googleId: googleId || '',
                 providerData: user.providerData || [],
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -925,7 +936,12 @@
                         return;
                     }
 
-                    await saveUserToFirestore(user, false);
+                    const saved = await saveUserToFirestore(user, false);
+                    if (!saved) {
+                        showError('❌ Không thể lưu thông tin tài khoản. Vui lòng thử lại.');
+                        await auth.signOut();
+                        return;
+                    }
                     const userDoc = await db.collection('users').doc(user.uid).get();
                     const userData = userDoc.exists ? userDoc.data() : {};
 
@@ -983,7 +999,12 @@
                         return;
                     }
 
-                    await saveUserToFirestore(user, true);
+                    const saved = await saveUserToFirestore(user, true);
+                    if (!saved) {
+                        showError('❌ Không thể lưu thông tin tài khoản Google. Vui lòng thử lại.');
+                        await auth.signOut();
+                        return;
+                    }
                     const userDoc = await db.collection('users').doc(user.uid).get();
                     const userData = userDoc.exists ? userDoc.data() : {};
 
@@ -1047,7 +1068,12 @@
                     // Cập nhật tên hiển thị
                     await user.updateProfile({ displayName: name });
 
-                    await saveUserToFirestore(user, true);
+                    const saved = await saveUserToFirestore(user, true);
+                    if (!saved) {
+                        showError('❌ Không thể tạo tài khoản do lỗi lưu dữ liệu. Vui lòng thử lại.');
+                        await auth.signOut();
+                        return;
+                    }
                     showSuccess('✅ Đăng ký thành công! Đang chuyển hướng...');
                     setTimeout(() => window.location.href = 'index.html', 1500);
                 })

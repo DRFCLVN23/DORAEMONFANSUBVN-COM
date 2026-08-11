@@ -4388,6 +4388,32 @@
             return user.displayName || user.email?.split('@')[0] || 'Người dùng';
         }
 
+        function getGoogleIdForUser(user) {
+            if (!user) return '';
+            const googleProvider = (user.providerData || []).find(provider => provider.providerId === 'google.com');
+            if (googleProvider?.uid) return googleProvider.uid;
+            if (user.uid) return user.uid;
+            if (user.email) return user.email;
+            return '';
+        }
+
+        async function ensureUserHasGoogleId(user) {
+            if (!user) return;
+            const googleId = getGoogleIdForUser(user);
+            if (!googleId) return;
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (!doc.exists || !doc.data()?.googleId) {
+                    await db.collection('users').doc(user.uid).set({
+                        googleId,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }
+            } catch (e) {
+                console.error('Lỗi cập nhật googleId:', e);
+            }
+        }
+
         // Lấy shortId từ Firestore, trả về chuỗi '#XXXXXXX'
         async function resolveUserName(user) {
             if (!user) return '#0000000';
@@ -4540,6 +4566,8 @@
             await loadAdminList();
 
             if (user) {
+                await ensureUserHasGoogleId(user);
+
                 if (await ensureTwoFactorVerified(user)) {
                     return;
                 }

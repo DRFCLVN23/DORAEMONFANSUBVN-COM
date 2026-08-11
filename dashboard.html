@@ -56,21 +56,28 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             margin-bottom: 8px;
             flex-shrink: 0;
+            text-align: center;
         }
 
         .sidebar-brand .brand-logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
             text-decoration: none;
             color: white;
         }
 
         .sidebar-brand .brand-logo img {
-            height: 36px;
-            width: 36px;
-            border-radius: 50%;
-            object-fit: cover;
+            height: 48px;
+            width: auto;
+            max-width: 120px;
+            border-radius: 24px;
+            object-fit: contain;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 10px rgba(255, 235, 170, 0.35), 0 4px 12px rgba(0, 0, 0, 0.12);
+            filter: drop-shadow(0 0 8px rgba(255, 235, 170, 0.45));
         }
 
         .sidebar-brand .brand-logo h2 {
@@ -88,7 +95,6 @@
             color: rgba(255, 255, 255, 0.4);
             display: block;
             margin-top: 2px;
-            margin-left: 46px;
             letter-spacing: 0.5px;
         }
 
@@ -272,10 +278,14 @@
         }
 
         .page-header h1 img {
-            height: 32px;
-            width: 32px;
-            border-radius: 50%;
-            object-fit: cover;
+            height: 48px;
+            width: auto;
+            max-width: 120px;
+            border-radius: 24px;
+            object-fit: contain;
+            border: 1px solid rgba(26, 26, 46, 0.15);
+            box-shadow: 0 0 10px rgba(255, 235, 170, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1);
+            filter: drop-shadow(0 0 6px rgba(255, 235, 170, 0.3));
         }
 
         .page-header .admin-badge {
@@ -1148,10 +1158,10 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <a href="index.html" class="brand-logo">
-                <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Logo">
-                <h2>🎬 <span>Doraemon</span> VN</h2>
+                <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Doraemon Fansub" loading="lazy">
+              
             </a>
-            <small>Admin Dashboard</small>
+           
         </div>
 
         <ul class="sidebar-menu">
@@ -1181,7 +1191,7 @@
         <!-- ===== HEADER ===== -->
         <div class="page-header">
             <h1>
-                <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Logo">
+                <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Doraemon Fansub" loading="lazy">
                 <span id="pageTitle">📊 Tổng quan</span>
             </h1>
             <div class="header-right">
@@ -1254,8 +1264,26 @@
                 </div>
                 <div class="search-bar" id="movieSearchBar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="movieSearchInput" placeholder="Tìm kiếm phim theo tên, thể loại..." autocomplete="off" />
+                    <input type="text" id="movieSearchInput" placeholder="Tìm kiếm phim theo tên..." autocomplete="off" />
                     <button class="clear-btn" id="clearSearchBtn">✕</button>
+                </div>
+                <div style="display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap;">
+                    <select id="movieCategoryFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #e4e6eb; font-size: 14px; cursor: pointer;">
+                        <option value="">📺 Tất cả danh mục</option>
+                        <option value="movie">🎬 Movie</option>
+                        <option value="short">🎥 Short</option>
+                        <option value="seri">📺 Seri</option>
+                    </select>
+                    <select id="movieGenreFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #e4e6eb; font-size: 14px; cursor: pointer;">
+                        <option value="">🎨 Tất cả thể loại</option>
+                        <option value="Hành động">Hành động</option>
+                        <option value="Hài hước">Hài hước</option>
+                        <option value="Tình cảm">Tình cảm</option>
+                        <option value="Phiêu lưu">Phiêu lưu</option>
+                        <option value="Khoa học viễn tưởng">Khoa học viễn tưởng</option>
+                        <option value="Thần thoại">Thần thoại</option>
+                        <option value="Khác">Khác</option>
+                    </select>
                 </div>
                 <div class="table-wrapper">
                     <table>
@@ -1285,11 +1313,12 @@
                                 <th>Email</th>
                                 <th>Ngày tham gia</th>
                                 <th>Vai trò</th>
-                                <th style="width:180px;">Hành động</th>
+                                <th>Trạng thái</th>
+                                <th style="width:200px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
-                            <tr><td colspan="7" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
+                            <tr><td colspan="8" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1544,7 +1573,7 @@
                 const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
 
                 if (snapshot.empty) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><span class="icon">👥</span>Chưa có người dùng nào</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><span class="icon">👥</span>Chưa có người dùng nào</td></tr>`;
                     document.getElementById('userCount').textContent = '0 người dùng';
                     updateStats();
                     return;
@@ -1581,15 +1610,50 @@
                     const isAdmin = adminEmails.has(data.email);
                     const isBanned = bannedEmails.has(data.email);
 
+                    // Kiểm tra trạng thái chặn đăng bài
+                    let isBlockedPosts = false;
+                    let blockPostsTime = '';
+                    if (data.blockPostsUntil) {
+                        const blockUntil = new Date(data.blockPostsUntil);
+                        const now = new Date();
+                        if (now < blockUntil) {
+                            isBlockedPosts = true;
+                            blockPostsTime = blockUntil.toLocaleString('vi-VN');
+                        }
+                    }
+
+                    // Kiểm tra trạng thái cấm tài khoản
+                    let isTempBanned = false;
+                    let tempBanTime = '';
+                    if (data.tempBannedUntil) {
+                        const banUntil = new Date(data.tempBannedUntil);
+                        const now = new Date();
+                        if (now < banUntil) {
+                            isTempBanned = true;
+                            tempBanTime = banUntil.toLocaleString('vi-VN');
+                        }
+                    }
+
                     let roleHtml = '';
                     if (isSuperAdmin) {
                         roleHtml = `<span class="badge-role badge-super-admin">👑 Super Admin</span>`;
                     } else if (isBanned) {
-                        roleHtml = `<span class="badge-role badge-banned">🚫 Đã cấm</span>`;
+                        roleHtml = `<span class="badge-role badge-banned">🚫 Cấm vĩnh viễn</span>`;
                     } else if (isAdmin) {
                         roleHtml = `<span class="badge-role badge-admin">👑 Admin</span>`;
                     } else {
                         roleHtml = `<span class="badge-role badge-user">👤 User</span>`;
+                    }
+
+                    let statusHtml = '';
+                    if (isBanned) {
+                        statusHtml = `<span style="color:#e94560;font-weight:600;">🚫 Cấm vĩnh viễn</span>`;
+                    } else if (isTempBanned) {
+                        statusHtml = `<span style="color:#ff9800;font-weight:600;">⏸️ Tạm cấm đến ${tempBanTime}</span>`;
+                    } else if (isBlockedPosts) {
+                        statusHtml = `<span style="color:#ff9800;font-weight:600;">🚫 Chặn đăng bài đến ${blockPostsTime}</span>`;
+                    } else {
+                        statusHtml = `<span style="color:#4caf50;font-weight:600;">✅ Bình thường</span>`;
                     }
 
                     let actionHtml = '';
@@ -1598,6 +1662,8 @@
                             actionHtml = `<button class="btn-success btn-sm" onclick="unbanUser('${data.email}')">✅ Bỏ cấm</button>`;
                         } else {
                             actionHtml =
+                                `<button class="btn-warning btn-sm" onclick="showBlockMenu('${uid}','${data.email}','${data.displayName || 'User'}')">⏸️ Chặn/Cấm</button>`;
+                            actionHtml +=
                                 `<button class="btn-danger btn-sm" onclick="banUser('${uid}','${data.email}')">🚫 Cấm</button>`;
                         }
                         if (!isBanned && !isAdmin) {
@@ -1616,15 +1682,16 @@
                             <td>${count}</td>
                             <td>
                                 <img src="${avatar}" 
-                                     style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid ${isBanned ? '#e94560' : '#e8f0fe'};"
+                                     style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid ${isBanned ? '#e94560' : isTempBanned ? '#ff9800' : '#e8f0fe'};"
                                      onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data.displayName || 'User')}&background=1a73e8&color=fff&size=32'">
                             </td>
-                            <td style="font-weight:500; ${isBanned ? 'text-decoration:line-through;color:#999;' : ''}">
+                            <td style="font-weight:500; ${isBanned || isTempBanned ? 'text-decoration:line-through;color:#999;' : ''}">
                                 ${data.displayName || 'Người dùng'}
                             </td>
                             <td style="font-size:12px;color:${isBanned ? '#e94560' : '#1a73e8'};">${data.email || ''}</td>
                             <td style="font-size:12px;color:#666;">${joinDate}</td>
                             <td>${roleHtml}</td>
+                            <td>${statusHtml}</td>
                             <td style="display:flex;gap:4px;flex-wrap:wrap;">${actionHtml}</td>
                         </tr>
                     `;
@@ -1636,7 +1703,7 @@
             } catch (e) {
                 console.error(e);
                 tbody.innerHTML =
-                    `<tr><td colspan="7" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
+                    `<tr><td colspan="8" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
             }
         }
 
@@ -1714,6 +1781,132 @@
                 snapshot.forEach(doc => doc.ref.delete());
                 showToast(`✅ Đã xóa admin ${email}!`);
                 await loadAdminList();
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
+        // CHẶN/CẤM THÀNH VIÊN
+        // ============================================================
+        window.showBlockMenu = async function(uid, email, displayName) {
+            const doc = await db.collection('users').doc(uid).get();
+            const data = doc.data();
+            
+            let isBlockedPosts = false, blockPostsTime = '';
+            if (data?.blockPostsUntil) {
+                const blockUntil = new Date(data.blockPostsUntil);
+                if (new Date() < blockUntil) {
+                    isBlockedPosts = true;
+                    blockPostsTime = blockUntil.toLocaleString('vi-VN');
+                }
+            }
+
+            let isTempBanned = false, tempBanTime = '';
+            if (data?.tempBannedUntil) {
+                const banUntil = new Date(data.tempBannedUntil);
+                if (new Date() < banUntil) {
+                    isTempBanned = true;
+                    tempBanTime = banUntil.toLocaleString('vi-VN');
+                }
+            }
+
+            let statusText = '';
+            if (isBlockedPosts && isTempBanned) {
+                statusText = `<span style="color:red;margin-bottom:12px;display:block;">⚠️ Hiện tại: Chặn đăng bài đến ${blockPostsTime} & Cấm đến ${tempBanTime}</span>`;
+            } else if (isBlockedPosts) {
+                statusText = `<span style="color:orange;margin-bottom:12px;display:block;">⚠️ Hiện tại: Chặn đăng bài đến ${blockPostsTime}</span>`;
+            } else if (isTempBanned) {
+                statusText = `<span style="color:orange;margin-bottom:12px;display:block;">⚠️ Hiện tại: Cấm đến ${tempBanTime}</span>`;
+            }
+
+            const menuHtml = `
+                <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:24px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:1000;max-width:600px;width:90%;">
+                    <h3 style="margin:0 0 8px 0;color:#1a1a2e;">⏸️ Chặn/Cấm ${displayName || email}</h3>
+                    ${statusText}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                        <div style="border:1px solid #e4e6eb;padding:12px;border-radius:8px;">
+                            <h4 style="margin:0 0 8px 0;color:#333;">🚫 Chặn đăng bài:</h4>
+                            <button onclick="blockUserPosts('${uid}', 3)" style="width:100%;padding:8px;margin:4px 0;background:#ff9800;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">3 giờ</button>
+                            <button onclick="blockUserPosts('${uid}', 24)" style="width:100%;padding:8px;margin:4px 0;background:#ff9800;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">24 giờ</button>
+                            <button onclick="blockUserPosts('${uid}', 72)" style="width:100%;padding:8px;margin:4px 0;background:#ff9800;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">72 giờ</button>
+                            <button onclick="blockUserPosts('${uid}', 168)" style="width:100%;padding:8px;margin:4px 0;background:#ff9800;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">7 ngày</button>
+                            ${isBlockedPosts ? `<button onclick="unblockUserPosts('${uid}')" style="width:100%;padding:8px;margin:4px 0;background:#4caf50;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✅ Gỡ chặn</button>` : ''}
+                        </div>
+                        <div style="border:1px solid #e4e6eb;padding:12px;border-radius:8px;">
+                            <h4 style="margin:0 0 8px 0;color:#333;">⏸️ Cấm tài khoản:</h4>
+                            <button onclick="tempBanUser('${uid}', 3)" style="width:100%;padding:8px;margin:4px 0;background:#ff6b6b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">3 giờ</button>
+                            <button onclick="tempBanUser('${uid}', 24)" style="width:100%;padding:8px;margin:4px 0;background:#ff6b6b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">24 giờ</button>
+                            <button onclick="tempBanUser('${uid}', 72)" style="width:100%;padding:8px;margin:4px 0;background:#ff6b6b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">72 giờ</button>
+                            <button onclick="tempBanUser('${uid}', 168)" style="width:100%;padding:8px;margin:4px 0;background:#ff6b6b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">7 ngày</button>
+                            ${isTempBanned ? `<button onclick="untempBanUser('${uid}')" style="width:100%;padding:8px;margin:4px 0;background:#4caf50;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✅ Gỡ cấm</button>` : ''}
+                        </div>
+                    </div>
+                    <button onclick="closeBlockMenu()" style="width:100%;padding:10px;background:#ccc;color:#333;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Đóng</button>
+                </div>
+                <div id="blockMenuOverlay" onclick="closeBlockMenu()" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;"></div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', menuHtml);
+        };
+
+        window.closeBlockMenu = function() {
+            const overlay = document.getElementById('blockMenuOverlay');
+            const menu = overlay?.parentElement?.querySelector('[style*="position:fixed"]');
+            if (overlay) overlay.remove();
+            if (menu) menu.remove();
+        };
+
+        window.blockUserPosts = async function(uid, hours) {
+            try {
+                const blockUntil = new Date(Date.now() + hours * 60 * 60 * 1000);
+                await db.collection('users').doc(uid).update({
+                    blockPostsUntil: blockUntil.toISOString()
+                });
+                showToast(`✅ Đã chặn đăng bài ${hours} giờ!`);
+                closeBlockMenu();
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        window.unblockUserPosts = async function(uid) {
+            if (!confirm('Gỡ chặn đăng bài?')) return;
+            try {
+                await db.collection('users').doc(uid).update({
+                    blockPostsUntil: null
+                });
+                showToast('✅ Đã gỡ chặn đăng bài!');
+                closeBlockMenu();
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        window.tempBanUser = async function(uid, hours) {
+            try {
+                const banUntil = new Date(Date.now() + hours * 60 * 60 * 1000);
+                await db.collection('users').doc(uid).update({
+                    tempBannedUntil: banUntil.toISOString()
+                });
+                showToast(`✅ Đã cấm tài khoản ${hours} giờ!`);
+                closeBlockMenu();
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi: ' + e.message, true);
+            }
+        };
+
+        window.untempBanUser = async function(uid) {
+            if (!confirm('Gỡ cấm tài khoản?')) return;
+            try {
+                await db.collection('users').doc(uid).update({
+                    tempBannedUntil: null
+                });
+                showToast('✅ Đã gỡ cấm tài khoản!');
+                closeBlockMenu();
                 loadUsers();
             } catch (e) {
                 showToast('❌ Lỗi: ' + e.message, true);
@@ -2120,6 +2313,8 @@
         // ============================================================
         // LOAD MOVIES
         // ============================================================
+        let allMovies = [];
+
         async function loadMovies() {
             const tbody = document.getElementById('moviesTableBody');
             try {
@@ -2127,23 +2322,58 @@
                 if (snapshot.empty) {
                     tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="icon">🎬</span>Chưa có phim nào</td></tr>`;
                     document.getElementById('movieCount').textContent = '0 phim';
+                    allMovies = [];
                     updateStats();
                     return;
                 }
-                let html = '', count = 0;
-                const categoryLabels = { 'movie': '🎬 Movie', 'short': '🎥 Short', 'seri': '📺 Seri' };
+                allMovies = [];
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-                    count++;
-                    html += `<tr><td>${count}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;">${data.title || 'Untitled'}</td><td style="font-size:12px;">${data.genre || 'Chưa phân loại'}</td><td style="font-size:12px;">${categoryLabels[data.category] || '📺 Chưa phân loại'}</td><td style="font-size:13px;font-weight:600;color:#1a73e8;">${data.views || 0}</td><td><button class="btn-edit btn-sm" onclick="editMovie('${doc.id}')">✏️ Sửa</button><button class="btn-danger btn-sm" onclick="deleteMovie('${doc.id}')">🗑️ Xóa</button></td></tr>`;
+                    allMovies.push({ id: doc.id, ...doc.data() });
                 });
-                tbody.innerHTML = html;
-                document.getElementById('movieCount').textContent = count + ' phim';
+                filterAndDisplayMovies();
                 updateStats();
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
             }
         }
+
+        function filterAndDisplayMovies() {
+            const tbody = document.getElementById('moviesTableBody');
+            const searchText = document.getElementById('movieSearchInput').value.toLowerCase().trim();
+            const categoryFilter = document.getElementById('movieCategoryFilter').value;
+            const genreFilter = document.getElementById('movieGenreFilter').value;
+
+            let filteredMovies = allMovies.filter(movie => {
+                const matchSearch = !searchText || movie.title?.toLowerCase().includes(searchText) || movie.genre?.toLowerCase().includes(searchText);
+                const matchCategory = !categoryFilter || movie.category === categoryFilter;
+                const matchGenre = !genreFilter || movie.genre === genreFilter;
+                return matchSearch && matchCategory && matchGenre;
+            });
+
+            if (filteredMovies.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="icon">🔍</span>Không tìm thấy phim nào</td></tr>`;
+                document.getElementById('movieCount').textContent = '0 phim';
+                return;
+            }
+
+            let html = '';
+            const categoryLabels = { 'movie': '🎬 Movie', 'short': '🎥 Short', 'seri': '📺 Seri' };
+            filteredMovies.forEach((movie, index) => {
+                html += `<tr><td>${index + 1}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;">${movie.title || 'Untitled'}</td><td style="font-size:12px;">${movie.genre || 'Chưa phân loại'}</td><td style="font-size:12px;">${categoryLabels[movie.category] || '📺 Chưa phân loại'}</td><td style="font-size:13px;font-weight:600;color:#1a73e8;">${movie.views || 0}</td><td><button class="btn-edit btn-sm" onclick="editMovie('${movie.id}')">✏️ Sửa</button><button class="btn-danger btn-sm" onclick="deleteMovie('${movie.id}')">🗑️ Xóa</button></td></tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('movieCount').textContent = filteredMovies.length + ' phim';
+        }
+
+        // MOVIE SEARCH AND FILTER HANDLERS
+        // ============================================================
+        document.getElementById('movieSearchInput')?.addEventListener('input', filterAndDisplayMovies);
+        document.getElementById('clearSearchBtn')?.addEventListener('click', function() {
+            document.getElementById('movieSearchInput').value = '';
+            filterAndDisplayMovies();
+        });
+        document.getElementById('movieCategoryFilter')?.addEventListener('change', filterAndDisplayMovies);
+        document.getElementById('movieGenreFilter')?.addEventListener('change', filterAndDisplayMovies);
 
         window.deleteMovie = async function(id) {
             if (!confirm('Xóa phim này?')) return;
@@ -2436,6 +2666,34 @@
                     await auth.signOut();
                     window.location.href = 'login.html';
                 }
+            });
+        });
+
+        // ============================================================
+        // MOBILE MENU TOGGLE
+        // ============================================================
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarMenu = document.querySelectorAll('.sidebar-menu li');
+
+        // Toggle menu khi click nút hamburger
+        menuToggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        });
+
+        // Đóng menu khi click overlay
+        sidebarOverlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.style.display = 'none';
+        });
+
+        // Đóng menu khi click menu items
+        sidebarMenu.forEach(item => {
+            item.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.style.display = 'none';
             });
         });
 
