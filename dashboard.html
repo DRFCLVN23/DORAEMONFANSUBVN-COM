@@ -1497,21 +1497,105 @@
         }
 
         // ============================================================
-        // KIỂM TRA QUYỀN ADMIN
         // ============================================================
-        async function checkAdminRole(uid) {
+        // KIỂM TRA QUYỀN ADMIN & ĐỒNG BỘ USER
+        // ============================================================
+        function getGoogleIdForUser(user) {
+            if (!user) return '';
+            const googleProvider = (user.providerData || []).find(provider => provider.providerId === 'google.com');
+            if (googleProvider?.uid) return googleProvider.uid;
+            if (user.uid) return user.uid;
+            if (user.email) return user.email;
+            return '';
+        }
+
+        async function ensureUserSavedInFirestore(user) {
+            if (!user || !user.uid) return;
             try {
-                const adminSnapshot = await db.collection('admins')
-                    .where('uid', '==', uid)
-                    .get();
+                const googleId = getGoogleIdForUser(user);
+                const userRef = db.collection('users').doc(user.uid);
+                const doc = await userRef.get();
+                const data = doc.exists ? (doc.data() || {}) : {};
+
+                const userEmail = user.email ? user.email.trim() : '';
+                const userDisplayName = user.displayName || (userEmail ? userEmail.split('@')[0] : 'Người dùng');
+                const userPhotoURL = user.photoURL || '';
+
+                const updates = {};
                 
-                if (!adminSnapshot.empty) {
-                    return true;
+                if (!doc.exists) {
+                    updates.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    updates.email = userEmail;
+                    updates.displayName = userDisplayName;
+                    updates.photoURL = userPhotoURL;
+                    if (googleId) updates.googleId = googleId;
+                    if (user.providerData) updates.providerData = user.providerData;
+                    updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                    updates.shortId = String(Date.now()).slice(-7);
+                    await userRef.set(updates, { merge: true });
+                    console.log('✅ Đã khởi tạo user trong Firestore:', user.email);
+                } else {
+                    let needsUpdate = false;
+                    if (!data.email && userEmail) {
+                        updates.email = userEmail;
+                        needsUpdate = true;
+                    }
+                    if (!data.googleId && googleId) {
+                        updates.googleId = googleId;
+                        needsUpdate = true;
+                    }
+                    if (!data.displayName && userDisplayName) {
+                        updates.displayName = userDisplayName;
+                        needsUpdate = true;
+                    }
+                    if (!data.photoURL && userPhotoURL) {
+                        updates.photoURL = userPhotoURL;
+                        needsUpdate = true;
+                    }
+                    if (!data.shortId) {
+                        updates.shortId = String(Date.now()).slice(-7);
+                        needsUpdate = true;
+                    }
+                    if (needsUpdate) {
+                        updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                        await userRef.set(updates, { merge: true });
+                        console.log('✅ Đã cập nhật thông tin user trong Firestore:', user.email);
+                    }
+                }
+            } catch (e) {
+                console.error('Lỗi tự động cập nhật user Firestore:', e);
+            }
+        }
+
+        async function checkAdminRole(uid, userEmail = null) {
+            try {
+                if (uid) {
+                    const adminSnapshot = await db.collection('admins')
+                        .where('uid', '==', uid)
+                        .get();
+                    if (!adminSnapshot.empty) return true;
                 }
                 
-                const user = auth.currentUser;
-                if (user && user.email === SUPER_ADMIN_EMAIL) {
-                    return true;
+                const current = auth.currentUser;
+                const emailToCheck = userEmail || current?.email;
+                if (emailToCheck) {
+                    const normEmail = emailToCheck.toLowerCase().trim();
+                    if (normEmail === SUPER_ADMIN_EMAIL.toLowerCase().trim()) return true;
+
+                    const adminByEmail = await db.collection('admins')
+                        .where('email', '==', normEmail)
+                        .get();
+                    if (!adminByEmail.empty) return true;
+
+                    const allAdmins = await db.collection('admins').get();
+                    let isAdminMatch = false;
+                    allAdmins.forEach(doc => {
+                        const d = doc.data();
+                        if (d.email && d.email.toLowerCase().trim() === normEmail) {
+                            isAdminMatch = true;
+                        }
+                    });
+                    if (isAdminMatch) return true;
                 }
                 
                 return false;
@@ -1531,10 +1615,10 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data.email) {
-                        adminEmails.add(data.email);
+                        adminEmails.add(data.email.toLowerCase().trim());
                     }
                 });
-                adminEmails.add(SUPER_ADMIN_EMAIL);
+                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
                 console.log('✅ Danh sách Admin:', adminEmails);
             } catch (e) {
                 console.error('Lỗi load admin list:', e);
@@ -1934,18 +2018,20 @@
         // SUBMIT THÊM ADMIN
         // ============================================================
         document.getElementById('submitAddAdminBtn')?.addEventListener('click', async function() {
-            const email = document.getElementById('newAdminEmail').value.trim();
+            const rawEmail = document.getElementById('newAdminEmail').value.trim();
             const displayName = document.getElementById('newAdminName').value.trim();
 
-            if (!email) {
+            if (!rawEmail) {
                 showToast('⚠️ Vui lòng nhập email!', true);
                 return;
             }
 
-            if (!email.includes('@') || !email.includes('.')) {
+            if (!rawEmail.includes('@') || !rawEmail.includes('.')) {
                 showToast('⚠️ Email không hợp lệ!', true);
                 return;
             }
+
+            const searchEmail = rawEmail.toLowerCase();
 
             const user = auth.currentUser;
             if (!user) {
@@ -1953,13 +2039,13 @@
                 return;
             }
 
-            const isAdmin = await checkAdminRole(user.uid);
+            const isAdmin = await checkAdminRole(user.uid, user.email);
             if (!isAdmin) {
                 showToast('❌ Bạn không có quyền thêm Admin!', true);
                 return;
             }
 
-            if (email === SUPER_ADMIN_EMAIL) {
+            if (searchEmail === SUPER_ADMIN_EMAIL.toLowerCase().trim()) {
                 showToast('⚠️ Đây là Super Admin, không cần thêm!', true);
                 return;
             }
@@ -1968,48 +2054,87 @@
             this.textContent = '⏳ Đang xử lý...';
 
             try {
-                const existingAdmin = await db.collection('admins')
-                    .where('email', '==', email)
-                    .get();
+                // Kiểm tra xem email này đã là Admin chưa (case-insensitive)
+                const existingAdminSnap = await db.collection('admins').get();
+                let alreadyAdmin = false;
+                existingAdminSnap.forEach(doc => {
+                    const d = doc.data();
+                    if (d.email && d.email.toLowerCase().trim() === searchEmail) {
+                        alreadyAdmin = true;
+                    }
+                });
 
-                if (!existingAdmin.empty) {
+                if (alreadyAdmin) {
                     showToast('⚠️ Email này đã là Admin!', true);
                     this.disabled = false;
                     this.textContent = '👑 Thêm Admin';
                     return;
                 }
 
-                const userSnapshot = await db.collection('users')
-                    .where('email', '==', email)
-                    .get();
-
+                // Tìm user trong Firestore `users` collection
                 let uid = '';
                 let userName = displayName;
 
-                if (userSnapshot.empty) {
-                    showToast('⚠️ User này chưa đăng ký! Vui lòng đăng ký trước.', true);
-                    this.disabled = false;
-                    this.textContent = '👑 Thêm Admin';
-                    return;
-                } else {
+                let userSnapshot = await db.collection('users')
+                    .where('email', '==', rawEmail)
+                    .get();
+
+                if (userSnapshot.empty && rawEmail !== searchEmail) {
+                    userSnapshot = await db.collection('users')
+                        .where('email', '==', searchEmail)
+                        .get();
+                }
+
+                if (!userSnapshot.empty) {
                     const userDoc = userSnapshot.docs[0];
                     const userData = userDoc.data();
                     uid = userDoc.id;
                     if (!userName) {
-                        userName = userData.displayName || userData.name || email.split('@')[0];
+                        userName = userData.displayName || userData.name || searchEmail.split('@')[0];
+                    }
+                } else {
+                    // Fallback search case-insensitively across all users
+                    const allUsersSnap = await db.collection('users').get();
+                    let foundDoc = null;
+                    allUsersSnap.forEach(doc => {
+                        const d = doc.data();
+                        if (d.email && d.email.toLowerCase().trim() === searchEmail) {
+                            foundDoc = doc;
+                        }
+                    });
+
+                    if (foundDoc) {
+                        uid = foundDoc.id;
+                        const userData = foundDoc.data();
+                        if (!userName) {
+                            userName = userData.displayName || userData.name || searchEmail.split('@')[0];
+                        }
+                    } else {
+                        // Tự động tạo profile user cơ bản nếu chưa tồn tại trong doc `users`
+                        console.log('ℹ️ Tạo thông tin user mới cho Admin:', searchEmail);
+                        userName = userName || searchEmail.split('@')[0];
+                        const newUserRef = db.collection('users').doc();
+                        uid = newUserRef.id;
+                        await newUserRef.set({
+                            email: searchEmail,
+                            displayName: userName,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            shortId: String(Date.now()).slice(-7)
+                        });
                     }
                 }
 
                 await db.collection('admins').add({
                     uid: uid,
-                    email: email,
+                    email: searchEmail,
                     displayName: userName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     addedBy: user.email,
                     addedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                showToast(`✅ Đã thêm ${email} làm Admin thành công!`);
+                showToast(`✅ Đã thêm ${searchEmail} làm Admin thành công!`);
                 document.getElementById('addAdminModal').classList.remove('active');
                 
                 await loadAdminList();
@@ -2633,6 +2758,8 @@
                 return;
             }
 
+            ensureUserSavedInFirestore(user).catch(() => {});
+
             const twoFactor = await getUserTwoFactorData(user.uid);
             if (twoFactor?.enabled && twoFactor.secret && getTwoFactorVerifiedUid() !== user.uid) {
                 await auth.signOut();
@@ -2640,7 +2767,7 @@
                 return;
             }
 
-            const isAdmin = await checkAdminRole(user.uid);
+            const isAdmin = await checkAdminRole(user.uid, user.email);
             if (!isAdmin) {
                 showToast('⚠️ Bạn không có quyền truy cập Dashboard!', true);
                 setTimeout(() => window.location.href = 'index.html', 1500);

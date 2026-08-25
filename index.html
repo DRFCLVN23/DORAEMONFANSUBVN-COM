@@ -4689,8 +4689,9 @@
             const cached = sessionStorage.getItem('adminEmails');
             if (cached) {
                 try {
-                    adminEmails = new Set(JSON.parse(cached));
-                    adminEmails.add(SUPER_ADMIN_EMAIL);
+                    const parsed = JSON.parse(cached);
+                    adminEmails = new Set(parsed.map(e => (e || '').toLowerCase().trim()));
+                    adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
                     _adminListLoaded = true;
                     return;
                 } catch(e) {}
@@ -4700,9 +4701,9 @@
                 adminEmails = new Set();
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.email) adminEmails.add(data.email);
+                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
                 });
-                adminEmails.add(SUPER_ADMIN_EMAIL);
+                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
                 sessionStorage.setItem('adminEmails', JSON.stringify([...adminEmails]));
                 _adminListLoaded = true;
             } catch (e) {
@@ -4715,7 +4716,7 @@
         // ============================================================
         function isUserAdmin(email) {
             if (!email) return false;
-            return adminEmails.has(email);
+            return adminEmails.has(email.toLowerCase().trim());
         }
 
         function getUserFallbackName(user) {
@@ -4732,20 +4733,65 @@
             return '';
         }
 
-        async function ensureUserHasGoogleId(user) {
-            if (!user) return;
-            const googleId = getGoogleIdForUser(user);
-            if (!googleId) return;
+        async function ensureUserSavedInFirestore(user) {
+            if (!user || !user.uid) return;
             try {
-                const doc = await db.collection('users').doc(user.uid).get();
-                if (!doc.exists || !doc.data()?.googleId) {
-                    await db.collection('users').doc(user.uid).set({
-                        googleId,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
+                const googleId = getGoogleIdForUser(user);
+                const userRef = db.collection('users').doc(user.uid);
+                const doc = await userRef.get();
+                const data = doc.exists ? (doc.data() || {}) : {};
+
+                const userEmail = user.email ? user.email.trim() : '';
+                const userDisplayName = user.displayName || (userEmail ? userEmail.split('@')[0] : 'Người dùng');
+                const userPhotoURL = user.photoURL || '';
+
+                const updates = {};
+                
+                if (!doc.exists) {
+                    updates.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    updates.email = userEmail;
+                    updates.displayName = userDisplayName;
+                    updates.photoURL = userPhotoURL;
+                    if (googleId) updates.googleId = googleId;
+                    if (user.providerData) updates.providerData = user.providerData;
+                    updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                    if (typeof generateUniqueShortId === 'function') {
+                        updates.shortId = await generateUniqueShortId();
+                    } else {
+                        updates.shortId = String(Date.now()).slice(-7);
+                    }
+                    await userRef.set(updates, { merge: true });
+                    console.log('✅ Đã khởi tạo user trong Firestore:', user.email);
+                } else {
+                    let needsUpdate = false;
+                    if (!data.email && userEmail) {
+                        updates.email = userEmail;
+                        needsUpdate = true;
+                    }
+                    if (!data.googleId && googleId) {
+                        updates.googleId = googleId;
+                        needsUpdate = true;
+                    }
+                    if (!data.displayName && userDisplayName) {
+                        updates.displayName = userDisplayName;
+                        needsUpdate = true;
+                    }
+                    if (!data.photoURL && userPhotoURL) {
+                        updates.photoURL = userPhotoURL;
+                        needsUpdate = true;
+                    }
+                    if (!data.shortId) {
+                        updates.shortId = typeof generateUniqueShortId === 'function' ? await generateUniqueShortId() : String(Date.now()).slice(-7);
+                        needsUpdate = true;
+                    }
+                    if (needsUpdate) {
+                        updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                        await userRef.set(updates, { merge: true });
+                        console.log('✅ Đã cập nhật thông tin user trong Firestore:', user.email);
+                    }
                 }
             } catch (e) {
-                console.error('Lỗi cập nhật googleId:', e);
+                console.error('Lỗi tự động cập nhật user Firestore:', e);
             }
         }
 
@@ -4934,7 +4980,7 @@
                     getUserTwoFactorData(user.uid),
                     checkBannedUser(user.email),
                     resolveUserProfile(user),
-                    ensureUserHasGoogleId(user)
+                    ensureUserSavedInFirestore(user)
                 ]);
 
                 if (twoFactor?.enabled && twoFactor.secret && !isTwoFactorVerifiedForUser(user.uid)) {

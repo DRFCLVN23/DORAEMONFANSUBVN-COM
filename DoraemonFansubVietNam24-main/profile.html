@@ -754,12 +754,17 @@
 
             try {
                 const doc = await db.collection('users').doc(user.uid).get();
+                const data = doc.exists ? (doc.data() || {}) : {};
+
+                const userEmail = user.email ? user.email.trim() : '';
+                const userDisplayName = user.displayName || (userEmail ? userEmail.split('@')[0] : 'Người dùng');
+                const userPhotoURL = user.photoURL || '';
 
                 if (!doc.exists) {
                     const userData = {
-                        email: user.email,
-                        displayName: user.displayName || user.email.split('@')[0],
-                        photoURL: user.photoURL || '',
+                        email: userEmail,
+                        displayName: userDisplayName,
+                        photoURL: userPhotoURL,
                         providerData: user.providerData || [],
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -767,6 +772,26 @@
                     await db.collection('users').doc(user.uid).set(userData, { merge: true });
                     console.log('✅ Đã tạo user trong Firestore:', user.email);
                     return true;
+                }
+
+                const updates = {};
+                let needsUpdate = false;
+                if (!data.email && userEmail) {
+                    updates.email = userEmail;
+                    needsUpdate = true;
+                }
+                if (!data.displayName && userDisplayName) {
+                    updates.displayName = userDisplayName;
+                    needsUpdate = true;
+                }
+                if (!data.photoURL && userPhotoURL) {
+                    updates.photoURL = userPhotoURL;
+                    needsUpdate = true;
+                }
+                if (needsUpdate) {
+                    updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('users').doc(user.uid).set(updates, { merge: true });
+                    console.log('✅ Đã cập nhật thông tin user:', user.email);
                 }
                 return true;
             } catch (e) {
