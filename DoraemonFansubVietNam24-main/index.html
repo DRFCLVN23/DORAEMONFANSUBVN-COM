@@ -3055,18 +3055,21 @@
             }
         }
 
+        let adminEmails = new Set();
+        let adminUids = new Set();
+
         async function loadAdminList() {
             try {
                 const snapshot = await db.collection('admins').get();
                 adminEmails = new Set();
+                adminUids = new Set();
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.email) {
-                        adminEmails.add(data.email.toLowerCase().trim());
-                    }
+                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
+                    if (data.uid) adminUids.add(data.uid);
                 });
                 adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
-                console.log('✅ Danh sách Admin:', adminEmails);
+                console.log('✅ Danh sách Admin Emails:', adminEmails, 'UIDs:', adminUids);
             } catch (e) {
                 console.error('Lỗi load admin list:', e);
             }
@@ -3075,9 +3078,25 @@
         // ============================================================
         // KIỂM TRA ADMIN
         // ============================================================
-        function isUserAdmin(email) {
-            if (!email) return false;
-            return adminEmails.has(email.toLowerCase().trim());
+        function isUserAdmin(userOrEmail, uid = null) {
+            if (!userOrEmail && !uid) return false;
+            let emailToCheck = '';
+            let uidToCheck = uid;
+
+            if (typeof userOrEmail === 'object' && userOrEmail !== null) {
+                emailToCheck = userOrEmail.email || '';
+                uidToCheck = userOrEmail.uid || uid;
+            } else if (typeof userOrEmail === 'string') {
+                emailToCheck = userOrEmail;
+            }
+
+            if (emailToCheck && adminEmails.has(emailToCheck.toLowerCase().trim())) {
+                return true;
+            }
+            if (uidToCheck && adminUids.has(uidToCheck)) {
+                return true;
+            }
+            return false;
         }
 
         // ============================================================
@@ -3164,7 +3183,7 @@
                 createPostBox.style.pointerEvents = 'auto';
                 postInput.placeholder = `${user.displayName || 'Bạn'} đang nghĩ gì thế?`;
 
-                isAdmin = isUserAdmin(user.email);
+                isAdmin = isUserAdmin(user);
 
                 if (isAdmin) {
                     dashboardLink.style.display = 'inline-block';

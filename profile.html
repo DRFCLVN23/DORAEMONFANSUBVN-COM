@@ -1557,40 +1557,46 @@
         let isViewingSelf = false;
         let isAdmin = false;
         let adminEmails = new Set();
+        let adminUids = new Set();
 
         // ============================================================
         // LẤY DANH SÁCH ADMIN
         // ============================================================
-        let _adminListLoaded = false;
         async function loadAdminList() {
-            if (_adminListLoaded && adminEmails.size > 0) return;
-            const cached = sessionStorage.getItem('adminEmails');
-            if (cached) {
-                try {
-                    adminEmails = new Set(JSON.parse(cached));
-                    adminEmails.add(SUPER_ADMIN_EMAIL);
-                    _adminListLoaded = true;
-                    return;
-                } catch(e) {}
-            }
             try {
                 const snapshot = await db.collection('admins').get();
                 adminEmails = new Set();
+                adminUids = new Set();
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.email) adminEmails.add(data.email);
+                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
+                    if (data.uid) adminUids.add(data.uid);
                 });
-                adminEmails.add(SUPER_ADMIN_EMAIL);
-                sessionStorage.setItem('adminEmails', JSON.stringify([...adminEmails]));
-                _adminListLoaded = true;
+                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
             } catch (e) {
                 console.error('Lỗi load admin list:', e);
             }
         }
 
-        function isUserAdmin(email) {
-            if (!email) return false;
-            return adminEmails.has(email);
+        function isUserAdmin(userOrEmail, uid = null) {
+            if (!userOrEmail && !uid) return false;
+            let emailToCheck = '';
+            let uidToCheck = uid;
+
+            if (typeof userOrEmail === 'object' && userOrEmail !== null) {
+                emailToCheck = userOrEmail.email || '';
+                uidToCheck = userOrEmail.uid || uid;
+            } else if (typeof userOrEmail === 'string') {
+                emailToCheck = userOrEmail;
+            }
+
+            if (emailToCheck && adminEmails.has(emailToCheck.toLowerCase().trim())) {
+                return true;
+            }
+            if (uidToCheck && adminUids.has(uidToCheck)) {
+                return true;
+            }
+            return false;
         }
 
         // ============================================================
@@ -1599,14 +1605,13 @@
         function updateAdminHeader() {
             const dashboardLink = document.getElementById('dashboardLink');
             const headerBadge = document.getElementById('headerBadge');
-            if (!dashboardLink || !headerBadge) return;
 
             if (isAdmin) {
-                dashboardLink.style.display = 'inline-block';
-                headerBadge.style.display = 'inline-block';
+                if (dashboardLink) dashboardLink.style.display = 'inline-block';
+                if (headerBadge) headerBadge.style.display = 'inline-block';
             } else {
-                dashboardLink.style.display = 'none';
-                headerBadge.style.display = 'none';
+                if (dashboardLink) dashboardLink.style.display = 'none';
+                if (headerBadge) headerBadge.style.display = 'none';
             }
         }
 

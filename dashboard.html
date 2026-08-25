@@ -1608,18 +1608,25 @@
         // ============================================================
         // LOAD DANH SÁCH ADMIN
         // ============================================================
+        let adminEmails = new Set();
+        let adminUids = new Set();
+
         async function loadAdminList() {
             try {
                 const snapshot = await db.collection('admins').get();
                 adminEmails = new Set();
+                adminUids = new Set();
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data.email) {
                         adminEmails.add(data.email.toLowerCase().trim());
                     }
+                    if (data.uid) {
+                        adminUids.add(data.uid);
+                    }
                 });
                 adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
-                console.log('✅ Danh sách Admin:', adminEmails);
+                console.log('✅ Danh sách Admin Emails:', adminEmails, 'UIDs:', adminUids);
             } catch (e) {
                 console.error('Lỗi load admin list:', e);
             }
@@ -1668,7 +1675,7 @@
                 const bannedSnapshot = await db.collection('banned_users').get();
                 const bannedEmails = new Set();
                 bannedSnapshot.forEach(doc => {
-                    bannedEmails.add(doc.data().email);
+                    if (doc.data()?.email) bannedEmails.add(doc.data().email.toLowerCase().trim());
                 });
 
                 let html = '', count = 0;
@@ -1690,9 +1697,10 @@
                         });
                     }
 
-                    const isSuperAdmin = data.email === SUPER_ADMIN_EMAIL;
-                    const isAdmin = adminEmails.has(data.email);
-                    const isBanned = bannedEmails.has(data.email);
+                    const userEmailNorm = data.email ? data.email.toLowerCase().trim() : '';
+                    const isSuperAdmin = userEmailNorm === SUPER_ADMIN_EMAIL.toLowerCase().trim();
+                    const isAdmin = isSuperAdmin || (userEmailNorm && adminEmails.has(userEmailNorm)) || adminUids.has(uid) || (data.uid && adminUids.has(data.uid));
+                    const isBanned = userEmailNorm ? bannedEmails.has(userEmailNorm) : false;
 
                     // Kiểm tra trạng thái chặn đăng bài
                     let isBlockedPosts = false;
