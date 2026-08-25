@@ -21,6 +21,10 @@
     <meta name="robots" content="index, follow" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://upload-widget.cloudinary.com">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -28,17 +32,11 @@
 
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js">
-    </script>
-
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript">
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" defer></script>
 
     <style>
         /* ===== RESET & BASE ===== */
@@ -367,6 +365,30 @@
         .btn-dora-outline:hover {
             background: #e2e8f0;
             color: #1e293b;
+        }
+
+        .btn-dora-dismiss {
+            background: transparent;
+            color: #94a3b8;
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 12.5px;
+            border: 1px dashed #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .btn-dora-dismiss:hover {
+            background: #fef2f2;
+            color: #ef4444;
+            border-color: #fca5a5;
         }
 
         /* Responsive Mobile Layout */
@@ -1541,21 +1563,26 @@
             overflow-wrap: break-word;
         }
 
-        .post-content .read-more-btn {
+        .read-more-btn {
             background: none;
-            border: none;
+            border: 1px solid #1a73e8;
             color: #1a73e8;
             font-weight: 600;
             cursor: pointer;
-            padding: 4px 0;
-            font-size: 14px;
-            transition: 0.3s;
-            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
         }
 
-        .post-content .read-more-btn:hover {
+        .read-more-btn:hover {
+            background: #e8f0fe;
             color: #1557b0;
-            text-decoration: underline;
+            border-color: #1557b0;
         }
 
         .post-image {
@@ -1828,40 +1855,52 @@
             }
         }
 
+        /* ===== COMMENT SECTION ===== */
         .comments-section {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e4e6eb;
+            margin-top: 0;
+            border-top: 1px solid #e8ecf0;
             display: none;
+            animation: slideDown 0.25s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
         .comments-section.open {
             display: block;
         }
 
+        .comments-list {
+            padding: 12px 16px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Comment Item */
         .comment-item {
             display: flex;
             gap: 10px;
-            padding: 8px 0;
+            align-items: flex-start;
         }
 
         .comment-item .avatar-link {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             overflow: hidden;
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
+            display: block;
+            border: 2px solid #e8f0fe;
             text-decoration: none;
-            cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .comment-item .avatar-link:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
+            box-shadow: 0 2px 8px rgba(26,115,232,0.25);
         }
 
         .comment-item .avatar-link img {
@@ -1871,62 +1910,86 @@
         }
 
         .comment-item .comment-body {
-            background: #f0f2f5;
-            padding: 8px 14px;
-            border-radius: 16px;
             flex: 1;
+            min-width: 0;
         }
 
-        .comment-item .comment-body .name {
-            font-weight: 600;
-            font-size: 13px;
+        .comment-bubble {
+            background: #f0f4ff;
+            border: 1px solid #e2eaff;
+            padding: 10px 14px 8px;
+            border-radius: 0 16px 16px 16px;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .comment-item:hover .comment-bubble {
+            background: #e8f0fe;
+        }
+
+        .comment-bubble .comment-name-row {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             flex-wrap: wrap;
+            margin-bottom: 3px;
         }
 
-        .comment-item .comment-body .name .profile-link {
+        .comment-bubble .comment-name-row .profile-link {
+            font-weight: 700;
+            font-size: 13px;
+            color: #1a1a2e;
             text-decoration: none;
-            color: inherit;
-            cursor: pointer;
-            transition: 0.3s;
+            transition: color 0.2s;
         }
 
-        .comment-item .comment-body .name .profile-link:hover {
+        .comment-bubble .comment-name-row .profile-link:hover {
             color: #1a73e8;
-            text-decoration: underline;
         }
 
-        .comment-item .comment-body .name .logo-small {
-            height: 16px;
+        .comment-bubble .comment-name-row .logo-small {
+            height: 15px;
             width: auto;
             border-radius: 50%;
         }
 
-        .comment-item .comment-body .text {
+        .comment-bubble .comment-text {
             font-size: 14px;
-            color: #1a1a2e;
+            color: #2d3748;
+            line-height: 1.55;
+            word-break: break-word;
+            white-space: pre-wrap;
         }
 
-        .comment-item .comment-body .time {
-            font-size: 11px;
-            color: #65676b;
+        .comment-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+            padding-left: 2px;
+        }
+
+        .comment-time {
+            font-size: 11.5px;
+            color: #8a94a6;
+            font-weight: 500;
         }
 
         .comment-delete-btn {
             background: none;
             border: none;
-            color: #aaa;
-            font-size: 12px;
+            color: #c0c7d4;
+            font-size: 11px;
             cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 8px;
-            transition: 0.2s;
-            margin-left: auto;
-            line-height: 1;
+            padding: 2px 7px;
+            border-radius: 20px;
+            transition: all 0.2s;
             opacity: 0;
             pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 500;
         }
 
         .comment-item:hover .comment-delete-btn {
@@ -1935,41 +1998,84 @@
         }
 
         .comment-delete-btn:hover {
-            background: #fce8e6;
-            color: #c62828;
+            background: #fff0f0;
+            color: #e53e3e;
         }
 
-        .comment-input {
+        /* Comment Input */
+        .comment-input-wrapper {
             display: flex;
             gap: 10px;
-            margin-top: 8px;
+            align-items: flex-end;
+            padding: 10px 16px 14px;
+            border-top: 1px solid #f0f2f5;
         }
 
-        .comment-input input {
+        .comment-input-wrapper .comment-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e8f0fe;
+            flex-shrink: 0;
+        }
+
+        .comment-input-box {
             flex: 1;
-            padding: 8px 14px;
-            border: none;
-            background: #f0f2f5;
-            border-radius: 20px;
+            position: relative;
+        }
+
+        .comment-input-box input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 52px 10px 16px;
+            border: 1.5px solid #dde3f0;
+            background: #f7f8fc;
+            border-radius: 24px;
             font-size: 14px;
             outline: none;
+            color: #1a1a2e;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            font-family: inherit;
         }
 
-        .comment-input button {
+        .comment-input-box input:focus {
+            border-color: #1a73e8;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+        }
+
+        .comment-input-box input::placeholder {
+            color: #a0aab8;
+        }
+
+        .comment-send-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
             background: #1a73e8;
             color: white;
             border: none;
-            padding: 10px 18px;
-            border-radius: 999px;
-            font-weight: 700;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s ease, transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background 0.2s, transform 0.2s;
+            flex-shrink: 0;
         }
 
-        .comment-input button:hover {
-            background: #1058a6;
-            transform: translateY(-1px);
+        .comment-send-btn:hover {
+            background: #1557b0;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .comment-send-btn:active {
+            transform: translateY(-50%) scale(0.95);
         }
 
         .empty-state {
@@ -3649,6 +3755,183 @@
                 font-size: 14px;
             }
         }
+
+        @media (max-width: 480px) {
+            .post-footer {
+                gap: 2px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }
+            .post-footer::-webkit-scrollbar { display: none; }
+
+            .post-footer button {
+                white-space: nowrap;
+                flex-shrink: 0;
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .post-card {
+                border-radius: 12px;
+                margin-bottom: 10px;
+                padding: 14px 12px 10px;
+            }
+
+            .post-header .info .name {
+                font-size: 13px;
+            }
+
+            .post-header .info .time {
+                font-size: 11px;
+            }
+
+            .post-content {
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
+            .create-post {
+                border-radius: 12px;
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+
+            .create-post-top {
+                gap: 8px;
+            }
+
+            .create-post-top textarea {
+                font-size: 14px;
+                min-height: 44px;
+            }
+
+            #composerAvatar {
+                width: 36px !important;
+                height: 36px !important;
+            }
+
+            .create-post-bottom {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            .post-actions {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }
+            .post-actions::-webkit-scrollbar { display: none; }
+
+            .post-actions button {
+                white-space: nowrap;
+                flex-shrink: 0;
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            .submit-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .tabs-container {
+                gap: 4px;
+                padding: 0 8px;
+            }
+
+            .tab-btn {
+                font-size: 12px;
+                padding: 10px 10px;
+            }
+
+            .newsfeed-hero {
+                padding: 20px 14px;
+                border-radius: 12px;
+            }
+
+            .newsfeed-hero h2 {
+                font-size: 20px;
+            }
+
+            .hero-desc {
+                font-size: 13px;
+            }
+
+            .hero-links {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .hero-link {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+
+            .comment-input-wrapper {
+                padding: 8px 12px 12px;
+            }
+
+            .comment-input-box input {
+                font-size: 13px;
+                padding: 9px 46px 9px 13px;
+            }
+
+            .comment-send-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+
+            .comment-bubble {
+                padding: 8px 12px 6px;
+            }
+
+            .comment-bubble .comment-text {
+                font-size: 13px;
+            }
+
+            .post-image {
+                border-radius: 10px;
+            }
+
+            .post-video {
+                border-radius: 10px;
+            }
+
+            .pin-badge {
+                font-size: 11px;
+            }
+
+            .filter-sidebar {
+                padding: 10px 12px;
+                border-radius: 12px;
+            }
+
+            .header-inner {
+                padding: 0 10px;
+                height: 52px;
+            }
+
+            .logo img {
+                height: 28px;
+            }
+
+            #authStatus img {
+                width: 30px;
+                height: 30px;
+            }
+
+            .logout-btn, #logoutBtn {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+        }
     </style>
 </head>
 
@@ -3708,6 +3991,9 @@
                         </a>
                         <button onclick="closeDoraemonNotification()" class="btn-dora-outline">
                             Xem phim ngay
+                        </button>
+                        <button onclick="dismissFor24h()" class="btn-dora-dismiss" title="Ẩn thông báo này trong 24 giờ">
+                            🚫 Không hiển thị lại 24h
                         </button>
                     </div>
                 </div>
@@ -3824,7 +4110,7 @@
                         <div class="create-post" id="createPostBox">
                             <div class="create-post-top">
                                 <a href="profile.html" class="avatar-link">
-                                    <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Logo" loading="lazy">
+                                    <img id="composerAvatar" src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Avatar" loading="lazy" style="border-radius:50%;width:40px;height:40px;object-fit:cover;">
                                 </a>
                                 <textarea id="postInput" placeholder="Bạn đang nghĩ gì thế?" rows="1"></textarea>
                             </div>
@@ -4101,6 +4387,33 @@
         let authReady = false;
         let adminEmails = new Set();
 
+        function timeAgo(timestamp) {
+            if (!timestamp) return 'Vừa xong';
+            let date;
+            if (timestamp.toDate) {
+                date = timestamp.toDate();
+            } else if (timestamp instanceof Date) {
+                date = timestamp;
+            } else if (typeof timestamp === 'number') {
+                date = new Date(timestamp);
+            } else if (timestamp.seconds) {
+                date = new Date(timestamp.seconds * 1000);
+            } else {
+                return 'Vừa xong';
+            }
+
+            const now = Date.now();
+            const diff = Math.floor((now - date.getTime()) / 1000); // giây
+
+            if (diff < 30) return 'Vừa xong';
+            if (diff < 60) return `${diff} giây trước`;
+            if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+            if (diff < 86400 * 30) return `${Math.floor(diff / 86400)} ngày trước`;
+            if (diff < 86400 * 365) return `${Math.floor(diff / (86400 * 30))} tháng trước`;
+            return `${Math.floor(diff / (86400 * 365))} năm trước`;
+        }
+
         // ============================================================
         // FILTER STATE
         // ============================================================
@@ -4284,6 +4597,11 @@
         });
 
         function showDoraemonNotification() {
+            // Kiểm tra xem người dùng đã chọn "Không hiển thị lại 24h" chưa
+            const dismissedUntil = localStorage.getItem('doraemonNotificationDismissedUntil');
+            if (dismissedUntil && Date.now() < parseInt(dismissedUntil, 10)) {
+                return; // Còn trong 24h, không hiển thị
+            }
             const notification = document.getElementById('doraemonNotification');
             if (notification) {
                 notification.classList.remove('hidden');
@@ -4302,6 +4620,13 @@
                     notification.style.visibility = 'hidden';
                 }, 400);
             }
+        }
+
+        function dismissFor24h() {
+            // Lưu thời điểm hết hạn = bây giờ + 24 giờ (ms)
+            const expiry = Date.now() + 24 * 60 * 60 * 1000;
+            localStorage.setItem('doraemonNotificationDismissedUntil', expiry.toString());
+            closeDoraemonNotification();
         }
 
         // ============================================================
@@ -4358,18 +4683,28 @@
         // ============================================================
         // LẤY DANH SÁCH ADMIN
         // ============================================================
+        let _adminListLoaded = false;
         async function loadAdminList() {
+            if (_adminListLoaded && adminEmails.size > 0) return;
+            const cached = sessionStorage.getItem('adminEmails');
+            if (cached) {
+                try {
+                    adminEmails = new Set(JSON.parse(cached));
+                    adminEmails.add(SUPER_ADMIN_EMAIL);
+                    _adminListLoaded = true;
+                    return;
+                } catch(e) {}
+            }
             try {
                 const snapshot = await db.collection('admins').get();
                 adminEmails = new Set();
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.email) {
-                        adminEmails.add(data.email);
-                    }
+                    if (data.email) adminEmails.add(data.email);
                 });
                 adminEmails.add(SUPER_ADMIN_EMAIL);
-                console.log('✅ Danh sách Admin:', adminEmails);
+                sessionStorage.setItem('adminEmails', JSON.stringify([...adminEmails]));
+                _adminListLoaded = true;
             } catch (e) {
                 console.error('Lỗi load admin list:', e);
             }
@@ -4414,20 +4749,49 @@
             }
         }
 
-        // Lấy shortId từ Firestore, trả về chuỗi '#XXXXXXX'
-        async function resolveUserName(user) {
-            if (!user) return '#0000000';
+        // Lấy thông tin user từ Firestore (displayName, photoURL, shortId)
+        let _userProfileCache = null;
+        let _userProfileCacheUid = null;
+
+        async function resolveUserProfile(user) {
+            if (!user) return { name: 'Người dùng', avatar: LOGO_URL, shortId: null };
+            if (_userProfileCacheUid === user.uid && _userProfileCache) return _userProfileCache;
             try {
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 const data = userDoc.data();
-                if (data?.shortId) {
-                    return '#' + data.shortId;
+                if (data) {
+                    const DEFAULTS = ['Người dùng', 'người dùng', ''];
+                    const firestoreName = data.displayName || '';
+                    const authName = user.displayName || user.email?.split('@')[0] || 'Người dùng';
+                    const name = (!DEFAULTS.includes(firestoreName)) ? firestoreName : authName;
+
+                    if (DEFAULTS.includes(firestoreName) && authName !== 'Người dùng') {
+                        db.collection('users').doc(user.uid).set(
+                            { displayName: authName },
+                            { merge: true }
+                        ).catch(() => {});
+                    }
+
+                    const avatar = data.photoURL || user.photoURL ||
+                        'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1a73e8&color=fff&size=80';
+                    _userProfileCache = { name, avatar, shortId: data.shortId || null };
+                    _userProfileCacheUid = user.uid;
+                    return _userProfileCache;
                 }
             } catch (e) {
-                console.error('Lỗi lấy shortId từ Firestore:', e);
+                console.error('Lỗi lấy profile từ Firestore:', e);
             }
-            // Fallback nếu chưa có shortId
-            return getUserFallbackName(user);
+            // Fallback về Firebase Auth
+            const name = user.displayName || user.email?.split('@')[0] || 'Người dùng';
+            const avatar = user.photoURL ||
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1a73e8&color=fff&size=80';
+            return { name, avatar, shortId: null };
+        }
+
+        // Giữ tương thích ngược: resolveUserName trả về displayName
+        async function resolveUserName(user) {
+            const profile = await resolveUserProfile(user);
+            return profile.name;
         }
 
         // Lấy shortId raw (không có #) từ Firestore
@@ -4563,15 +4927,20 @@
         // ============================================================
         auth.onAuthStateChanged(async (user) => {
             authReady = true;
-            await loadAdminList();
 
             if (user) {
-                await ensureUserHasGoogleId(user);
+                const [, twoFactor, isBanned, profile] = await Promise.all([
+                    loadAdminList(),
+                    getUserTwoFactorData(user.uid),
+                    checkBannedUser(user.email),
+                    resolveUserProfile(user),
+                    ensureUserHasGoogleId(user)
+                ]);
 
-                if (await ensureTwoFactorVerified(user)) {
+                if (twoFactor?.enabled && twoFactor.secret && !isTwoFactorVerifiedForUser(user.uid)) {
+                    window.location.href = 'login.html';
                     return;
                 }
-                const isBanned = await checkBannedUser(user.email);
                 if (isBanned) {
                     showAccountDeletedModal();
                     return;
@@ -4582,12 +4951,13 @@
                 authStatus.style.display = 'flex';
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
-                const resolvedName = await resolveUserName(user);
-                userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(resolvedName);
-                userName.textContent = resolvedName;
+                userAvatar.src = profile.avatar;
+                userName.textContent = profile.name;
+                const composerAvatar = document.getElementById('composerAvatar');
+                if (composerAvatar) composerAvatar.src = profile.avatar;
                 createPostBox.style.opacity = '1';
                 createPostBox.style.pointerEvents = 'auto';
-                postInput.placeholder = `${resolvedName || 'Bạn'} đang nghĩ gì thế?`;
+                postInput.placeholder = `${profile.name} đang nghĩ gì thế?`;
 
                 isAdmin = isUserAdmin(user.email);
 
@@ -4607,18 +4977,11 @@
                     renderMoviesByCategory(currentCategory);
                 }
 
-                if (!tabCache.newsfeed.loaded) {
-                    await loadPosts();
-                    tabCache.newsfeed.loaded = true;
-                }
-                if (!tabCache.movies.loaded) {
-                    await loadMovies();
-                    tabCache.movies.loaded = true;
-                }
-                if (!tabCache.events.loaded) {
-                    await loadEvents();
-                    tabCache.events.loaded = true;
-                }
+                const loads = [];
+                if (!tabCache.newsfeed.loaded) loads.push(loadPosts().then(() => { tabCache.newsfeed.loaded = true; }));
+                if (!tabCache.movies.loaded) loads.push(loadMovies().then(() => { tabCache.movies.loaded = true; }));
+                if (!tabCache.events.loaded) loads.push(loadEvents().then(() => { tabCache.events.loaded = true; }));
+                await Promise.all(loads);
             } else {
                 isLoggedIn = false;
                 isAdmin = false;
@@ -4640,18 +5003,11 @@
                     renderMoviesByCategory(currentCategory);
                 }
 
-                if (!tabCache.newsfeed.loaded) {
-                    await loadPosts();
-                    tabCache.newsfeed.loaded = true;
-                }
-                if (!tabCache.movies.loaded) {
-                    await loadMovies();
-                    tabCache.movies.loaded = true;
-                }
-                if (!tabCache.events.loaded) {
-                    await loadEvents();
-                    tabCache.events.loaded = true;
-                }
+                const loadsGuest = [];
+                if (!tabCache.newsfeed.loaded) loadsGuest.push(loadPosts().then(() => { tabCache.newsfeed.loaded = true; }));
+                if (!tabCache.movies.loaded) loadsGuest.push(loadMovies().then(() => { tabCache.movies.loaded = true; }));
+                if (!tabCache.events.loaded) loadsGuest.push(loadEvents().then(() => { tabCache.events.loaded = true; }));
+                await Promise.all(loadsGuest);
             }
         });
 
@@ -4794,9 +5150,10 @@
 
             try {
                 const user = auth.currentUser;
-                const currentUserName = await resolveUserName(user);
-                const currentShortId = await getShortId(user.uid);
-                const currentUserAvatar = user.photoURL || LOGO_URL;
+                const profile = await resolveUserProfile(user);
+                const currentUserName = profile.name;
+                const currentShortId = profile.shortId;
+                const currentUserAvatar = profile.avatar;
                 const postData = {
                     user: currentUserName,
                     shortId: currentShortId || '',
@@ -4810,6 +5167,7 @@
                     totalLikes: 0,
                     comments: [],
                     showComments: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     userId: user.uid,
                     userEmail: user.email,
@@ -4896,6 +5254,8 @@
                 snapshot.forEach(doc => {
                     const p = doc.data();
                     p.id = doc.id;
+                    // Tính thời gian tương đối từ createdAt hoặc timestamp
+                    p.time = timeAgo(p.createdAt || p.timestamp);
                     allPostsData.push(p);
                 });
 
@@ -5021,7 +5381,7 @@
                 const isLiked = !!likedBy[currentUserEmail];
                 const totalLikes = p.totalLikes || p.likes || Object.keys(likedBy).length || 0;
 
-                const canEdit = isOwner || isPostAdmin;
+                const canEdit = isOwner || isAdmin;
                 const isPinned = p.pinned === true;
 
                 // Kiểm tra nội dung dài để thu gọn
@@ -5038,24 +5398,28 @@
                         isUserAdmin(currentUserEmail)
                     );
                     return `
-                            <div class="comment-item">
-                                <a href="${commentProfileLink}" class="avatar-link">
-                                    <img src="${c.avatar || LOGO_URL}" alt="avatar" loading="lazy">
-                                </a>
-                                <div class="comment-body">
-                                    <div class="name">
+                        <div class="comment-item">
+                            <a href="${commentProfileLink}" class="avatar-link">
+                                <img src="${c.avatar || LOGO_URL}" alt="avatar" loading="lazy">
+                            </a>
+                            <div class="comment-body">
+                                <div class="comment-bubble">
+                                    <div class="comment-name-row">
                                         <a href="${commentProfileLink}" class="profile-link">
                                             ${c.shortId ? '#' + c.shortId : (c.user || c.userEmail?.split('@')[0] || 'Người dùng')}
                                         </a>
                                         ${isCommentAdmin ? `<span class="verified-badge">✓ Admin</span>` : ''}
                                         <img src="${LOGO_URL}" class="logo-small" alt="logo" loading="lazy">
-                                        ${canDeleteComment ? `<button class="comment-delete-btn" onclick="deleteComment('${p.id}', ${cIndex})" title="Xóa bình luận">🗑️</button>` : ''}
                                     </div>
-                                    <div class="text">${c.text || ''}</div>
-                                    <div class="time">${c.time || 'Vừa xong'}</div>
+                                    <div class="comment-text">${c.text || ''}</div>
+                                </div>
+                                <div class="comment-meta-row">
+                                    <span class="comment-time">${timeAgo(c.createdAt) || c.time || 'Vừa xong'}</span>
+                                    ${canDeleteComment ? `<button class="comment-delete-btn" onclick="deleteComment('${p.id}', ${cIndex})" title="Xóa bình luận">🗑️ Xóa</button>` : ''}
                                 </div>
                             </div>
-                        `;
+                        </div>
+                    `;
                 }));
                 const commentsHtmlStr = commentsHtml.join('');
 
@@ -5127,10 +5491,15 @@
                                 ${isPostAdmin ? `<button onclick="togglePinPost('${p.id}')" class="pin-btn ${isPinned ? 'pinned' : ''}">${isPinned ? '📍 Đã ghim' : '📌 Ghim'}</button>` : ''}
                             </div>
                             <div class="comments-section ${p.showComments ? 'open' : ''}" id="comments-${p.id}">
-                                ${commentsHtmlStr}
-                                <div class="comment-input">
-                                    <input type="text" id="commentInput-${p.id}" placeholder="Viết bình luận...">
-                                    <button onclick="addComment('${p.id}')">Gửi</button>
+                                <div class="comments-list" id="comments-list-${p.id}">
+                                    ${commentsHtmlStr}
+                                </div>
+                                <div class="comment-input-wrapper">
+                                    <img src="${currentUser?.photoURL || LOGO_URL}" class="comment-user-avatar" alt="avatar">
+                                    <div class="comment-input-box">
+                                        <input type="text" id="commentInput-${p.id}" placeholder="Viết bình luận..." onkeydown="if(event.key==='Enter')addComment('${p.id}')">
+                                        <button class="comment-send-btn" onclick="addComment('${p.id}')" title="Gửi bình luận">➤</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -5376,6 +5745,7 @@
                     color: '1',
                     text: text,
                     time: 'Vừa xong',
+                    createdAt: Date.now(),
                     userEmail: user.email || '',
                     userId: user.uid || '',
                     isAdmin: isAdmin

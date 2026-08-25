@@ -15,19 +15,16 @@
     <!-- ===== FAVICON ===== -->
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
 
-    <!-- Firebase compat -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js">
-    </script>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://upload-widget.cloudinary.com">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
 
-    <!-- Cloudinary Upload Widget -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript">
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" defer></script>
 
     <style>
         * {
@@ -1087,21 +1084,29 @@
                 white-space: nowrap;
             }
             .profile-card {
-                padding: 20px;
+                padding: 20px 16px;
+                border-radius: 16px;
             }
             .profile-avatar img {
-                width: 90px;
-                height: 90px;
+                width: 86px;
+                height: 86px;
+            }
+            .profile-avatar .avatar-overlay {
+                font-size: 11px;
+                padding: 4px 8px;
             }
             .stats-row {
                 grid-template-columns: 1fr 1fr 1fr;
-                gap: 8px;
+                gap: 6px;
             }
             .stat-item {
-                padding: 10px;
+                padding: 8px 6px;
             }
             .stat-item .number {
-                font-size: 18px;
+                font-size: 16px;
+            }
+            .stat-item .label {
+                font-size: 10px;
             }
             .verified-badge {
                 font-size: 9px;
@@ -1111,7 +1116,55 @@
                 font-size: 11px;
                 padding: 4px 10px;
             }
-        }
+            .security-card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+            .security-badges {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .security-badge {
+                width: 100%;
+                text-align: center;
+            }
+            .form-group input,
+            .form-group textarea {
+                font-size: 14px;
+                padding: 10px 13px;
+                border-radius: 10px;
+            }
+            .form-group textarea {
+                min-height: 80px;
+            }
+            .form-group label {
+                font-size: 13px;
+            }
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+            .profile-container {
+                padding: 12px 0 24px;
+            }
+            .profile-layout {
+                gap: 12px;
+            }
+            .profile-name {
+                font-size: 20px;
+            }
+            .profile-bio-text {
+                font-size: 13px;
+            }
+            .member-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
         }
     </style>
 </head>
@@ -1508,17 +1561,28 @@
         // ============================================================
         // LẤY DANH SÁCH ADMIN
         // ============================================================
+        let _adminListLoaded = false;
         async function loadAdminList() {
+            if (_adminListLoaded && adminEmails.size > 0) return;
+            const cached = sessionStorage.getItem('adminEmails');
+            if (cached) {
+                try {
+                    adminEmails = new Set(JSON.parse(cached));
+                    adminEmails.add(SUPER_ADMIN_EMAIL);
+                    _adminListLoaded = true;
+                    return;
+                } catch(e) {}
+            }
             try {
                 const snapshot = await db.collection('admins').get();
                 adminEmails = new Set();
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.email) {
-                        adminEmails.add(data.email);
-                    }
+                    if (data.email) adminEmails.add(data.email);
                 });
                 adminEmails.add(SUPER_ADMIN_EMAIL);
+                sessionStorage.setItem('adminEmails', JSON.stringify([...adminEmails]));
+                _adminListLoaded = true;
             } catch (e) {
                 console.error('Lỗi load admin list:', e);
             }
@@ -1647,11 +1711,14 @@
         // AUTH STATE
         // ============================================================
         auth.onAuthStateChanged(async (user) => {
-            await loadAdminList();
             loadingState.style.display = 'none';
 
             if (user) {
-                const twoFactor = await getUserTwoFactorData(user.uid);
+                const [, twoFactor] = await Promise.all([
+                    loadAdminList(),
+                    getUserTwoFactorData(user.uid)
+                ]);
+
                 if (twoFactor?.enabled && twoFactor.secret && !isTwoFactorVerifiedForUser(user.uid)) {
                     await auth.signOut();
                     window.location.href = 'login.html';
@@ -1665,7 +1732,7 @@
                     .displayName || user.email);
                 userName.textContent = user.displayName || user.email;
 
-                await ensureUserInFirestore(user);
+                ensureUserInFirestore(user).catch(() => {});
 
                 isAdmin = isUserAdmin(user.email);
                 updateAdminHeader();
@@ -1722,14 +1789,33 @@
         // HIỂN THỊ DỮ LIỆU USER
         // ============================================================
         function displayUserData(data) {
-            const displayName = data.displayName || data.email?.split('@')[0] || 'Người dùng';
+            const DEFAULTS = ['Người dùng', 'người dùng', ''];
+            const firestoreName = data.displayName || '';
+            const authName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Người dùng';
+            // Ưu tiên tên thực từ Firestore, nếu là mặc định thì dùng Firebase Auth
+            const displayName = (!DEFAULTS.includes(firestoreName)) ? firestoreName : authName;
             const email = data.email || '';
-
-            profileAvatar.src = data.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) +
+            const avatarUrl = data.photoURL || currentUser?.photoURL ||
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) +
                 '&background=1a73e8&color=fff&size=120';
+
+            profileAvatar.src = avatarUrl;
             profileNameText.textContent = displayName;
             profileEmail.textContent = email;
             profileBio.textContent = data.bio || '⭐ Thành viên của Doraemon Fansub VN';
+
+            // Đồng nhất header với Firestore data khi xem profile của chính mình
+            if (isViewingSelf) {
+                userAvatar.src = avatarUrl;
+                userName.textContent = displayName;
+                // Tự động sync vào Firestore nếu đang dùng mặc định
+                if (DEFAULTS.includes(firestoreName) && authName !== 'Người dùng' && currentUser) {
+                    db.collection('users').doc(currentUser.uid).set(
+                        { displayName: authName },
+                        { merge: true }
+                    ).catch(() => {});
+                }
+            }
 
             if (isUserAdmin(data.email)) {
                 profileBadge.style.display = 'inline-block';
