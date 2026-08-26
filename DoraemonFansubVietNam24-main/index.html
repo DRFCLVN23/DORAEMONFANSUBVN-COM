@@ -2839,6 +2839,7 @@
         let isAdmin = false;
         let currentUserEmail = '';
         let adminEmails = new Set();
+        let adminUids = new Set();
 
         // ============================================================
         // FILTER STATE
@@ -3055,8 +3056,7 @@
             }
         }
 
-        let adminEmails = new Set();
-        let adminUids = new Set();
+
 
         async function loadAdminList() {
             try {

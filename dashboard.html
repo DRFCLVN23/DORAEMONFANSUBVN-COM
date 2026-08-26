@@ -1483,6 +1483,7 @@
         const db = firebase.firestore();
         const SUPER_ADMIN_EMAIL = 'tuankhaimoi12345@gmail.com';
         let adminEmails = new Set();
+        let adminUids = new Set();
 
         // ============================================================
         // TOAST
@@ -1608,8 +1609,7 @@
         // ============================================================
         // LOAD DANH SÁCH ADMIN
         // ============================================================
-        let adminEmails = new Set();
-        let adminUids = new Set();
+
 
         async function loadAdminList() {
             try {

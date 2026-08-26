@@ -4386,6 +4386,7 @@
         let currentUserEmail = '';
         let authReady = false;
         let adminEmails = new Set();
+        let adminUids = new Set();
 
         function timeAgo(timestamp) {
             if (!timestamp) return 'Vừa xong';
@@ -4683,8 +4684,7 @@
         // ============================================================
         // LẤY DANH SÁCH ADMIN
         // ============================================================
-        let adminEmails = new Set();
-        let adminUids = new Set();
+
 
         async function loadAdminList() {
             try {
