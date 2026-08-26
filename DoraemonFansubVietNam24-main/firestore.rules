@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Collection Phim
+    match /movies/{movieId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Collection Bình luận phim
+    match /movie_comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid);
+    }
+
+    // Collection Danh sách bị cấm
+    match /banned_users/{documentId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Collection Danh sách IP bị cấm
+    match /banned_ips/{ip} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Collection Người dùng
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId) || isSignedIn();
+    }
+
+    // Collection Bài viết newsfeed
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    // Sub-collection comments của bài viết
+    match /posts/{postId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    // Collection Sự kiện & Báo lỗi
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /reports/{reportId} {
+      allow read, write: if true;
+    }
+  }
+}
+
+

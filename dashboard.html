@@ -1309,20 +1309,49 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width:50px;">#</th>
-                                <th style="width:50px;">Avatar</th>
+                                <th style="width:40px;">#</th>
+                                <th style="width:40px;">Avatar</th>
                                 <th>Tên</th>
                                 <th>Email</th>
+                                <th>IP mới nhất</th>
                                 <th>Ngày tham gia</th>
                                 <th>Vai trò</th>
                                 <th>Trạng thái</th>
-                                <th style="width:200px;">Hành động</th>
+                                <th style="width:240px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
-                            <tr><td colspan="8" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
+                            <tr><td colspan="9" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- ===== CARD QUẢN LÝ IP BỊ CẤM ===== -->
+                <div style="margin-top:24px;background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                    <div class="table-toolbar" style="margin-bottom:16px;">
+                        <span class="title" style="color:#e94560;">🌐 Danh sách IP bị cấm</span>
+                        <div class="right">
+                            <button class="btn-danger" onclick="promptBanIpManual()" style="font-size:12px;padding:6px 14px;">➕ Cấm IP Thủ Công</button>
+                            <button class="btn-primary" onclick="loadBannedIps()" style="font-size: 12px; padding: 6px 14px;">🔄 Làm mới IP</button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">#</th>
+                                    <th>Địa chỉ IP</th>
+                                    <th>Lý do cấm</th>
+                                    <th>Thời gian cấm</th>
+                                    <th>Người cấm</th>
+                                    <th style="width:120px;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bannedIpsTableBody">
+                                <tr><td colspan="6" class="empty-state"><span class="icon">🌐</span>Đang tải danh sách IP bị cấm...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -1511,6 +1540,19 @@
                 return url.replace('/upload/', `/upload/w_${size},h_${size},c_fill,g_face,q_auto,f_auto/`);
             }
             return url;
+        }
+
+        function getTimestampValue(ts) {
+            if (!ts) return 0;
+            if (typeof ts === 'number') return ts;
+            if (ts && typeof ts.toDate === 'function') return ts.toDate().getTime();
+            if (ts && typeof ts.seconds === 'number') return ts.seconds * 1000;
+            if (ts instanceof Date) return ts.getTime();
+            if (typeof ts === 'string') {
+                const parsed = Date.parse(ts);
+                if (!isNaN(parsed)) return parsed;
+            }
+            return 0;
         }
         let adminEmails = new Set();
         let adminUids = new Set();
@@ -1703,24 +1745,39 @@
                 await loadAdminList();
                 
                 const bannedSnapshot = await db.collection('banned_users').get();
-                const bannedEmails = new Set();
+                const bannedKeys = new Set();
                 bannedSnapshot.forEach(doc => {
-                    if (doc.data()?.email) bannedEmails.add(doc.data().email.toLowerCase().trim());
+                    bannedKeys.add(doc.id.toLowerCase().trim());
+                    const d = doc.data();
+                    if (d.email) bannedKeys.add(d.email.toLowerCase().trim());
+                    if (d.uid) bannedKeys.add(d.uid);
+                });
+
+                const usersList = [];
+                snapshot.forEach(doc => {
+                    usersList.push({ uid: doc.id, ...doc.data() });
+                });
+
+                // Sắp xếp người dùng mới đăng ký lên ĐẦU danh sách (#1)
+                usersList.sort((a, b) => {
+                    const tsA = getTimestampValue(a.createdAt || a.updatedAt);
+                    const tsB = getTimestampValue(b.createdAt || b.updatedAt);
+                    return tsB - tsA;
                 });
 
                 let html = '', count = 0;
 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const uid = doc.id;
+                usersList.forEach(data => {
+                    const uid = data.uid;
                     count++;
 
                     const avatar = data.photoURL ||
                         `https://ui-avatars.com/api/?name=${encodeURIComponent(data.displayName || 'User')}&background=1a73e8&color=fff&size=32`;
 
                     let joinDate = 'Chưa có';
-                    if (data.createdAt?.seconds) {
-                        joinDate = new Date(data.createdAt.seconds * 1000).toLocaleDateString('vi-VN', {
+                    const joinTs = getTimestampValue(data.createdAt || data.updatedAt);
+                    if (joinTs > 0) {
+                        joinDate = new Date(joinTs).toLocaleDateString('vi-VN', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric'
@@ -1730,7 +1787,7 @@
                     const userEmailNorm = data.email ? data.email.toLowerCase().trim() : '';
                     const isSuperAdmin = userEmailNorm === SUPER_ADMIN_EMAIL.toLowerCase().trim();
                     const isAdmin = isSuperAdmin || (userEmailNorm && adminEmails.has(userEmailNorm)) || adminUids.has(uid) || (data.uid && adminUids.has(data.uid));
-                    const isBanned = userEmailNorm ? bannedEmails.has(userEmailNorm) : false;
+                    const isBanned = (userEmailNorm && bannedKeys.has(userEmailNorm)) || (uid && bannedKeys.has(uid));
 
                     // Kiểm tra trạng thái chặn đăng bài
                     let isBlockedPosts = false;
@@ -1778,22 +1835,32 @@
                         statusHtml = `<span style="color:#4caf50;font-weight:600;">✅ Bình thường</span>`;
                     }
 
+                    const userIp = data.lastIp || data.ip || 'Chưa có';
+                    const safeIp = userIp.replace(/'/g, "\\'");
+
                     let actionHtml = '';
                     if (!isSuperAdmin) {
+                        const safeEmail = (data.email || '').replace(/'/g, "\\'");
+                        const safeUid = (uid || '').replace(/'/g, "\\'");
+                        const safeName = (data.displayName || 'User').replace(/'/g, "\\'");
+
                         if (isBanned) {
-                            actionHtml = `<button class="btn-success btn-sm" onclick="unbanUser('${data.email}')">✅ Bỏ cấm</button>`;
+                            actionHtml = `<button class="btn-success btn-sm" onclick="unbanUser('${safeUid}','${safeEmail}')">✅ Bỏ cấm</button>`;
                         } else {
-                            actionHtml =
-                                `<button class="btn-warning btn-sm" onclick="showBlockMenu('${uid}','${data.email}','${data.displayName || 'User'}')">⏸️ Chặn/Cấm</button>`;
-                            actionHtml +=
-                                `<button class="btn-danger btn-sm" onclick="banUser('${uid}','${data.email}')">🚫 Cấm</button>`;
+                            actionHtml = `<button class="btn-warning btn-sm" onclick="showBlockMenu('${safeUid}','${safeEmail}','${safeName}')">⏸️ Chặn</button>`;
+                            actionHtml += `<button class="btn-danger btn-sm" onclick="banUser('${safeUid}','${safeEmail}')">🚫 Cấm</button>`;
                         }
+
+                        if (userIp && userIp !== 'Chưa có') {
+                            actionHtml += `<button class="btn-warning btn-sm" onclick="banIpAddress('${safeIp}','${safeUid}','${safeEmail}')" style="background:#ef6c00;margin-left:2px;" title="Cấm địa chỉ IP này">🌐 Cấm IP</button>`;
+                        }
+
+                        actionHtml += `<button class="btn-danger btn-sm" onclick="deleteUserAccount('${safeUid}','${safeEmail}')" style="background:#b71c1c;margin-left:2px;" title="Xóa vĩnh viễn nick ảo">❌ Xóa</button>`;
+
                         if (!isBanned && !isAdmin) {
-                            actionHtml +=
-                                ` <button class="btn-primary btn-sm" onclick="addAdmin('${data.email}','${uid}')" style="font-size:10px;padding:3px 8px;">👑 Admin</button>`;
+                            actionHtml += ` <button class="btn-primary btn-sm" onclick="addAdmin('${safeEmail}','${safeUid}')" style="font-size:10px;padding:3px 8px;">👑 Admin</button>`;
                         } else if (!isBanned && isAdmin) {
-                            actionHtml +=
-                                ` <button class="btn-danger btn-sm" onclick="removeAdmin('${data.email}')" style="font-size:10px;padding:3px 8px;">🗑️ Admin</button>`;
+                            actionHtml += ` <button class="btn-danger btn-sm" onclick="removeAdmin('${safeEmail}')" style="font-size:10px;padding:3px 8px;">🗑️ Admin</button>`;
                         }
                     } else {
                         actionHtml = `<span style="color:#999;font-size:11px;">🔒 Chủ sở hữu</span>`;
@@ -1811,6 +1878,7 @@
                                 ${data.displayName || 'Người dùng'}
                             </td>
                             <td style="font-size:12px;color:${isBanned ? '#e94560' : '#1a73e8'};">${data.email || ''}</td>
+                            <td style="font-size:12px;color:#f57c00;font-weight:500;">${userIp}</td>
                             <td style="font-size:12px;color:#666;">${joinDate}</td>
                             <td>${roleHtml}</td>
                             <td>${statusHtml}</td>
@@ -1822,45 +1890,181 @@
                 tbody.innerHTML = html;
                 document.getElementById('userCount').textContent = count + ' người dùng';
                 updateStats();
+                loadBannedIps();
             } catch (e) {
                 console.error(e);
                 tbody.innerHTML =
-                    `<tr><td colspan="8" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
+                    `<tr><td colspan="9" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
             }
         }
 
         // ============================================================
-        // BAN / UNBAN
+        // BAN IP / UNBAN IP / LOAD BANNED IPS
         // ============================================================
-        window.banUser = async function(uid, email) {
-            if (!email || email === SUPER_ADMIN_EMAIL) {
-                showToast(email === SUPER_ADMIN_EMAIL ? '⚠️ Không thể cấm Super Admin!' : '⚠️ Không có email!', true);
+        window.banIpAddress = async function(ip, uid, email) {
+            let targetIp = ip;
+            if (!targetIp || targetIp === 'Chưa có') {
+                targetIp = prompt('Nhập địa chỉ IP cần cấm (Ví dụ: 14.232.120.45):') || '';
+            }
+            targetIp = targetIp.trim();
+            if (!targetIp) {
+                showToast('⚠️ Địa chỉ IP không hợp lệ!', true);
                 return;
             }
-            const reason = prompt('Nhập lý do cấm:') || 'Vi phạm điều khoản';
+            const reason = prompt(`Nhập lý do cấm IP ${targetIp}:`) || 'Vi phạm điều khoản / Spam bot';
             try {
-                await db.collection('banned_users').doc(email).set({
-                    uid,
-                    email,
+                const safeIpDoc = targetIp.replace(/\./g, '_');
+                const banData = {
+                    ip: targetIp,
+                    uid: uid || '',
+                    email: email || '',
                     reason,
                     bannedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     bannedBy: auth.currentUser?.email || 'Admin'
-                });
-                showToast(`✅ Đã cấm ${email}!`);
-                loadUsers();
+                };
+                await db.collection('banned_ips').doc(safeIpDoc).set(banData);
+                await db.collection('banned_ips').doc(targetIp).set(banData);
+
+                showToast(`✅ Đã cấm địa chỉ IP ${targetIp}!`);
+                loadBannedIps();
             } catch (e) {
-                showToast('❌ Lỗi: ' + e.message, true);
+                showToast('❌ Lỗi cấm IP: ' + e.message, true);
             }
         };
 
-        window.unbanUser = async function(email) {
-            if (!confirm(`Bỏ cấm cho ${email}?`)) return;
+        window.unbanIpAddress = async function(ip) {
+            if (!confirm(`Bạn có chắc chắn muốn BỎ CẤM cho IP ${ip}?`)) return;
             try {
-                await db.collection('banned_users').doc(email).delete();
-                showToast(`✅ Đã bỏ cấm ${email}!`);
+                const safeIpDoc = ip.replace(/\./g, '_');
+                await db.collection('banned_ips').doc(safeIpDoc).delete().catch(() => {});
+                await db.collection('banned_ips').doc(ip).delete().catch(() => {});
+                showToast(`✅ Đã bỏ cấm địa chỉ IP ${ip}!`);
+                loadBannedIps();
+            } catch (e) {
+                showToast('❌ Lỗi bỏ cấm IP: ' + e.message, true);
+            }
+        };
+
+        window.promptBanIpManual = function() {
+            const ip = prompt('Nhập địa chỉ IP muốn cấm (Ví dụ: 14.232.120.45):');
+            if (ip) banIpAddress(ip);
+        };
+
+        async function loadBannedIps() {
+            const tbody = document.getElementById('bannedIpsTableBody');
+            if (!tbody) return;
+            try {
+                const snapshot = await db.collection('banned_ips').get();
+                if (snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="icon">🌐</span>Không có IP nào bị cấm</td></tr>`;
+                    return;
+                }
+                let html = '', count = 0;
+                const ipSeen = new Set();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const ip = data.ip || doc.id.replace(/_/g, '.');
+                    if (ipSeen.has(ip)) return;
+                    ipSeen.add(ip);
+                    count++;
+                    let timeStr = 'Chưa có';
+                    if (data.bannedAt?.seconds) {
+                        timeStr = new Date(data.bannedAt.seconds * 1000).toLocaleString('vi-VN');
+                    }
+                    html += `
+                        <tr>
+                            <td>${count}</td>
+                            <td><strong style="color:#e94560;background:rgba(233,69,96,0.1);padding:2px 8px;border-radius:4px;font-family:monospace;">${ip}</strong></td>
+                            <td style="font-size:12px;color:#555;">${data.reason || 'Vi phạm điều khoản'}</td>
+                            <td style="font-size:12px;color:#888;">${timeStr}</td>
+                            <td style="font-size:12px;color:#1a73e8;">${data.bannedBy || 'Admin'}</td>
+                            <td>
+                                <button class="btn-success btn-sm" onclick="unbanIpAddress('${ip}')">✅ Bỏ cấm IP</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">❌ Lỗi tải IP: ${e.message}</td></tr>`;
+            }
+        }
+
+        // ============================================================
+        // BAN / UNBAN / DELETE
+        // ============================================================
+        window.banUser = async function(uid, email) {
+            const userEmailNorm = (email || '').toLowerCase().trim();
+            if (userEmailNorm === SUPER_ADMIN_EMAIL.toLowerCase().trim()) {
+                showToast('⚠️ Không thể cấm Super Admin!', true);
+                return;
+            }
+            const banKey = uid || email;
+            if (!banKey) {
+                showToast('⚠️ Không tìm thấy ID hoặc Email người dùng!', true);
+                return;
+            }
+            const reason = prompt('Nhập lý do cấm:') || 'Vi phạm điều khoản / Nick ảo';
+            try {
+                const banData = {
+                    uid: uid || '',
+                    email: email || '',
+                    reason,
+                    bannedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    bannedBy: auth.currentUser?.email || 'Admin'
+                };
+                if (uid) await db.collection('banned_users').doc(uid).set(banData);
+                if (email) await db.collection('banned_users').doc(email.toLowerCase().trim()).set(banData);
+
+                showToast(`✅ Đã cấm thành công ${email || uid}!`);
                 loadUsers();
             } catch (e) {
-                showToast('❌ Lỗi: ' + e.message, true);
+                showToast('❌ Lỗi cấm: ' + e.message, true);
+            }
+        };
+
+        window.unbanUser = async function(uid, email) {
+            if (!confirm(`Bỏ cấm cho ${email || uid}?`)) return;
+            try {
+                if (uid) await db.collection('banned_users').doc(uid).delete().catch(() => {});
+                if (email) await db.collection('banned_users').doc(email.toLowerCase().trim()).delete().catch(() => {});
+                showToast(`✅ Đã bỏ cấm ${email || uid}!`);
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi bỏ cấm: ' + e.message, true);
+            }
+        };
+
+        window.deleteUserAccount = async function(uid, email) {
+            const userEmailNorm = (email || '').toLowerCase().trim();
+            if (userEmailNorm === SUPER_ADMIN_EMAIL.toLowerCase().trim()) {
+                showToast('⚠️ Không thể xóa Super Admin!', true);
+                return;
+            }
+            if (!confirm(`❌ Bạn có CHẮC CHẮN muốn XÓA VĨNH VIỄN tài khoản ${email || uid}? Thao tác này sẽ xóa sạch dữ liệu người dùng ra khỏi Firestore database!`)) return;
+            try {
+                if (uid) {
+                    await db.collection('users').doc(uid).delete();
+                    await db.collection('banned_users').doc(uid).set({
+                        uid,
+                        email: email || '',
+                        reason: 'Nick ảo bị xóa bởi Admin',
+                        bannedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                if (email) {
+                    await db.collection('banned_users').doc(email.toLowerCase().trim()).set({
+                        uid: uid || '',
+                        email,
+                        reason: 'Nick ảo bị xóa bởi Admin',
+                        bannedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                showToast(`✅ Đã xóa vĩnh viễn tài khoản ${email || uid}!`);
+                loadUsers();
+            } catch (e) {
+                showToast('❌ Lỗi xóa tài khoản: ' + e.message, true);
             }
         };
 

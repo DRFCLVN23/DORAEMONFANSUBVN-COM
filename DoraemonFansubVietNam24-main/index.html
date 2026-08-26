@@ -4387,6 +4387,73 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
+        // BAN IP & CLIENT IP DETECTION
+        // ============================================================
+        let cachedUserIp = '';
+        async function getUserIpAddress() {
+            if (cachedUserIp) return cachedUserIp;
+            const sessionIp = sessionStorage.getItem('user_client_ip');
+            if (sessionIp) {
+                cachedUserIp = sessionIp;
+                return sessionIp;
+            }
+            try {
+                const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.ip) {
+                        cachedUserIp = data.ip;
+                        sessionStorage.setItem('user_client_ip', data.ip);
+                        return data.ip;
+                    }
+                }
+            } catch (e) {
+                console.warn('Không thể lấy IP:', e);
+            }
+            return '';
+        }
+
+        async function checkBannedIp() {
+            try {
+                const clientIp = await getUserIpAddress();
+                if (!clientIp) return false;
+                
+                const safeIpDoc = clientIp.replace(/\./g, '_');
+                const docRef = await db.collection('banned_ips').doc(safeIpDoc).get();
+                if (docRef.exists) {
+                    showIpBanScreen(clientIp);
+                    return true;
+                }
+                const docRaw = await db.collection('banned_ips').doc(clientIp).get();
+                if (docRaw.exists) {
+                    showIpBanScreen(clientIp);
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.warn('Lỗi kiểm tra IP bị cấm:', e);
+                return false;
+            }
+        }
+
+        function showIpBanScreen(ip) {
+            document.body.innerHTML = `
+                <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0f172a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999999;font-family:sans-serif;text-align:center;padding:20px;">
+                    <div style="background:rgba(239,68,68,0.1);border:2px solid #ef4444;border-radius:16px;padding:40px;max-width:550px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <div style="font-size:64px;margin-bottom:16px;">🚫</div>
+                        <h1 style="color:#ef4444;font-size:24px;margin-bottom:12px;font-weight:700;">ĐỊA CHỈ IP CỦA BẠN ĐÃ BỊ CẤM</h1>
+                        <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:20px;">
+                            Địa chỉ IP <strong style="color:#f87171;background:rgba(239,68,68,0.2);padding:2px 8px;border-radius:4px;">${ip}</strong> đã bị quản trị viên cấm khỏi hệ thống do vi phạm điều khoản dịch vụ hoặc thực hiện hành vi bất thường.
+                        </p>
+                        <div style="font-size:13px;color:#94a3b8;border-top:1px solid rgba(255,255,255,0.1);padding-top:16px;">
+                            Nếu bạn cho rằng đây là sự nhầm lẫn, vui lòng liên hệ Admin qua email: <strong style="color:#38bdf8;">tuankhaimoi12345@gmail.com</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================================
         // FIREBASE CONFIG
         // ============================================================
         const firebaseConfig = {
@@ -4412,6 +4479,7 @@
                         console.warn('Firestore persistence error:', err);
                     }
                 });
+                checkBannedIp();
             }
         }
         initFirebaseApp();
@@ -4857,6 +4925,10 @@
                 const userPhotoURL = user.photoURL || '';
 
                 const updates = {};
+                const clientIp = await getUserIpAddress();
+                if (clientIp) {
+                    updates.lastIp = clientIp;
+                }
                 
                 if (!doc.exists) {
                     updates.createdAt = firebase.firestore.FieldValue.serverTimestamp();
