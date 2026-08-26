@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Đăng nhập - Doraemon Fansub VN</title>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js">
-    </script>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://i.ibb.co">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
     <style>
         * {
@@ -48,7 +48,7 @@
 
         @media (min-width: 1024px) {
             body {
-                background-image: url('anh_nen_pc.png');
+                background-image: url('anh_nen_pc.webp');
                 background-position: center center;
                 background-repeat: no-repeat;
                 background-size: cover;
@@ -70,12 +70,12 @@
 
             .bg-left {
                 left: 2%;
-                background-image: url('news_dora.png');
+                background-image: url('news_dora.webp');
             }
 
             .bg-right {
                 right: 2%;
-                background-image: url('news_nobi.png');
+                background-image: url('news_nobi.webp');
             }
 
             .login-container {
@@ -92,7 +92,7 @@
             body {
                 padding-top: 80px;
                 padding-bottom: 80px;
-                background-image: url('anh_nen_pc.png');
+                background-image: url('anh_nen_pc.webp');
                 background-position: center top;
                 background-repeat: no-repeat;
                 background-size: cover;
@@ -120,12 +120,12 @@
 
             .bg-left {
                 top: -120px;
-                background-image: url('news_dora.png');
+                background-image: url('news_dora.webp');
             }
 
             .bg-right {
                 bottom: -120px;
-                background-image: url('news_nobi.png');
+                background-image: url('news_nobi.webp');
             }
         }
 
@@ -664,10 +664,27 @@
             measurementId: "G-0S2Z4XRK0B"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const provider = new firebase.auth.GoogleAuthProvider();
+        let auth, db, provider;
+        function initFirebaseApp() {
+            if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                // Offline Cache Persistence
+                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+                    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+                        console.warn('Firestore persistence error:', err);
+                    }
+                });
+
+                provider = new firebase.auth.GoogleAuthProvider();
+            }
+        }
+        initFirebaseApp();
+        if (typeof firebase === 'undefined') {
+            window.addEventListener('DOMContentLoaded', initFirebaseApp);
+        }
 
         const loading = document.getElementById('loadingOverlay');
         const errorMsg = document.getElementById('errorMessage');
@@ -680,19 +697,66 @@
 
         function hideLoading() { loading.classList.remove('active'); }
 
-        function showError(msg) {
+        function showError(msg, duration = 8000) {
             errorMsg.textContent = msg;
             errorMsg.style.display = 'block';
             successMsg.style.display = 'none';
-            setTimeout(() => errorMsg.style.display = 'none', 8000);
+            if (duration) {
+                clearTimeout(errorMsg._timer);
+                errorMsg._timer = setTimeout(() => errorMsg.style.display = 'none', duration);
+            }
         }
 
-        function showSuccess(msg) {
+        function showErrorHtml(html, duration = 12000) {
+            errorMsg.innerHTML = html;
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+            if (duration) {
+                clearTimeout(errorMsg._timer);
+                errorMsg._timer = setTimeout(() => errorMsg.style.display = 'none', duration);
+            }
+        }
+
+        function showSuccess(msg, duration = 5000) {
             successMsg.textContent = msg;
             successMsg.style.display = 'block';
             errorMsg.style.display = 'none';
-            setTimeout(() => successMsg.style.display = 'none', 5000);
+            if (duration) {
+                clearTimeout(successMsg._timer);
+                successMsg._timer = setTimeout(() => successMsg.style.display = 'none', duration);
+            }
         }
+
+        function showSuccessHtml(html, duration = 15000) {
+            successMsg.innerHTML = html;
+            successMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+            if (duration) {
+                clearTimeout(successMsg._timer);
+                successMsg._timer = setTimeout(() => successMsg.style.display = 'none', duration);
+            }
+        }
+
+        window.resendVerificationEmail = async function() {
+            const email = document.getElementById('loginEmail')?.value.trim();
+            const password = document.getElementById('loginPassword')?.value;
+            if (!email || !password) {
+                showError('🔑 Vui lòng nhập Email và Mật khẩu của bạn ở form Đăng nhập để gửi lại email xác thực!');
+                return;
+            }
+            showLoading();
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                await user.sendEmailVerification();
+                await auth.signOut();
+                showSuccess(`📧 Đã gửi lại email xác thực tới ${email}. Vui lòng mở hộp thư (bao gồm cả thư rác / Spam) để kích hoạt!`, 10000);
+            } catch (e) {
+                showError('❌ Lỗi gửi lại email xác thực: ' + (e.message || 'Không thể gửi email'));
+            } finally {
+                hideLoading();
+            }
+        };
 
         function clearMessages() {
             errorMsg.style.display = 'none';
@@ -798,6 +862,7 @@
         let pending2faSecret = null;
         let pending2faUid = null;
         let twoFactorLoginInProgress = false;
+        let isRegistering = false;
 
         function showTwoFactorStep(secret, userUid) {
             pending2faSecret = secret;
@@ -1058,6 +1123,7 @@
                 return;
             }
 
+            isRegistering = true;
             showLoading();
             this.disabled = true;
 
@@ -1068,16 +1134,43 @@
                     // Cập nhật tên hiển thị
                     await user.updateProfile({ displayName: name });
 
+                    // Gửi email xác thực
+                    try {
+                        await user.sendEmailVerification();
+                    } catch (verifyErr) {
+                        console.warn('Lỗi gửi email xác thực:', verifyErr);
+                    }
+
                     const saved = await saveUserToFirestore(user, true);
                     if (!saved) {
                         showError('❌ Không thể tạo tài khoản do lỗi lưu dữ liệu. Vui lòng thử lại.');
                         await auth.signOut();
+                        isRegistering = false;
                         return;
                     }
-                    showSuccess('✅ Đăng ký thành công! Đang chuyển hướng...');
-                    setTimeout(() => window.location.href = 'index.html', 1500);
+
+                    await auth.signOut(); // Đăng xuất tài khoản vừa tạo
+                    isRegistering = false;
+
+                    // Chuyển form sang tab Đăng nhập và điền sẵn Email vừa tạo
+                    showLoginForm();
+                    const loginEmailInput = document.getElementById('email');
+                    if (loginEmailInput) loginEmailInput.value = email;
+                    const loginPasswordInput = document.getElementById('password');
+                    if (loginPasswordInput) loginPasswordInput.value = '';
+
+                    showSuccessHtml(`
+                        <div style="text-align:left;padding:4px;">
+                            📧 <strong style="font-size:15px;color:#2e7d32;">Đăng ký tài khoản thành công!</strong><br>
+                            Hệ thống đã gửi một liên kết xác minh đến <strong>${email}</strong>.<br>
+                            <span style="display:block;margin-top:6px;color:#333;font-size:13px;line-height:1.4;">
+                                Vui lòng mở hộp thư Email (kiểm tra cả mục <strong>Thư rác / Spam</strong>) và bấm nút <strong>Xác nhận</strong> trước khi đăng nhập!
+                            </span>
+                        </div>
+                    `, 25000);
                 })
                 .catch((err) => {
+                    isRegistering = false;
                     let msg = '❌ Đăng ký thất bại! ';
                     switch (err.code) {
                         case 'auth/email-already-in-use':
@@ -1149,14 +1242,32 @@
                 });
         });
 
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('forgotForm').style.display = 'none';
+        }
+
+        window.switchTab = function(tab) {
+            if (tab === 'register') {
+                showRegisterForm();
+            } else {
+                showLoginForm();
+            }
+        };
+
         // ============================================================
         // TOGGLE FORMS
         // ============================================================
         document.getElementById('showRegister').addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('forgotForm').style.display = 'none';
+            showRegisterForm();
             clearMessages();
         });
 
@@ -1170,9 +1281,7 @@
 
         document.getElementById('backToLogin').addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('forgotForm').style.display = 'none';
+            showLoginForm();
             clearMessages();
         });
 
@@ -1275,7 +1384,7 @@
         // AUTH STATE - TỰ ĐỘNG CHUYỂN HƯỚNG
         // ============================================================
         auth.onAuthStateChanged(async function(user) {
-            if (!user) return;
+            if (!user || isRegistering) return;
 
             const requiresTwoFactor = await ensureLoginPageTwoFactorState(user);
             if (requiresTwoFactor) return;

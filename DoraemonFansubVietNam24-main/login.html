@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Đăng nhập - Doraemon Fansub VN</title>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js">
-    </script>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://i.ibb.co">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
     <style>
         * {
@@ -42,8 +42,100 @@
             background: 
                 radial-gradient(circle at 20% 50%, rgba(255, 235, 59, 0.05) 0%, transparent 50%),
                 radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
-            z-index: 0;
+            z-index: -2;
             animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        @media (min-width: 1024px) {
+            body {
+                background-image: url('anh_nen_pc.webp');
+                background-position: center center;
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-attachment: fixed;
+            }
+
+            .bg-character {
+                position: fixed;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 320px;
+                height: 420px;
+                background-position: center center;
+                background-size: contain;
+                background-repeat: no-repeat;
+                z-index: 3;
+                pointer-events: none;
+            }
+
+            .bg-left {
+                left: 2%;
+                background-image: url('news_dora.webp');
+            }
+
+            .bg-right {
+                right: 2%;
+                background-image: url('news_nobi.webp');
+            }
+
+            .login-container {
+                max-width: 520px;
+                background: rgba(255, 255, 255, 0.92);
+                box-shadow: 0 35px 80px rgba(0, 0, 0, 0.18);
+                border: 1px solid rgba(255, 255, 255, 0.65);
+                position: relative;
+                z-index: 1;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            body {
+                padding-top: 80px;
+                padding-bottom: 80px;
+                background-image: url('anh_nen_pc.webp');
+                background-position: center top;
+                background-repeat: no-repeat;
+                background-size: cover;
+            }
+
+            .login-container {
+                margin-top: 40px;
+                margin-bottom: 40px;
+            }
+
+            .bg-left,
+            .bg-right {
+                position: fixed;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 260px;
+                height: 260px;
+                background-position: center center;
+                background-size: contain;
+                background-repeat: no-repeat;
+                z-index: 3;
+                pointer-events: none;
+                animation: floatCharacter 6s ease-in-out infinite;
+            }
+
+            .bg-left {
+                top: -120px;
+                background-image: url('news_dora.webp');
+            }
+
+            .bg-right {
+                bottom: -120px;
+                background-image: url('news_nobi.webp');
+            }
+        }
+
+        @keyframes floatCharacter {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(18px);
+            }
         }
 
         @keyframes pulse {
@@ -52,7 +144,7 @@
         }
 
         .login-container {
-            background: rgba(255, 255, 255, 0.97);
+            background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(20px);
             border-radius: 24px;
             padding: 40px 35px;
@@ -127,18 +219,18 @@
         }
 
         .logo img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
+            width: 120px;
+            height: auto;
+            border-radius: 0;
+            object-fit: contain;
             margin-bottom: 10px;
-            border: 3px solid #ffeb3b;
-            box-shadow: 0 8px 30px rgba(255, 235, 59, 0.2);
-            transition: transform 0.4s ease;
+            border: none;
+            box-shadow: none;
+            transition: transform 0.2s ease;
         }
 
         .logo img:hover {
-            transform: scale(1.05) rotate(-3deg);
+            transform: scale(1.03);
         }
 
         .logo h1 {
@@ -271,6 +363,34 @@
         }
 
         .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: #f1f5f9;
+            color: #1a1a2e;
+            border: 2px solid #d2e3fc;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-secondary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
@@ -418,6 +538,8 @@
     </style>
 </head>
 <body>
+    <div class="bg-character bg-left"></div>
+    <div class="bg-character bg-right"></div>
 
     <div class="login-container">
         <!-- Loading -->
@@ -458,6 +580,15 @@
                 <a href="#" id="showRegister">📝 Đăng ký</a>
             </div>
         </form>
+
+        <div id="twoFactorSection" style="display:none; margin-top:16px;">
+            <div class="form-group">
+                <label>🔐 Mã xác thực 2 lớp</label>
+                <input type="text" id="twoFactorCode" placeholder="Nhập mã 6 chữ số" maxlength="6" autocomplete="one-time-code" />
+            </div>
+            <button type="button" class="btn-primary" id="verifyTwoFactorBtn">✅ Xác thực 2 lớp</button>
+            <button type="button" class="btn-secondary" id="cancelTwoFactorBtn">↩️ Hủy và đăng nhập lại</button>
+        </div>
 
         <!-- REGISTER -->
         <form id="registerForm" onsubmit="return false;">
@@ -533,10 +664,27 @@
             measurementId: "G-0S2Z4XRK0B"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const provider = new firebase.auth.GoogleAuthProvider();
+        let auth, db, provider;
+        function initFirebaseApp() {
+            if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                // Offline Cache Persistence
+                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+                    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+                        console.warn('Firestore persistence error:', err);
+                    }
+                });
+
+                provider = new firebase.auth.GoogleAuthProvider();
+            }
+        }
+        initFirebaseApp();
+        if (typeof firebase === 'undefined') {
+            window.addEventListener('DOMContentLoaded', initFirebaseApp);
+        }
 
         const loading = document.getElementById('loadingOverlay');
         const errorMsg = document.getElementById('errorMessage');
@@ -549,23 +697,190 @@
 
         function hideLoading() { loading.classList.remove('active'); }
 
-        function showError(msg) {
+        function showError(msg, duration = 8000) {
             errorMsg.textContent = msg;
             errorMsg.style.display = 'block';
             successMsg.style.display = 'none';
-            setTimeout(() => errorMsg.style.display = 'none', 8000);
+            if (duration) {
+                clearTimeout(errorMsg._timer);
+                errorMsg._timer = setTimeout(() => errorMsg.style.display = 'none', duration);
+            }
         }
 
-        function showSuccess(msg) {
+        function showErrorHtml(html, duration = 12000) {
+            errorMsg.innerHTML = html;
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+            if (duration) {
+                clearTimeout(errorMsg._timer);
+                errorMsg._timer = setTimeout(() => errorMsg.style.display = 'none', duration);
+            }
+        }
+
+        function showSuccess(msg, duration = 5000) {
             successMsg.textContent = msg;
             successMsg.style.display = 'block';
             errorMsg.style.display = 'none';
-            setTimeout(() => successMsg.style.display = 'none', 5000);
+            if (duration) {
+                clearTimeout(successMsg._timer);
+                successMsg._timer = setTimeout(() => successMsg.style.display = 'none', duration);
+            }
         }
+
+        function showSuccessHtml(html, duration = 15000) {
+            successMsg.innerHTML = html;
+            successMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+            if (duration) {
+                clearTimeout(successMsg._timer);
+                successMsg._timer = setTimeout(() => successMsg.style.display = 'none', duration);
+            }
+        }
+
+        window.resendVerificationEmail = async function() {
+            const email = document.getElementById('loginEmail')?.value.trim();
+            const password = document.getElementById('loginPassword')?.value;
+            if (!email || !password) {
+                showError('🔑 Vui lòng nhập Email và Mật khẩu của bạn ở form Đăng nhập để gửi lại email xác thực!');
+                return;
+            }
+            showLoading();
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                await user.sendEmailVerification();
+                await auth.signOut();
+                showSuccess(`📧 Đã gửi lại email xác thực tới ${email}. Vui lòng mở hộp thư (bao gồm cả thư rác / Spam) để kích hoạt!`, 10000);
+            } catch (e) {
+                showError('❌ Lỗi gửi lại email xác thực: ' + (e.message || 'Không thể gửi email'));
+            } finally {
+                hideLoading();
+            }
+        };
 
         function clearMessages() {
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
+        }
+
+        async function hmacSha1(keyBytes, messageBytes) {
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyBytes,
+                { name: 'HMAC', hash: 'SHA-1' },
+                false,
+                ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageBytes);
+            return new Uint8Array(signature);
+        }
+
+        function base32ToBytes(base32) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let bits = '';
+            let bytes = [];
+            base32 = base32.replace(/=+$/, '').toUpperCase();
+            for (let char of base32) {
+                const val = alphabet.indexOf(char);
+                if (val === -1) continue;
+                bits += val.toString(2).padStart(5, '0');
+            }
+            for (let i = 0; i + 8 <= bits.length; i += 8) {
+                bytes.push(parseInt(bits.slice(i, i + 8), 2));
+            }
+            return new Uint8Array(bytes);
+        }
+
+        function leftPad(str, length) {
+            return str.toString().padStart(length, '0');
+        }
+
+        async function verifyTOTP(secret, code) {
+            if (!secret || !code) return false;
+            code = code.trim();
+            const now = Math.floor(Date.now() / 1000 / 30);
+            for (let delta = -1; delta <= 1; delta++) {
+                const counter = now + delta;
+                const counterBytes = new ArrayBuffer(8);
+                const view = new DataView(counterBytes);
+                view.setUint32(4, counter, false);
+                const hash = await hmacSha1(base32ToBytes(secret), new Uint8Array(counterBytes));
+                const offset = hash[hash.length - 1] & 0xf;
+                const binary = ((hash[offset] & 0x7f) << 24) |
+                    ((hash[offset + 1] & 0xff) << 16) |
+                    ((hash[offset + 2] & 0xff) << 8) |
+                    (hash[offset + 3] & 0xff);
+                if (leftPad(binary % 10 ** 6, 6) === code) return true;
+            }
+            return false;
+        }
+
+        const TWO_FACTOR_SESSION_KEY = 'twoFactorVerifiedUid';
+
+        function setTwoFactorVerifiedUid(uid) {
+            if (!uid) return;
+            localStorage.setItem(TWO_FACTOR_SESSION_KEY, uid);
+        }
+
+        function getTwoFactorVerifiedUid() {
+            return localStorage.getItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function clearTwoFactorVerifiedUid() {
+            localStorage.removeItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function isTwoFactorVerifiedForUser(uid) {
+            return uid && getTwoFactorVerifiedUid() === uid;
+        }
+
+        async function getUserTwoFactorData(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.exists ? doc.data()?.twoFactor || null : null;
+            } catch (e) {
+                console.error('Lỗi kiểm tra 2FA:', e);
+                return null;
+            }
+        }
+
+        async function ensureLoginPageTwoFactorState(user) {
+            if (!user) return false;
+            const twoFactor = await getUserTwoFactorData(user.uid);
+            if (twoFactor?.enabled && twoFactor.secret) {
+                if (!isTwoFactorVerifiedForUser(user.uid)) {
+                    showTwoFactorStep(twoFactor.secret, user.uid);
+                    return true;
+                }
+            } else if (isTwoFactorVerifiedForUser(user.uid)) {
+                clearTwoFactorVerifiedUid();
+            }
+            return false;
+        }
+
+        let pending2faSecret = null;
+        let pending2faUid = null;
+        let twoFactorLoginInProgress = false;
+        let isRegistering = false;
+
+        function showTwoFactorStep(secret, userUid) {
+            pending2faSecret = secret;
+            pending2faUid = userUid;
+            twoFactorLoginInProgress = true;
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('twoFactorSection').style.display = 'block';
+            document.getElementById('twoFactorCode').value = '';
+            showSuccess('✅ Đăng nhập thành công. Vui lòng nhập mã 2FA.');
+        }
+
+        function resetTwoFactorStep() {
+            pending2faSecret = null;
+            pending2faUid = null;
+            twoFactorLoginInProgress = false;
+            document.getElementById('twoFactorSection').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('twoFactorCode').value = '';
         }
 
         // ============================================================
@@ -587,19 +902,64 @@
         }
 
         // ============================================================
+        // TẠO SHORT ID 7 CHỮ SỐ DUY NHẤT
+        // ============================================================
+        async function generateUniqueShortId() {
+            const max = 9999999;
+            const min = 1000000;
+            let attempts = 0;
+            while (attempts < 20) {
+                const id = Math.floor(Math.random() * (max - min + 1)) + min;
+                const idStr = id.toString();
+                // Kiểm tra xem id này đã được dùng chưa
+                const snap = await db.collection('users')
+                    .where('shortId', '==', idStr)
+                    .limit(1)
+                    .get();
+                if (snap.empty) return idStr;
+                attempts++;
+            }
+            // Fallback: dùng timestamp để đảm bảo duy nhất
+            return String(Date.now()).slice(-7);
+        }
+
+        function getGoogleIdForUser(user) {
+            if (!user) return '';
+            const googleProvider = (user.providerData || []).find(provider => provider.providerId === 'google.com');
+            if (googleProvider?.uid) return googleProvider.uid;
+            if (user.uid) return user.uid;
+            if (user.email) return user.email;
+            return '';
+        }
+
+        // ============================================================
         // LƯU USER VÀO FIRESTORE
         // ============================================================
-        function saveUserToFirestore(user, isNew = false) {
+        async function saveUserToFirestore(user, isNew = false) {
+            const googleId = getGoogleIdForUser(user);
             const userData = {
                 email: user.email,
                 displayName: user.displayName || user.email.split('@')[0],
                 photoURL: user.photoURL || '',
+                googleId: googleId || '',
                 providerData: user.providerData || [],
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             if (isNew) {
                 userData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            }
+
+            // Kiểm tra xem user đã có shortId chưa
+            try {
+                const existingDoc = await db.collection('users').doc(user.uid).get();
+                if (!existingDoc.exists || !existingDoc.data()?.shortId) {
+                    userData.shortId = await generateUniqueShortId();
+                    console.log('🆔 Đã tạo shortId:', userData.shortId);
+                }
+            } catch (e) {
+                console.error('Lỗi kiểm tra shortId:', e);
+                userData.shortId = await generateUniqueShortId();
             }
 
             return db.collection('users').doc(user.uid).set(userData, { merge: true })
@@ -625,6 +985,7 @@
                 return;
             }
 
+            twoFactorLoginInProgress = true;
             showLoading();
             this.disabled = true;
 
@@ -640,12 +1001,25 @@
                         return;
                     }
 
-                    await saveUserToFirestore(user, false);
+                    const saved = await saveUserToFirestore(user, false);
+                    if (!saved) {
+                        showError('❌ Không thể lưu thông tin tài khoản. Vui lòng thử lại.');
+                        await auth.signOut();
+                        return;
+                    }
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    const userData = userDoc.exists ? userDoc.data() : {};
+
+                    if (userData?.twoFactor?.enabled && userData.twoFactor.secret) {
+                        showTwoFactorStep(userData.twoFactor.secret, user.uid);
+                        return;
+                    }
+
                     showSuccess('✅ Đăng nhập thành công! Đang chuyển hướng...');
                     setTimeout(() => window.location.href = 'index.html', 1500);
                 })
                 .catch((err) => {
-                    let msg = '❌ Đăng nhập thất bại! ';
+                    let msg = '❌ Đăng nhập thất bại, hãy kiểm tra lại tài khoản hoặc mật khẩu đi. ';
                     switch (err.code) {
                         case 'auth/user-not-found':
                             msg += 'Email chưa được đăng ký.';
@@ -680,6 +1054,7 @@
             auth.signInWithPopup(provider)
                 .then(async (result) => {
                     const user = result.user;
+                    twoFactorLoginInProgress = true;
 
                     // Kiểm tra banned
                     const isBanned = await checkBannedUser(user.email);
@@ -689,7 +1064,20 @@
                         return;
                     }
 
-                    await saveUserToFirestore(user, true);
+                    const saved = await saveUserToFirestore(user, true);
+                    if (!saved) {
+                        showError('❌ Không thể lưu thông tin tài khoản Google. Vui lòng thử lại.');
+                        await auth.signOut();
+                        return;
+                    }
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    const userData = userDoc.exists ? userDoc.data() : {};
+
+                    if (userData?.twoFactor?.enabled && userData.twoFactor.secret) {
+                        showTwoFactorStep(userData.twoFactor.secret, user.uid);
+                        return;
+                    }
+
                     showSuccess('✅ Đăng nhập thành công! Đang chuyển hướng...');
                     setTimeout(() => window.location.href = 'index.html', 1500);
                 })
@@ -735,6 +1123,7 @@
                 return;
             }
 
+            isRegistering = true;
             showLoading();
             this.disabled = true;
 
@@ -745,11 +1134,43 @@
                     // Cập nhật tên hiển thị
                     await user.updateProfile({ displayName: name });
 
-                    await saveUserToFirestore(user, true);
-                    showSuccess('✅ Đăng ký thành công! Đang chuyển hướng...');
-                    setTimeout(() => window.location.href = 'index.html', 1500);
+                    // Gửi email xác thực
+                    try {
+                        await user.sendEmailVerification();
+                    } catch (verifyErr) {
+                        console.warn('Lỗi gửi email xác thực:', verifyErr);
+                    }
+
+                    const saved = await saveUserToFirestore(user, true);
+                    if (!saved) {
+                        showError('❌ Không thể tạo tài khoản do lỗi lưu dữ liệu. Vui lòng thử lại.');
+                        await auth.signOut();
+                        isRegistering = false;
+                        return;
+                    }
+
+                    await auth.signOut(); // Đăng xuất tài khoản vừa tạo
+                    isRegistering = false;
+
+                    // Chuyển form sang tab Đăng nhập và điền sẵn Email vừa tạo
+                    showLoginForm();
+                    const loginEmailInput = document.getElementById('email');
+                    if (loginEmailInput) loginEmailInput.value = email;
+                    const loginPasswordInput = document.getElementById('password');
+                    if (loginPasswordInput) loginPasswordInput.value = '';
+
+                    showSuccessHtml(`
+                        <div style="text-align:left;padding:4px;">
+                            📧 <strong style="font-size:15px;color:#2e7d32;">Đăng ký tài khoản thành công!</strong><br>
+                            Hệ thống đã gửi một liên kết xác minh đến <strong>${email}</strong>.<br>
+                            <span style="display:block;margin-top:6px;color:#333;font-size:13px;line-height:1.4;">
+                                Vui lòng mở hộp thư Email (kiểm tra cả mục <strong>Thư rác / Spam</strong>) và bấm nút <strong>Xác nhận</strong> trước khi đăng nhập!
+                            </span>
+                        </div>
+                    `, 25000);
                 })
                 .catch((err) => {
+                    isRegistering = false;
                     let msg = '❌ Đăng ký thất bại! ';
                     switch (err.code) {
                         case 'auth/email-already-in-use':
@@ -821,14 +1242,32 @@
                 });
         });
 
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('forgotForm').style.display = 'none';
+        }
+
+        window.switchTab = function(tab) {
+            if (tab === 'register') {
+                showRegisterForm();
+            } else {
+                showLoginForm();
+            }
+        };
+
         // ============================================================
         // TOGGLE FORMS
         // ============================================================
         document.getElementById('showRegister').addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('forgotForm').style.display = 'none';
+            showRegisterForm();
             clearMessages();
         });
 
@@ -842,18 +1281,51 @@
 
         document.getElementById('backToLogin').addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('forgotForm').style.display = 'none';
+            showLoginForm();
             clearMessages();
         });
 
         document.getElementById('backToLogin2').addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('loginForm').style.display = 'block';
+            resetTwoFactorStep();
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('forgotForm').style.display = 'none';
             clearMessages();
+        });
+
+        document.getElementById('verifyTwoFactorBtn').addEventListener('click', async function() {
+            const code = document.getElementById('twoFactorCode').value.trim();
+            if (!pending2faUid || !pending2faSecret) {
+                showError('❌ Vui lòng nhập email và mật khẩu trước.');
+                resetTwoFactorStep();
+                return;
+            }
+            if (!code) {
+                showError('📝 Vui lòng nhập mã 2FA.');
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = '⏳ Đang xác thực...';
+
+            const valid = await verifyTOTP(pending2faSecret, code);
+            if (valid) {
+                setTwoFactorVerifiedUid(pending2faUid);
+                showSuccess('✅ Xác thực 2FA thành công! Đang chuyển hướng...');
+                setTimeout(() => window.location.href = 'index.html', 1500);
+            } else {
+                showError('❌ Mã 2FA không đúng. Vui lòng thử lại.');
+            }
+
+            this.disabled = false;
+            this.textContent = '✅ Xác thực 2 lớp';
+        });
+
+        document.getElementById('cancelTwoFactorBtn').addEventListener('click', async function() {
+            clearTwoFactorVerifiedUid();
+            await auth.signOut();
+            resetTwoFactorStep();
+            showError('✋ Đã hủy 2FA. Vui lòng đăng nhập lại.');
         });
 
         // ============================================================
@@ -887,6 +1359,13 @@
             }
         });
 
+        document.getElementById('twoFactorCode')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('verifyTwoFactorBtn').click();
+            }
+        });
+
         document.getElementById('registerConfirmPassword').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -904,8 +1383,13 @@
         // ============================================================
         // AUTH STATE - TỰ ĐỘNG CHUYỂN HƯỚNG
         // ============================================================
-        auth.onAuthStateChanged(function(user) {
-            if (user && window.location.pathname.includes('login.html')) {
+        auth.onAuthStateChanged(async function(user) {
+            if (!user || isRegistering) return;
+
+            const requiresTwoFactor = await ensureLoginPageTwoFactorState(user);
+            if (requiresTwoFactor) return;
+
+            if (window.location.pathname.includes('login.html')) {
                 window.location.href = 'index.html';
             }
         });

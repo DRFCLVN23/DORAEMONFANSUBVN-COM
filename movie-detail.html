@@ -28,6 +28,10 @@
     <!-- ===== FAVICON ===== -->
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
 
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://i.ibb.co">
+
     <!-- Firebase compat -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1126,11 +1130,84 @@
             measurementId: "G-0S2Z4XRK0B"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        let auth, db;
+        function initFirebaseApp() {
+            if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                // Offline Cache Persistence
+                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+                    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+                        console.warn('Firestore persistence error:', err);
+                    }
+                });
+            }
+        }
+        initFirebaseApp();
+        if (typeof firebase === 'undefined') {
+            window.addEventListener('DOMContentLoaded', initFirebaseApp);
+        }
 
         const LOGO_URL = 'https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png';
+
+        function getOptimizedAvatarUrl(url, size = 150) {
+            if (!url) return LOGO_URL;
+            if (typeof url === 'string' && url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+                if (url.includes('/upload/w_') || url.includes('/upload/c_fill')) {
+                    return url;
+                }
+                return url.replace('/upload/', `/upload/w_${size},h_${size},c_fill,g_face,q_auto,f_auto/`);
+            }
+            return url;
+        }
+
+        function getTimestampValue(ts) {
+            if (!ts) return 0;
+            if (typeof ts === 'number') return ts;
+            if (ts && typeof ts.toDate === 'function') return ts.toDate().getTime();
+            if (ts && typeof ts.seconds === 'number') return ts.seconds * 1000;
+            if (ts instanceof Date) return ts.getTime();
+            if (typeof ts === 'string') {
+                const parsedNum = Number(ts);
+                if (!isNaN(parsedNum) && parsedNum > 1000000000) return parsedNum;
+                const d = new Date(ts);
+                return isNaN(d.getTime()) ? 0 : d.getTime();
+            }
+            return 0;
+        }
+
+        function timeAgo(timestamp) {
+            const tsVal = getTimestampValue(timestamp);
+            if (!tsVal) return 'Vừa xong';
+
+            const now = Date.now();
+            const diff = Math.floor((now - tsVal) / 1000);
+
+            if (diff < 10) return 'Vừa xong';
+            if (diff < 60) return `${Math.max(10, diff)} giây trước`;
+            if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+            if (diff < 86400 * 30) return `${Math.floor(diff / 86400)} ngày trước`;
+            if (diff < 86400 * 365) return `${Math.floor(diff / (86400 * 30))} tháng trước`;
+            return `${Math.floor(diff / (86400 * 365))} năm trước`;
+        }
+
+        function updateLiveTimes() {
+            document.querySelectorAll('[data-timestamp]').forEach(el => {
+                const raw = el.getAttribute('data-timestamp');
+                if (raw && raw !== '0') {
+                    const num = Number(raw);
+                    const ts = !isNaN(num) ? num : raw;
+                    const updated = timeAgo(ts);
+                    if (updated && el.textContent !== updated) {
+                        el.textContent = updated;
+                    }
+                }
+            });
+        }
+        setInterval(updateLiveTimes, 10000);
         const REACTION_OPTIONS = [
             { id: 'happy', label: 'Vui', image: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#FDD835"/><circle cx="24" cy="27" r="3" fill="#2C2C2C"/><circle cx="40" cy="27" r="3" fill="#2C2C2C"/><path d="M22 42c3 4 17 4 20 0" stroke="#2C2C2C" stroke-width="3" fill="none" stroke-linecap="round"/></svg>') },
             { id: 'love', label: 'Yêu', image: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M32 55s-18-10.4-18-24a12 12 0 0 1 20-8 12 12 0 0 1 20 8c0 13.6-18 24-18 24Z" fill="#F06292"/></svg>') },
@@ -1441,9 +1518,7 @@
                 }
 
                 commentList.innerHTML = comments.map((comment) => {
-                    const timeText = comment.createdAt?.toDate
-                        ? new Date(comment.createdAt.toDate()).toLocaleString('vi-VN')
-                        : 'Vừa gửi';
+                    const timeText = timeAgo(comment.createdAt);
                     const displayId = comment.shortId
                         ? '#' + comment.shortId
                         : escapeHtml(comment.displayName || 'Người dùng');
@@ -1492,9 +1567,7 @@
                         ${isReplyExpanded ? `
                             <div class="replies-container" id="replies-${comment.id}">
                                 ${replies.map(reply => {
-                                    const replyTimeText = reply.createdAt?.toDate
-                                        ? new Date(reply.createdAt.toDate()).toLocaleString('vi-VN')
-                                        : 'Vừa gửi';
+                                    const replyTimeText = timeAgo(reply.createdAt);
                                     const replyUserName = reply.shortId
                                         ? '#' + escapeHtml(reply.shortId)
                                         : escapeHtml(reply.displayName || 'Người dùng');
@@ -1511,7 +1584,7 @@
                                                     <div class="comment-user-avatar">${replyAvatarContent}</div>
                                                     <div class="comment-user-info">
                                                         <div class="comment-user-name">${reply.shortId ? '#' + escapeHtml(reply.shortId) : escapeHtml(reply.displayName || 'Người dùng')}</div>
-                                                        <div class="comment-time">${replyTimeText}</div>
+                                                        <div class="comment-time" data-timestamp="${getTimestampValue(reply.createdAt)}">${replyTimeText}</div>
                                                     </div>
                                                 </div>
                                                 ${isReplyOwner ? `
@@ -1535,7 +1608,7 @@
                                     <div class="comment-user-avatar">${avatarContent}</div>
                                     <div class="comment-user-info">
                                         <div class="comment-user-name">${userName}</div>
-                                        <div class="comment-time">${timeText}</div>
+                                        <div class="comment-time" data-timestamp="${getTimestampValue(comment.createdAt)}">${timeText}</div>
                                     </div>
                                 </div>
                                 ${isOwner ? `

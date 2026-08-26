@@ -15,19 +15,17 @@
     <!-- ===== FAVICON ===== -->
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
 
-    <!-- Firebase compat -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js">
-    </script>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://upload-widget.cloudinary.com">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
+    <link rel="dns-prefetch" href="https://i.ibb.co">
 
-    <!-- Cloudinary Upload Widget -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript">
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" defer></script>
 
     <style>
         * {
@@ -48,45 +46,104 @@
         }
 
         header {
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
-            padding: 12px 0;
+            background: linear-gradient(135deg, #67b7ff, #2f78c1);
+            padding: 8px 0;
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(18, 43, 107, 0.16);
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -80px;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.32), transparent 60%);
+            filter: blur(26px);
+            pointer-events: none;
         }
 
         .container {
-            max-width: 680px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 16px;
+            padding: 0 20px;
         }
 
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .logo {
-            display: flex;
+            position: relative;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
-            font-size: 20px;
-            font-weight: 800;
-            color: white;
+            justify-content: center;
+            padding: 4px;
+            border-radius: 999px;
+            min-height: auto;
             text-decoration: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 18px rgba(2, 6, 23, 0.10);
+            overflow: visible;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 999px;
+            background: conic-gradient(from 240deg, #ff3ec4, #6b36ff, #16b6ff, #48ff9a, #fff859, #ff7d2f, #ff3ec4);
+            opacity: 0.35;
+            filter: blur(14px);
+            z-index: -1;
+            animation: rainbowSpin 3.6s linear infinite;
+        }
+
+        .logo:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.18);
+        }
+
+        .logo:hover::after {
+            opacity: 0.5;
+        }
+
+        .logo:hover img {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 14px rgba(255, 235, 170, 0.6));
         }
 
         .logo img {
-            height: 36px;
+            display: block;
+            height: 48px;
             width: auto;
-            border-radius: 50%;
-            object-fit: cover;
+            max-width: 120px;
+            border-radius: 24px;
+            object-fit: contain;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 10px rgba(255, 235, 170, 0.35), 0 4px 12px rgba(0, 0, 0, 0.12);
+            transition: transform 0.25s ease, filter 0.25s ease;
+            filter: drop-shadow(0 0 8px rgba(255, 235, 170, 0.45));
         }
 
-        .logo span {
-            color: #ffeb3b;
+        .logo:hover img {
+            transform: scale(1.04);
+        }
+
+        @keyframes rainbowSpin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .header-actions {
@@ -119,40 +176,73 @@
             border-radius: 50%;
             border: 2px solid #ffeb3b;
             object-fit: cover;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #authStatus img:hover {
+            transform: scale(1.05);
+            border-color: #ffeb3b;
         }
 
         #authStatus .user-name {
             color: white;
             font-weight: 600;
             font-size: 14px;
-            max-width: 120px;
+            max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #authStatus .user-name:hover {
+            color: #ffeb3b;
+        }
+
+        .verified-badge {
+            display: inline-block;
+            background: #ffeb3b;
+            color: #0d47a1;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 4px;
+            vertical-align: middle;
+            line-height: 1.5;
+            border: 1px solid #fdd835;
+        }
+
+        .verified-badge .check {
+            margin-right: 2px;
         }
 
         .login-btn {
-            background: #ffeb3b;
-            color: #0d47a1;
+            background: linear-gradient(135deg, #1a73e8, #0f5ccf);
+            color: white;
             border: none;
-            padding: 6px 18px;
-            border-radius: 20px;
+            padding: 10px 22px;
+            border-radius: 30px;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             text-decoration: none;
+            box-shadow: 0 10px 25px rgba(26, 115, 232, 0.18);
         }
 
         .login-btn:hover {
-            transform: scale(1.05);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(26, 115, 232, 0.25);
         }
 
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 6px 16px;
+            padding: 8px 18px;
             border-radius: 20px;
             font-weight: 600;
             font-size: 13px;
@@ -164,6 +254,26 @@
         .logout-btn:hover {
             background: rgba(255, 0, 0, 0.3);
             border-color: #ff4444;
+        }
+
+        .dashboard-link {
+            display: none;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        .dashboard-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .dashboard-link:hover {
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .back-link {
@@ -199,7 +309,7 @@
         }
 
         .profile-container {
-            max-width: 680px;
+            max-width: 980px;
             margin: 20px auto;
             padding: 0 16px;
         }
@@ -207,8 +317,317 @@
         .profile-card {
             background: white;
             border-radius: 20px;
-            padding: 30px;
+            padding: 24px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: minmax(280px, 1.2fr) minmax(260px, 0.9fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .profile-left,
+        .profile-right {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .security-card {
+            background: #f7fbff;
+            border-radius: 18px;
+            padding: 20px;
+            border: 1px solid rgba(26, 115, 232, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .security-card h3 {
+            margin-bottom: 14px;
+            font-size: 18px;
+            color: #102a54;
+        }
+
+        .security-card p {
+            color: #384a60;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .security-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .security-status span {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(26, 115, 232, 0.12);
+            color: #0d47a1;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .two-factor-setup {
+            padding: 20px;
+            border-radius: 24px;
+            background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+            border: 1px solid rgba(59, 130, 246, 0.16);
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .two-factor-setup-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            align-items: stretch;
+            margin-bottom: 20px;
+        }
+
+        .qr-card,
+        .qr-info,
+        .two-factor-setup .form-group {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .qr-info {
+            width: 100%;
+        }
+
+        .qr-card {
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 0;
+            background: #eef5ff;
+            border: 1px solid rgba(59, 130, 246, 0.14);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .qr-card img {
+            width: 100%;
+            max-width: 240px;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 0;
+            border: 1px solid rgba(59, 130, 246, 0.18);
+            background: white;
+        }
+
+        .qr-card .qr-label {
+            margin-top: 14px;
+            color: #1d4ed8;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .qr-card .qr-hint {
+            margin-top: 8px;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.5;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .qr-info p {
+            margin-bottom: 18px;
+            color: #334155;
+            line-height: 1.75;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        .secret-box {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            align-items: stretch;
+            margin-top: 6px;
+        }
+
+        .secret-box input {
+            width: 100%;
+            min-width: 0;
+            border-radius: 14px;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            padding: 12px 14px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #0f172a;
+        }
+
+        .two-factor-setup .form-group input[readonly] {
+            background: #eff6ff;
+            cursor: text;
+            border-color: #bfdbfe;
+        }
+
+        .btn-secondary.copy-secret {
+            min-width: 120px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            color: #1d4ed8;
+            background: #e0efff;
+            border: 1px solid #bfdbfe;
+            white-space: nowrap;
+        }
+
+        .btn-secondary.copy-secret:hover {
+            background: #dbeafe;
+        }
+
+        .two-factor-setup .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .two-factor-setup .form-group input,
+        .two-factor-setup .form-group textarea {
+            border-radius: 16px;
+        }
+
+        .two-factor-setup .btn-primary {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            box-shadow: 0 12px 28px rgba(59, 130, 246, 0.22);
+            min-width: 0;
+        }
+
+        .two-factor-setup .btn-primary:hover {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 100%;
+                padding: 0 18px;
+            }
+            .profile-container {
+                max-width: 100%;
+                padding: 0 14px;
+            }
+            .profile-card {
+                padding: 22px;
+            }
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 840px) {
+            .two-factor-setup-grid {
+                grid-template-columns: 1fr;
+            }
+            .secret-box {
+                grid-template-columns: 1fr;
+            }
+            .btn-secondary.copy-secret {
+                width: 100%;
+            }
+            .qr-card {
+                padding: 16px;
+            }
+            .qr-card img {
+                max-width: 100%;
+                height: auto;
+            }
+            .two-factor-setup {
+                padding: 18px;
+            }
+            .two-factor-setup .form-group {
+                width: 100%;
+            }
+            .two-factor-setup .form-group label,
+            .two-factor-setup .form-group input {
+                display: block;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .header-actions {
+                gap: 8px;
+            }
+            .header-actions a,
+            .header-actions button {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            .profile-card {
+                padding: 16px;
+            }
+            .profile-name {
+                font-size: 20px;
+            }
+            .profile-avatar img {
+                width: 90px;
+                height: 90px;
+            }
+            .profile-bio {
+                padding: 10px;
+            }
+            .stats-row {
+                gap: 10px;
+            }
+            .stat-item {
+                padding: 12px;
+            }
+            .two-factor-setup {
+                padding: 14px;
+            }
+            .qr-card {
+                padding: 14px;
+            }
+            .qr-card img {
+                max-width: 100%;
+                height: auto;
+            }
+            .secret-box {
+                grid-template-columns: 1fr;
+            }
+            .btn-secondary.copy-secret {
+                width: 100%;
+            }
+            .two-factor-setup .form-group label {
+                font-size: 14px;
+            }
+            .two-factor-setup .form-group input {
+                padding: 12px 14px;
+            }
+            .two-factor-setup .btn-primary {
+                padding: 14px;
+                font-size: 15px;
+            }
+        }
+
+        .security-actions {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .security-actions .btn-primary,
+        .security-actions .btn-secondary {
+            width: 100%;
         }
 
         .profile-avatar {
@@ -411,26 +830,94 @@
 
         .toast {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: #1a1a2e;
+            top: 20px;
+            right: 20px;
+            left: auto;
+            transform: translateY(-10px);
+            background: #1a73e8;
             color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
+            padding: 14px 24px;
+            border-radius: 14px;
             font-weight: 600;
-            z-index: 9999;
+            z-index: 99999;
             opacity: 0;
-            transition: 0.4s;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: 0.3s ease;
+            box-shadow: 0 18px 40px rgba(17, 57, 115, 0.28);
             font-size: 14px;
-            max-width: 90%;
-            text-align: center;
+            max-width: 360px;
+            min-width: 220px;
+            text-align: left;
         }
 
         .toast.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateY(0);
+        }
+
+        .confirm-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: auto;
+            width: min(100%, 420px);
+            background: #ffffff;
+            color: #102a54;
+            border: 1px solid rgba(16, 42, 84, 0.12);
+            border-radius: 18px;
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+            padding: 18px 20px;
+            z-index: 100000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: 0.25s ease;
+            display: grid;
+            gap: 12px;
+        }
+
+        .confirm-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .confirm-toast p {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .confirm-actions button {
+            min-width: 90px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .confirm-actions .confirm-btn {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .confirm-actions .confirm-btn:hover {
+            background: #1557b0;
+        }
+
+        .confirm-actions .cancel-btn {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .confirm-actions .cancel-btn:hover {
+            background: #e5e7eb;
         }
 
         .login-required {
@@ -498,34 +985,186 @@
             margin: 0 auto 16px;
         }
 
+        @media (max-width: 992px) {
+            .container {
+                padding: 0 12px;
+            }
+            .logo {
+                font-size: 18px;
+            }
+
+            .header-actions {
+                gap: 10px;
+            }
+
+            .login-btn {
+                padding: 10px 18px;
+                font-size: 13px;
+            }
+
+            .logout-btn,
+            .dashboard-link {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-actions {
+                justify-content: flex-start;
+                flex-wrap: nowrap;
+                gap: 8px;
+            }
+            .logo img {
+                height: 36px;
+            }
+            #authStatus {
+                min-width: 0;
+                flex-shrink: 1;
+            }
+            #authStatus a {
+                min-width: 0;
+                overflow: hidden;
+            }
+            #authStatus .user-name {
+                display: none;
+            }
+            .login-btn {
+                padding: 10px 14px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+            .logout-btn,
+            .dashboard-link {
+                padding: 8px 12px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+        }
+
         @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+            .header-content {
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .header-actions {
+                gap: 6px;
+                flex-wrap: nowrap;
+                justify-content: flex-end;
+                min-width: 0;
+                overflow-x: auto;
+            }
+            .header-actions > * {
+                flex-shrink: 0;
+            }
+            #authStatus {
+                min-width: 0;
+                flex-shrink: 0;
+                overflow: hidden;
+            }
+            #authStatus a {
+                min-width: 0;
+            }
+            #authStatus img {
+                width: 32px;
+                height: 32px;
+            }
+            #authStatus .user-name {
+                display: none;
+            }
+            .login-btn,
+            .logout-btn,
+            .dashboard-link {
+                padding: 7px 10px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
             .profile-card {
-                padding: 20px;
+                padding: 20px 16px;
+                border-radius: 16px;
             }
             .profile-avatar img {
-                width: 90px;
-                height: 90px;
+                width: 86px;
+                height: 86px;
+            }
+            .profile-avatar .avatar-overlay {
+                font-size: 11px;
+                padding: 4px 8px;
             }
             .stats-row {
                 grid-template-columns: 1fr 1fr 1fr;
-                gap: 8px;
+                gap: 6px;
             }
             .stat-item {
-                padding: 10px;
+                padding: 8px 6px;
             }
             .stat-item .number {
-                font-size: 18px;
+                font-size: 16px;
+            }
+            .stat-item .label {
+                font-size: 10px;
             }
             .verified-badge {
                 font-size: 9px;
                 padding: 1px 6px;
             }
-            .header-actions {
-                gap: 6px;
-            }
             .back-link {
                 font-size: 11px;
                 padding: 4px 10px;
+            }
+            .security-card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+            .security-badges {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .security-badge {
+                width: 100%;
+                text-align: center;
+            }
+            .form-group input,
+            .form-group textarea {
+                font-size: 14px;
+                padding: 10px 13px;
+                border-radius: 10px;
+            }
+            .form-group textarea {
+                min-height: 80px;
+            }
+            .form-group label {
+                font-size: 13px;
+            }
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+            .profile-container {
+                padding: 12px 0 24px;
+            }
+            .profile-layout {
+                gap: 12px;
+            }
+            .profile-name {
+                font-size: 20px;
+            }
+            .profile-bio-text {
+                font-size: 13px;
+            }
+            .member-badge {
+                font-size: 12px;
+                padding: 6px 12px;
             }
         }
     </style>
@@ -535,18 +1174,20 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <a href="index.html" class="logo">
-                    <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Doraemon Fansub">
-                    Doraemon <span>FanSub</span>
+                <a href="index.html" class="logo" aria-label="Doraemon Fansub">
+                    <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Doraemon Fansub" loading="lazy">
                 </a>
                 <div class="header-actions">
                     <div id="authStatus">
-                        <a href="profile.html">
-                            <img id="userAvatar" src="" alt="Avatar">
+                        <a href="profile.html" id="profileLink">
+                            <img id="userAvatar" src="" alt="Avatar" loading="lazy">
                             <span class="user-name" id="userName">User</span>
+                            <span class="verified-badge" id="headerBadge" style="display:none;">
+                                <span class="check">✓</span> Admin
+                            </span>
                         </a>
+                        <a href="dashboard.html" class="dashboard-link" id="dashboardLink">📊 Dashboard</a>
                     </div>
-                    <a href="index.html" class="back-link">🏠 Trang chủ</a>
                     <a href="login.html" class="login-btn" id="loginBtn">🔑 Đăng nhập</a>
                     <button class="logout-btn" id="logoutBtn" onclick="logoutUser()">🚪 Đăng xuất</button>
                 </div>
@@ -569,68 +1210,132 @@
 
         <div id="profileContent" style="display:none;">
             <div class="profile-card">
-                <!-- Avatar -->
-                <div class="profile-avatar" id="avatarContainer">
-                    <img id="profileAvatar" src="" alt="Avatar">
-                    <div class="avatar-overlay" id="avatarOverlay" onclick="openAvatarUpload()">📷 Đổi ảnh</div>
-                </div>
-
-                <!-- Upload Progress -->
-                <div class="upload-progress" id="uploadProgress">
-                    <span id="uploadStatus">📤 Đang tải ảnh lên Cloudinary...</span>
-                    <div class="progress-bar">
-                        <div class="fill" id="progressFill"></div>
-                    </div>
-                </div>
-
-                <!-- Name & Badge -->
-                <div class="profile-name" id="profileName">
-                    <span id="profileNameText">Tên người dùng</span>
-                    <span class="verified-badge" id="profileBadge" style="display:none;">
-                        <span class="check">✓</span> Admin
-                    </span>
-                    <span class="owner-badge" id="ownerBadge" style="display:none;">👤 Bạn</span>
-                </div>
-                <div class="profile-email" id="profileEmail">email@example.com</div>
-
-                <!-- Stats -->
-                <div class="stats-row">
-                    <div class="stat-item">
-                        <div class="number" id="statPosts">0</div>
-                        <div class="label">📝 Bài viết</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="number" id="statLikes">0</div>
-                        <div class="label">❤️ Lượt thích</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="number" id="statComments">0</div>
-                        <div class="label">💬 Bình luận</div>
-                    </div>
-                </div>
-
-                <div class="profile-bio" id="profileBio">⭐ Thành viên của Doraemon Fansub VN</div>
-
-                <!-- Edit Form - Chỉ hiện khi xem trang của chính mình -->
-                <div id="editSection">
-                    <form id="profileForm" onsubmit="return false;">
-                        <div class="form-group">
-                            <label>Tên hiển thị</label>
-                            <input type="text" id="editName" placeholder="Nhập tên của bạn" />
+                <div class="profile-grid">
+                    <div class="profile-left">
+                        <!-- Avatar -->
+                        <div class="profile-avatar" id="avatarContainer">
+                            <img id="profileAvatar" src="" alt="Avatar">
+                            <div class="avatar-overlay" id="avatarOverlay" onclick="openAvatarUpload()">📷 Đổi ảnh</div>
                         </div>
-                        <div class="form-group">
-                            <label>Giới thiệu</label>
-                            <textarea id="editBio" placeholder="Viết một vài dòng giới thiệu về bạn..."></textarea>
+
+                        <!-- Name & Badge -->
+                        <div class="profile-name" id="profileName">
+                            <span id="profileNameText">Tên người dùng</span>
+                            <span class="verified-badge" id="profileBadge" style="display:none;">
+                                <span class="check">✓</span> Admin
+                            </span>
+                            <span class="owner-badge" id="ownerBadge" style="display:none;">👤 Bạn</span>
                         </div>
-                        <button type="submit" class="btn-primary" id="saveBtn">💾 Lưu thay đổi</button>
-                    </form>
-                    <button class="btn-secondary" onclick="logoutUser()">🚪 Đăng xuất</button>
+                        <div class="profile-email" id="profileEmail">email@example.com</div>
+
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="number" id="statPosts">0</div>
+                                <div class="label">📝 Bài viết</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="number" id="statLikes">0</div>
+                                <div class="label">❤️ Lượt thích</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="number" id="statComments">0</div>
+                                <div class="label">💬 Bình luận</div>
+                            </div>
+                        </div>
+
+                        <div class="profile-bio" id="profileBio">⭐ Thành viên của Doraemon Fansub VN</div>
+
+                        <!-- Edit Form - Chỉ hiện khi xem trang của chính mình -->
+                        <div id="editSection">
+                            <form id="profileForm" onsubmit="return false;">
+                                <div class="form-group">
+                                    <label>Tên hiển thị</label>
+                                    <input type="text" id="editName" placeholder="Nhập tên của bạn" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Giới thiệu</label>
+                                    <textarea id="editBio" placeholder="Viết một vài dòng giới thiệu về bạn..."></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary" id="saveBtn">💾 Lưu thay đổi</button>
+                            </form>
+
+                            <button class="btn-secondary" onclick="logoutUser()">🚪 Đăng xuất</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-right">
+                        <div class="security-card">
+                            <h3>🔐 Bảo mật tài khoản</h3>
+                            <p>Đổi mật khẩu và bật xác thực 2 lớp bằng Google Authenticator để tăng bảo mật cho tài khoản của bạn.</p>
+
+                            <div class="security-status">
+                                <span id="passwordStatus">Mật khẩu: an toàn</span>
+                                <span id="twoFactorStatus">2 lớp: chưa kích hoạt</span>
+                            </div>
+
+                            <div class="security-actions">
+                                <button type="button" class="btn-primary" id="showPasswordBoxBtn">🔒 Đổi mật khẩu</button>
+                                <button type="button" class="btn-secondary" id="toggle2faBtn">🛡️ Bật Google Authenticator</button>
+                            </div>
+
+                            <div class="two-factor-setup" id="twoFactorSetup" style="display:none;">
+                                <div class="two-factor-setup-grid">
+                                    <div class="qr-card">
+                                        <img id="tfaQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=placeholder" alt="Mã QR Google Authenticator" />
+                                        <p class="qr-label">Quét mã QR bằng Google Authenticator</p>
+                                        <p class="qr-hint">Mở ứng dụng và thêm tài khoản mới bằng mã QR. Nếu cần, nhập secret key thủ công.</p>
+                                    </div>
+                                    <div class="qr-info">
+                                        <p>Quét mã QR hoặc sao chép secret key vào Google Authenticator để kích hoạt xác thực 2 lớp.</p>
+                                        <div class="form-group">
+                                            <label>Secret key</label>
+                                            <div class="secret-box">
+                                                <input type="text" id="tfaSecret" readonly value="HƯỚNG DẪN NHẬP 2FA" />
+                                                <button type="button" class="btn-secondary copy-secret" id="copyTfaSecretBtn">Sao chép</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Mã xác thực</label>
+                                            <input type="text" id="tfaCode" placeholder="Nhập mã 6 chữ số" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-primary" id="verify2faBtn">✅ Xác thực 2 lớp</button>
+                            </div>
+                        </div>
+
+                        <div id="passwordSection" style="display:none;">
+                            <h3 style="margin-bottom:12px; font-size:16px; font-weight:600; color:#1a1a2e;">🔒 Đổi mật khẩu</h3>
+                            <form id="passwordForm" onsubmit="return false;">
+                                <div class="form-group">
+                                    <label>Mật khẩu hiện tại</label>
+                                    <input type="password" id="currentPassword" placeholder="Nhập mật khẩu hiện tại" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Mật khẩu mới</label>
+                                    <input type="password" id="newPassword" placeholder="Tối thiểu 6 ký tự" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Xác nhận mật khẩu mới</label>
+                                    <input type="password" id="confirmNewPassword" placeholder="Nhập lại mật khẩu mới" />
+                                </div>
+                                <button type="button" class="btn-primary" id="changePasswordBtn">🔒 Đổi mật khẩu</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="toast" id="toast"></div>
+    <div class="confirm-toast" id="confirmToast" style="display:none;">
+        <p id="confirmToastMessage">Bạn có chắc muốn tắt xác thực 2 lớp?</p>
+        <div class="confirm-actions">
+            <button type="button" class="cancel-btn" id="confirmCancelBtn">Hủy</button>
+            <button type="button" class="confirm-btn" id="confirmAcceptBtn">Xác nhận</button>
+        </div>
+    </div>
 
     <script>
         // ============================================================
@@ -646,12 +1351,176 @@
             measurementId: "G-0S2Z4XRK0B"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        let auth, db;
+        function initFirebaseApp() {
+            if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                // Offline Cache Persistence
+                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+                    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+                        console.warn('Firestore persistence error:', err);
+                    }
+                });
+            }
+        }
+        initFirebaseApp();
+        if (typeof firebase === 'undefined') {
+            window.addEventListener('DOMContentLoaded', initFirebaseApp);
+        }
 
         const SUPER_ADMIN_EMAIL = 'tuankhaimoi12345@gmail.com';
         const LOGO_URL = 'https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png';
+
+        function getOptimizedAvatarUrl(url, size = 150) {
+            if (!url) return LOGO_URL;
+            if (typeof url === 'string' && url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+                if (url.includes('/upload/w_') || url.includes('/upload/c_fill')) {
+                    return url;
+                }
+                return url.replace('/upload/', `/upload/w_${size},h_${size},c_fill,g_face,q_auto,f_auto/`);
+            }
+            return url;
+        }
+
+        async function hmacSha1(keyBytes, messageBytes) {
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyBytes,
+                { name: 'HMAC', hash: 'SHA-1' },
+                false,
+                ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageBytes);
+            return new Uint8Array(signature);
+        }
+
+        function base32ToBytes(base32) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let bits = '';
+            let bytes = [];
+            base32 = base32.replace(/=+$/, '').toUpperCase();
+            for (let char of base32) {
+                const val = alphabet.indexOf(char);
+                if (val === -1) continue;
+                bits += val.toString(2).padStart(5, '0');
+            }
+            for (let i = 0; i + 8 <= bits.length; i += 8) {
+                bytes.push(parseInt(bits.slice(i, i + 8), 2));
+            }
+            return new Uint8Array(bytes);
+        }
+
+        function leftPad(str, length) {
+            return str.toString().padStart(length, '0');
+        }
+
+        function generateSecretBase32(length = 16) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            const bytes = new Uint8Array(length);
+            window.crypto.getRandomValues(bytes);
+            return Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
+        }
+
+        async function generateTOTP(secret, step = 30, digits = 6) {
+            const key = base32ToBytes(secret);
+            const counter = Math.floor(Date.now() / 1000 / step);
+            const counterBytes = new ArrayBuffer(8);
+            const view = new DataView(counterBytes);
+            view.setUint32(4, counter, false);
+            const hash = await hmacSha1(key, new Uint8Array(counterBytes));
+            const offset = hash[hash.length - 1] & 0xf;
+            const binary = ((hash[offset] & 0x7f) << 24) |
+                ((hash[offset + 1] & 0xff) << 16) |
+                ((hash[offset + 2] & 0xff) << 8) |
+                (hash[offset + 3] & 0xff);
+            return leftPad(binary % 10 ** digits, digits);
+        }
+
+        async function verifyTOTP(secret, code) {
+            if (!secret || !code) return false;
+            code = code.trim();
+            const now = Math.floor(Date.now() / 1000 / 30);
+            for (let delta = -1; delta <= 1; delta++) {
+                const counter = now + delta;
+                const counterBytes = new ArrayBuffer(8);
+                const view = new DataView(counterBytes);
+                view.setUint32(4, counter, false);
+                const hash = await hmacSha1(base32ToBytes(secret), new Uint8Array(counterBytes));
+                const offset = hash[hash.length - 1] & 0xf;
+                const binary = ((hash[offset] & 0x7f) << 24) |
+                    ((hash[offset + 1] & 0xff) << 16) |
+                    ((hash[offset + 2] & 0xff) << 8) |
+                    (hash[offset + 3] & 0xff);
+                if (leftPad(binary % 10 ** 6, 6) === code) return true;
+            }
+            return false;
+        }
+
+        const QR_CODE_API_URL = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=';
+
+        function buildOtpAuthUri(secret, account) {
+            const issuer = 'Doraemon Fansub VN';
+            const label = `${account}`;
+            return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+        }
+
+        function updateTfaQrCode(secret, account) {
+            const qrImage = document.getElementById('tfaQrCode');
+            if (!qrImage) return;
+            qrImage.src = `${QR_CODE_API_URL}${encodeURIComponent(buildOtpAuthUri(secret, account))}`;
+        }
+
+        async function copyTfaSecret() {
+            const secret = document.getElementById('tfaSecret').value.trim();
+            if (!secret) return;
+            try {
+                await navigator.clipboard.writeText(secret);
+                showToast('✅ Đã sao chép secret key!');
+            } catch (e) {
+                const textarea = document.createElement('textarea');
+                textarea.value = secret;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('✅ Đã sao chép secret key!');
+                } catch (copyError) {
+                    showToast('❌ Không thể sao chép. Vui lòng sao chép thủ công.', true);
+                }
+                document.body.removeChild(textarea);
+            }
+        }
+
+        const TWO_FACTOR_SESSION_KEY = 'twoFactorVerifiedUid';
+
+        function getTwoFactorVerifiedUid() {
+            return localStorage.getItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function clearTwoFactorVerifiedUid() {
+            localStorage.removeItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        async function getUserTwoFactorData(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.exists ? doc.data()?.twoFactor || null : null;
+            } catch (e) {
+                console.error('Lỗi kiểm tra 2FA:', e);
+                return null;
+            }
+        }
+
+        function isTwoFactorVerifiedForUser(uid) {
+            return uid && getTwoFactorVerifiedUid() === uid;
+        }
 
         // ============================================================
         // CLOUDINARY CONFIG
@@ -687,6 +1556,20 @@
         const editBio = document.getElementById('editBio');
         const saveBtn = document.getElementById('saveBtn');
         const editSection = document.getElementById('editSection');
+        const passwordSection = document.getElementById('passwordSection');
+
+        const showPasswordBoxBtn = document.getElementById('showPasswordBoxBtn');
+        const toggle2faBtn = document.getElementById('toggle2faBtn');
+        const twoFactorSetup = document.getElementById('twoFactorSetup');
+        const tfaSecret = document.getElementById('tfaSecret');
+        const tfaCode = document.getElementById('tfaCode');
+        const verify2faBtn = document.getElementById('verify2faBtn');
+        const twoFactorStatus = document.getElementById('twoFactorStatus');
+        const passwordStatus = document.getElementById('passwordStatus');
+        const currentPasswordInput = document.getElementById('currentPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
 
         const statPosts = document.getElementById('statPosts');
         const statLikes = document.getElementById('statLikes');
@@ -702,6 +1585,7 @@
         let isViewingSelf = false;
         let isAdmin = false;
         let adminEmails = new Set();
+        let adminUids = new Set();
 
         // ============================================================
         // LẤY DANH SÁCH ADMIN
@@ -710,21 +1594,53 @@
             try {
                 const snapshot = await db.collection('admins').get();
                 adminEmails = new Set();
+                adminUids = new Set();
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.email) {
-                        adminEmails.add(data.email);
-                    }
+                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
+                    if (data.uid) adminUids.add(data.uid);
                 });
-                adminEmails.add(SUPER_ADMIN_EMAIL);
+                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
             } catch (e) {
                 console.error('Lỗi load admin list:', e);
             }
         }
 
-        function isUserAdmin(email) {
-            if (!email) return false;
-            return adminEmails.has(email);
+        function isUserAdmin(userOrEmail, uid = null) {
+            if (!userOrEmail && !uid) return false;
+            let emailToCheck = '';
+            let uidToCheck = uid;
+
+            if (typeof userOrEmail === 'object' && userOrEmail !== null) {
+                emailToCheck = userOrEmail.email || '';
+                uidToCheck = userOrEmail.uid || uid;
+            } else if (typeof userOrEmail === 'string') {
+                emailToCheck = userOrEmail;
+            }
+
+            if (emailToCheck && adminEmails.has(emailToCheck.toLowerCase().trim())) {
+                return true;
+            }
+            if (uidToCheck && adminUids.has(uidToCheck)) {
+                return true;
+            }
+            return false;
+        }
+
+        // ============================================================
+        // HIỂN THỊ QUYỀN HẠN ADMIN TRONG HEADER
+        // ============================================================
+        function updateAdminHeader() {
+            const dashboardLink = document.getElementById('dashboardLink');
+            const headerBadge = document.getElementById('headerBadge');
+
+            if (isAdmin) {
+                if (dashboardLink) dashboardLink.style.display = 'inline-block';
+                if (headerBadge) headerBadge.style.display = 'inline-block';
+            } else {
+                if (dashboardLink) dashboardLink.style.display = 'none';
+                if (headerBadge) headerBadge.style.display = 'none';
+            }
         }
 
         // ============================================================
@@ -740,10 +1656,49 @@
         // ============================================================
         function showToast(msg, isError = false) {
             toast.textContent = msg;
-            toast.style.background = isError ? '#c62828' : '#1a1a2e';
+            toast.style.background = isError ? '#c62828' : '#1a73e8';
             toast.classList.add('show');
             clearTimeout(toast._timer);
             toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        const confirmToast = document.getElementById('confirmToast');
+        const confirmToastMessage = document.getElementById('confirmToastMessage');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const confirmAcceptBtn = document.getElementById('confirmAcceptBtn');
+        let confirmCallback = null;
+
+        function showConfirmToast(message, callback) {
+            confirmToastMessage.textContent = message;
+            confirmToast.style.display = 'grid';
+            requestAnimationFrame(() => confirmToast.classList.add('show'));
+            confirmCallback = callback;
+        }
+
+        function hideConfirmToast() {
+            confirmToast.classList.remove('show');
+            clearTimeout(confirmToast._hideTimer);
+            confirmToast._hideTimer = setTimeout(() => {
+                confirmToast.style.display = 'none';
+            }, 250);
+            confirmCallback = null;
+        }
+
+        confirmCancelBtn.addEventListener('click', hideConfirmToast);
+        confirmAcceptBtn.addEventListener('click', function() {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            hideConfirmToast();
+        });
+
+        function getGoogleIdForUser(user) {
+            if (!user) return '';
+            const googleProvider = (user.providerData || []).find(provider => provider.providerId === 'google.com');
+            if (googleProvider?.uid) return googleProvider.uid;
+            if (user.uid) return user.uid;
+            if (user.email) return user.email;
+            return '';
         }
 
         // ============================================================
@@ -754,6 +1709,7 @@
 
             try {
                 const doc = await db.collection('users').doc(user.uid).get();
+                const googleId = getGoogleIdForUser(user);
                 const data = doc.exists ? (doc.data() || {}) : {};
 
                 const userEmail = user.email ? user.email.trim() : '';
@@ -765,6 +1721,7 @@
                         email: userEmail,
                         displayName: userDisplayName,
                         photoURL: userPhotoURL,
+                        googleId: googleId || '',
                         providerData: user.providerData || [],
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -778,6 +1735,10 @@
                 let needsUpdate = false;
                 if (!data.email && userEmail) {
                     updates.email = userEmail;
+                    needsUpdate = true;
+                }
+                if (!data.googleId && googleId) {
+                    updates.googleId = googleId;
                     needsUpdate = true;
                 }
                 if (!data.displayName && userDisplayName) {
@@ -804,10 +1765,19 @@
         // AUTH STATE
         // ============================================================
         auth.onAuthStateChanged(async (user) => {
-            await loadAdminList();
             loadingState.style.display = 'none';
 
             if (user) {
+                const [, twoFactor] = await Promise.all([
+                    loadAdminList(),
+                    getUserTwoFactorData(user.uid)
+                ]);
+
+                if (twoFactor?.enabled && twoFactor.secret && !isTwoFactorVerifiedForUser(user.uid)) {
+                    await auth.signOut();
+                    window.location.href = 'login.html';
+                    return;
+                }
                 currentUser = user;
                 authStatus.style.display = 'flex';
                 loginBtn.style.display = 'none';
@@ -816,9 +1786,10 @@
                     .displayName || user.email);
                 userName.textContent = user.displayName || user.email;
 
-                await ensureUserInFirestore(user);
+                ensureUserInFirestore(user).catch(() => {});
 
                 isAdmin = isUserAdmin(user.email);
+                updateAdminHeader();
 
                 loginRequired.style.display = 'none';
                 profileContent.style.display = 'block';
@@ -872,14 +1843,33 @@
         // HIỂN THỊ DỮ LIỆU USER
         // ============================================================
         function displayUserData(data) {
-            const displayName = data.displayName || data.email?.split('@')[0] || 'Người dùng';
+            const DEFAULTS = ['Người dùng', 'người dùng', ''];
+            const firestoreName = data.displayName || '';
+            const authName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Người dùng';
+            // Ưu tiên tên thực từ Firestore, nếu là mặc định thì dùng Firebase Auth
+            const displayName = (!DEFAULTS.includes(firestoreName)) ? firestoreName : authName;
             const email = data.email || '';
-
-            profileAvatar.src = data.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) +
+            const avatarUrl = data.photoURL || currentUser?.photoURL ||
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) +
                 '&background=1a73e8&color=fff&size=120';
+
+            profileAvatar.src = avatarUrl;
             profileNameText.textContent = displayName;
             profileEmail.textContent = email;
             profileBio.textContent = data.bio || '⭐ Thành viên của Doraemon Fansub VN';
+
+            // Đồng nhất header với Firestore data khi xem profile của chính mình
+            if (isViewingSelf) {
+                userAvatar.src = avatarUrl;
+                userName.textContent = displayName;
+                // Tự động sync vào Firestore nếu đang dùng mặc định
+                if (DEFAULTS.includes(firestoreName) && authName !== 'Người dùng' && currentUser) {
+                    db.collection('users').doc(currentUser.uid).set(
+                        { displayName: authName },
+                        { merge: true }
+                    ).catch(() => {});
+                }
+            }
 
             if (isUserAdmin(data.email)) {
                 profileBadge.style.display = 'inline-block';
@@ -898,9 +1888,27 @@
                 avatarOverlay.style.display = 'block';
                 editName.value = displayName;
                 editBio.value = data.bio || '';
+
+                if (currentUser.providerData.some(p => p.providerId === 'password')) {
+                    passwordSection.style.display = 'block';
+                } else {
+                    passwordSection.style.display = 'none';
+                }
+
+                if (data.twoFactor && data.twoFactor.enabled) {
+                    twoFactorStatus.textContent = '2 lớp: đã kích hoạt';
+                    toggle2faBtn.textContent = '🛡️ 2FA đã bật';
+                    tfaSecret.value = data.twoFactor.secret || '';
+                    twoFactorSetup.style.display = 'none';
+                } else {
+                    twoFactorStatus.textContent = '2 lớp: chưa kích hoạt';
+                    toggle2faBtn.textContent = '🛡️ Bật Google Authenticator';
+                    tfaSecret.value = '';
+                }
             } else {
                 editSection.style.display = 'none';
                 avatarOverlay.style.display = 'none';
+                passwordSection.style.display = 'none';
             }
 
             if (viewingUserId) {
@@ -986,6 +1994,150 @@
         });
 
         // ============================================================
+        // CHANGE PASSWORD
+        // ============================================================
+        changePasswordBtn?.addEventListener('click', async function() {
+            if (!currentUser || !isViewingSelf) {
+                showToast('⚠️ Bạn không có quyền đổi mật khẩu!', true);
+                return;
+            }
+
+            const currentPassword = currentPasswordInput.value.trim();
+            const newPassword = newPasswordInput.value.trim();
+            const confirmPassword = confirmNewPasswordInput.value.trim();
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('⚠️ Vui lòng điền đủ các trường mật khẩu!', true);
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showToast('⚠️ Mật khẩu mới và xác nhận không khớp!', true);
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showToast('⚠️ Mật khẩu mới phải ít nhất 6 ký tự.', true);
+                return;
+            }
+
+            changePasswordBtn.disabled = true;
+            changePasswordBtn.textContent = '⏳ Đang đổi mật khẩu...';
+
+            try {
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    currentUser.email,
+                    currentPassword
+                );
+
+                await currentUser.reauthenticateWithCredential(credential);
+                await currentUser.updatePassword(newPassword);
+
+                showToast('✅ Đổi mật khẩu thành công!');
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+                confirmNewPasswordInput.value = '';
+            } catch (e) {
+                console.error('Lỗi đổi mật khẩu:', e);
+                if (e.code === 'auth/wrong-password') {
+                    showToast('❌ Mật khẩu hiện tại không đúng.', true);
+                } else if (e.code === 'auth/weak-password') {
+                    showToast('❌ Mật khẩu quá yếu, hãy dùng ít nhất 6 ký tự.', true);
+                } else if (e.code === 'auth/requires-recent-login') {
+                    showToast('❌ Vui lòng đăng nhập lại để đổi mật khẩu.', true);
+                } else if (e.code === 'auth/invalid-credential') {
+                    showToast('❌ Thông tin xác thực không hợp lệ. Vui lòng thử lại.', true);
+                } else {
+                    showToast('❌ Đổi mật khẩu thất bại. Vui lòng thử lại sau.', true);
+                }
+            } finally {
+                changePasswordBtn.disabled = false;
+                changePasswordBtn.textContent = '🔒 Đổi mật khẩu';
+            }
+        });
+
+        showPasswordBoxBtn?.addEventListener('click', function() {
+            if (!currentUser || !isViewingSelf) return;
+            passwordSection.style.display = passwordSection.style.display === 'block' ? 'none' : 'block';
+        });
+
+        toggle2faBtn?.addEventListener('click', async function() {
+            if (!currentUser || !isViewingSelf) return;
+
+            const doc = await db.collection('users').doc(currentUser.uid).get();
+            const userData = doc.exists ? doc.data() : {};
+            const enabled = userData?.twoFactor?.enabled;
+
+            if (enabled) {
+                showConfirmToast('Bạn có chắc muốn tắt xác thực 2 lớp?', async () => {
+                    await db.collection('users').doc(currentUser.uid).update({
+                        twoFactor: firebase.firestore.FieldValue.delete(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    twoFactorStatus.textContent = '2 lớp: chưa kích hoạt';
+                    toggle2faBtn.textContent = '🛡️ Bật Google Authenticator';
+                    tfaSecret.value = '';
+                    twoFactorSetup.style.display = 'none';
+                    showToast('✅ Đã tắt 2FA.');
+                });
+                return;
+            }
+
+            const secret = generateSecretBase32();
+            tfaSecret.value = secret;
+            updateTfaQrCode(secret, currentUser.email || currentUser.uid);
+            twoFactorSetup.style.display = 'block';
+            toggle2faBtn.textContent = '🛡️ Hoàn tất kích hoạt 2FA';
+        });
+
+        document.getElementById('copyTfaSecretBtn')?.addEventListener('click', copyTfaSecret);
+
+        verify2faBtn?.addEventListener('click', async function() {
+            if (!currentUser || !isViewingSelf) {
+                showToast('⚠️ Bạn không có quyền thực hiện thao tác này!', true);
+                return;
+            }
+
+            const secret = tfaSecret.value.trim();
+            const code = tfaCode.value.trim();
+
+            if (!secret) {
+                showToast('⚠️ Vui lòng tạo secret 2FA trước khi xác thực.', true);
+                return;
+            }
+            if (!code) {
+                showToast('⚠️ Vui lòng nhập mã 2FA.', true);
+                return;
+            }
+
+            verify2faBtn.disabled = true;
+            verify2faBtn.textContent = '⏳ Đang kiểm tra...';
+
+            const valid = await verifyTOTP(secret, code);
+            if (valid) {
+                await db.collection('users').doc(currentUser.uid).update({
+                    twoFactor: {
+                        enabled: true,
+                        secret: secret
+                    },
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                twoFactorStatus.textContent = '2 lớp: đã kích hoạt';
+                toggle2faBtn.textContent = '🛡️ 2FA đã bật';
+                twoFactorSetup.style.display = 'none';
+                tfaCode.value = '';
+                showToast('✅ 2FA đã được kích hoạt!');
+            } else {
+                showToast('❌ Mã 2FA không đúng. Thử lại.', true);
+            }
+
+            verify2faBtn.disabled = false;
+            verify2faBtn.textContent = '✅ Xác thực 2 lớp';
+        });
+
+        // ============================================================
         // UPLOAD AVATAR
         // ============================================================
         function openAvatarUpload() {
@@ -1010,6 +2162,9 @@
                 clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
                 cropping: true,
                 croppingAspectRatio: 1,
+                croppingValidateDimensions: true,
+                maxImageWidth: 300,
+                maxImageHeight: 300,
                 showAdvancedOptions: false,
                 styles: {
                     palette: {
@@ -1037,10 +2192,10 @@
                 }
 
                 if (result.event === 'success') {
-                    const avatarUrl = result.info.secure_url;
+                    const avatarUrl = getOptimizedAvatarUrl(result.info.secure_url, 300);
 
                     profileAvatar.src = avatarUrl;
-                    userAvatar.src = avatarUrl;
+                    userAvatar.src = getOptimizedAvatarUrl(avatarUrl, 80);
 
                     try {
                         await db.collection('users').doc(currentUser.uid).update({
@@ -1089,6 +2244,7 @@
         // ============================================================
         window.logoutUser = async function() {
             try {
+                clearTwoFactorVerifiedUid();
                 await auth.signOut();
                 window.location.href = 'index.html';
             } catch (error) {

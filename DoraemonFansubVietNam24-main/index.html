@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,20 +19,26 @@
     <meta name="description" content="Xem phim Doraemon và nhiều bộ phim hay khác - Doraemon Fansub Việt Nam" />
     <meta name="keywords" content="Doraemon, Anime, Vietsub, Xem phim, Doraemon Fansub" />
     <meta name="robots" content="index, follow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://upload-widget.cloudinary.com">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
+    <link rel="dns-prefetch" href="https://i.ibb.co">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <link rel="icon" href="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" type="image/png" />
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js">
-    </script>
-
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript">
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" defer></script>
 
     <style>
         /* ===== RESET & BASE ===== */
@@ -43,17 +50,460 @@
         }
 
         body {
-            background: #f0f2f5;
-            color: #1a1a2e;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            background: radial-gradient(circle at top left, rgba(26, 115, 232, 0.14), transparent 22%),
+                radial-gradient(circle at bottom right, rgba(255, 235, 59, 0.18), transparent 20%),
+                linear-gradient(180deg, #edf5ff 0%, #f8fbff 45%, #eef6ff 100%);
+            color: #14233d;
+        }
+
+        .page-loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(237, 245, 255, 0.34);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            opacity: 1;
+            transition: opacity 0.45s ease, visibility 0.45s ease;
+            visibility: visible;
+        }
+
+        .page-loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .page-loading-overlay .flight-image {
+            position: absolute;
+            width: 220px;
+            height: auto;
+            object-fit: contain;
+            transform: translate(-50%, -50%) scale(0.8);
+            filter: drop-shadow(0 18px 44px rgba(24, 76, 161, 0.24));
+            transition: left 1.25s cubic-bezier(0.2, 0.9, 0.2, 1), top 1.25s cubic-bezier(0.2, 0.9, 0.2, 1), transform 1.25s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.45s ease;
+            opacity: 0.97;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .page-loading-overlay .flight-image.animate {
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(1.4);
+        }
+
+        .hero-robot.hidden-by-loading {
+            display: none !important;
+        }
+
+        /* ===== DORAEMON PAINTER NOTIFICATION MODAL ===== */
+        .doraemon-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .doraemon-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .doraemon-modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: opacity 0.4s ease;
+        }
+
+        .doraemon-modal-card {
+            position: relative;
+            z-index: 2;
+            width: 92%;
+            max-width: 580px;
+            margin: 20px;
+            transform: translateY(100px) scale(0.85);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+        }
+
+        .doraemon-modal-overlay.show .doraemon-modal-card {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .doraemon-modal-overlay.hidden .doraemon-modal-card {
+            transform: translateY(80px) scale(0.9);
+            opacity: 0;
+        }
+
+        /* Doraemon Artist Mascot (doraemon_ve.png) */
+        .doraemon-artist-wrapper {
+            position: absolute;
+            top: -44px;
+            left: -24px;
+            z-index: 10;
+            width: 160px;
+            pointer-events: none;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25));
+            animation: doraFloat 3.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes doraFloat {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            100% {
+                transform: translateY(-8px) rotate(1.5deg);
+            }
+        }
+
+        .doraemon-artist-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .paint-sparkle {
+            position: absolute;
+            font-size: 22px;
+            animation: sparklePop 2s ease-in-out infinite alternate;
+        }
+
+        .paint-sparkle.p1 {
+            top: 5px;
+            right: 25px;
+            animation-delay: 0.2s;
+        }
+
+        .paint-sparkle.p2 {
+            top: 35px;
+            right: 5px;
+            animation-delay: 0.8s;
+        }
+
+        @keyframes sparklePop {
+            0% {
+                transform: scale(0.8) rotate(-10deg);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1.25) rotate(15deg);
+                opacity: 1;
+            }
+        }
+
+        /* Doraemon Canvas Board */
+        .doraemon-board-canvas {
+            background: #ffffff;
+            border-radius: 24px;
+            border: 3.5px solid #00a0e9;
+            box-shadow: 0 20px 50px rgba(0, 160, 233, 0.35), 0 0 0 5px rgba(255, 255, 255, 0.95);
+            overflow: hidden;
+            position: relative;
+            padding-left: 0;
+            min-height: 220px;
+        }
+
+        /* Red Collar & Bell Header */
+        .doraemon-board-header {
+            background: linear-gradient(135deg, #00a0e9 0%, #0077b6 100%);
+            padding: 14px 18px 14px 145px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            border-bottom: 4px solid #e60012;
+            min-height: 66px;
+        }
+
+        .doraemon-bell-badge {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff9900 100%);
+            border: 2.5px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 170, 0, 0.4);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .board-header-title {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            margin-left: 10px;
+            flex-grow: 1;
+            white-space: nowrap;
+        }
+
+        .dora-close-btn {
+            width: 36px;
+            height: 36px;
+            background: #e60012;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(230, 0, 18, 0.4);
+            outline: none;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .dora-close-btn:hover {
+            background: #ff2a3b;
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 6px 18px rgba(230, 0, 18, 0.6);
+        }
+
+        /* Body Content */
+        .doraemon-board-body {
+            padding: 22px 24px 24px 145px;
+        }
+
+        .board-welcome-title {
+            color: #0077b6;
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            line-height: 1.35;
+        }
+
+        .board-welcome-text {
+            color: #334155;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+        }
+
+        .board-welcome-text strong {
+            color: #0096c7;
+        }
+
+        .board-action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-dora-primary {
+            background: linear-gradient(135deg, #00a0e9, #0077b6);
+            color: #ffffff !important;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            box-shadow: 0 6px 18px rgba(0, 160, 233, 0.35);
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-dora-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0, 160, 233, 0.5);
+            background: linear-gradient(135deg, #00b4d8, #0096c7);
+        }
+
+        .btn-dora-outline {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1.5px solid #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-dora-outline:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .btn-dora-dismiss {
+            background: transparent;
+            color: #94a3b8;
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 12.5px;
+            border: 1px dashed #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .btn-dora-dismiss:hover {
+            background: #fef2f2;
+            color: #ef4444;
+            border-color: #fca5a5;
+        }
+
+        /* Responsive Mobile Layout */
+        @media (max-width: 640px) {
+            .doraemon-artist-wrapper {
+                top: -40px;
+                left: -12px;
+                width: 105px;
+            }
+
+            .doraemon-board-header {
+                padding: 12px 14px 12px 98px;
+                min-height: 56px;
+            }
+
+            .doraemon-bell-badge {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
+            .board-header-title {
+                font-size: 16px;
+                letter-spacing: 0.8px;
+                margin-left: 8px;
+            }
+
+            .dora-close-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                margin-left: 6px;
+            }
+
+            .doraemon-board-body {
+                padding: 18px 16px 20px 98px;
+            }
+
+            .board-welcome-title {
+                font-size: 15.5px;
+            }
+
+            .board-welcome-text {
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .board-action-buttons {
+                gap: 8px;
+                width: 100%;
+            }
+
+            .btn-dora-primary,
+            .btn-dora-outline {
+                flex: 1;
+                padding: 9px 12px;
+                font-size: 13px;
+            }
+        }
+
+        .page-loading-overlay .loading-text {
+            position: absolute;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1a73e8;
+            opacity: 0.8;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.6);
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.9;
+        }
+
+        body::before {
+            top: -60px;
+            right: -80px;
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(255, 235, 59, 0.28), transparent 70%);
+            animation: floatCloud 7s ease-in-out infinite;
         }
 
         header {
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
-            padding: 12px 0;
+            background: linear-gradient(135deg, #67b7ff, #2f78c1);
+            padding: 8px 0;
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(18, 43, 107, 0.16);
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -80px;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.32), transparent 60%);
+            filter: blur(26px);
+            pointer-events: none;
         }
 
         .container {
@@ -71,20 +521,68 @@
         }
 
         .logo {
-            display: flex;
+            position: relative;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            font-weight: 800;
-            color: white;
+            justify-content: center;
+            padding: 4px;
+            border-radius: 999px;
+            min-height: auto;
             text-decoration: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 18px rgba(2, 6, 23, 0.10);
+            overflow: visible;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 999px;
+            background: conic-gradient(from 240deg, #ff3ec4, #6b36ff, #16b6ff, #48ff9a, #fff859, #ff7d2f, #ff3ec4);
+            opacity: 0.35;
+            filter: blur(14px);
+            z-index: -1;
+            animation: rainbowSpin 3.6s linear infinite;
+        }
+
+        .logo:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.18);
+        }
+
+        .logo:hover::after {
+            opacity: 0.5;
+        }
+
+        .logo:hover img {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 14px rgba(255, 235, 170, 0.6));
         }
 
         .logo img {
-            height: 40px;
+            display: block;
+            height: 48px;
             width: auto;
-            border-radius: 50%;
-            object-fit: cover;
+            max-width: 120px;
+            border-radius: 24px;
+            object-fit: contain;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 10px rgba(255, 235, 170, 0.35), 0 4px 12px rgba(0, 0, 0, 0.12);
+            transition: transform 0.25s ease, filter 0.25s ease;
+            filter: drop-shadow(0 0 8px rgba(255, 235, 170, 0.45));
+        }
+
+        .logo:hover img {
+            transform: scale(1.04);
+        }
+
+        @keyframes rainbowSpin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .header-actions {
@@ -161,20 +659,22 @@
         }
 
         .login-btn {
-            background: #ffeb3b;
-            color: #0d47a1;
+            background: linear-gradient(135deg, #1a73e8, #0f5ccf);
+            color: white;
             border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
+            padding: 10px 22px;
+            border-radius: 30px;
             font-weight: 700;
             font-size: 14px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             text-decoration: none;
+            box-shadow: 0 10px 25px rgba(26, 115, 232, 0.18);
         }
 
         .login-btn:hover {
-            transform: scale(1.05);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(26, 115, 232, 0.25);
         }
 
         .logout-btn {
@@ -215,36 +715,183 @@
             padding: 20px 0 40px;
         }
 
+        .hero-panel {
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 20px;
+            align-items: center;
+            padding: 24px 24px 22px;
+            margin-bottom: 24px;
+            border-radius: 28px;
+            border: 1px solid rgba(26, 115, 232, 0.16);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 255, 0.95));
+            box-shadow: 0 24px 60px rgba(17, 42, 112, 0.10);
+        }
+
+        .hero-panel::before {
+            content: '';
+            position: absolute;
+            inset: auto auto -24px -24px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(255, 235, 59, 0.58), transparent 72%);
+            pointer-events: none;
+            animation: floatCloud 6s ease-in-out infinite;
+        }
+
+        .hero-panel::after {
+            content: '';
+            position: absolute;
+            inset: -16px -16px auto auto;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(26, 115, 232, 0.12), transparent 70%);
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(26, 115, 232, 0.10);
+            color: #1259a5;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            border: 1px solid rgba(26, 115, 232, 0.16);
+        }
+
+        .hero-title {
+            font-size: clamp(24px, 3.2vw, 34px);
+            line-height: 1.2;
+            font-weight: 800;
+            color: #13213c;
+            margin-bottom: 10px;
+        }
+
+        .hero-title span {
+            color: #1a73e8;
+        }
+
+        .hero-subtitle {
+            color: #51627a;
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 640px;
+        }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .hero-tags span {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: white;
+            color: #295a97;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(17, 42, 112, 0.06);
+            border: 1px solid rgba(26, 115, 232, 0.12);
+        }
+
+        .hero-visual {
+            position: relative;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-robot {
+            width: 190px;
+            height: 190px;
+            border-radius: 0;
+            display: block;
+            object-fit: contain;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            position: relative;
+            z-index: 2;
+            animation: flyAcrossScreen 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards, bob 3s ease-in-out 1.4s infinite;
+            filter: drop-shadow(0 12px 24px rgba(17, 42, 112, 0.12));
+            opacity: 0;
+            transform: translate(-220px, -220px) scale(0.8);
+        }
+
+        .hero-float {
+            position: absolute;
+            font-size: 28px;
+            animation: floatCloud 4.5s ease-in-out infinite;
+        }
+
+        .hero-float-1 {
+            top: 18px;
+            left: 18px;
+        }
+
+        .hero-float-2 {
+            bottom: 30px;
+            right: 28px;
+            animation-delay: 0.8s;
+        }
+
+        .hero-float-3 {
+            top: 40px;
+            right: 24px;
+            animation-delay: 1.2s;
+        }
+
         .tabs {
             display: flex;
-            gap: 0;
-            background: white;
-            border-radius: 16px;
-            padding: 4px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 999px;
+            padding: 8px;
+            margin-bottom: 26px;
+            box-shadow: 0 18px 45px rgba(17, 43, 99, 0.08);
+            border: 1px solid rgba(26, 115, 232, 0.12);
+            backdrop-filter: blur(12px);
         }
 
         .tab-btn {
             flex: 1;
-            padding: 12px;
-            border: none;
+            padding: 14px 18px;
+            border: 1px solid transparent;
             background: transparent;
             font-size: 15px;
-            font-weight: 600;
-            color: #65676b;
+            font-weight: 700;
+            color: #33496d;
             cursor: pointer;
-            border-radius: 12px;
-            transition: 0.3s;
+            border-radius: 999px;
+            transition: transform 0.24s ease, color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
         }
 
         .tab-btn:hover {
-            background: #f0f2f5;
+            background: rgba(26, 115, 232, 0.10);
+            color: #0d4ea2;
+            transform: translateY(-1px);
         }
 
         .tab-btn.active {
-            background: #1a73e8;
+            background: linear-gradient(135deg, #1a73e8, #0d59b1);
             color: white;
+            box-shadow: 0 16px 32px rgba(26, 115, 232, 0.18);
+            transform: scale(1.02);
         }
 
         .tab-content {
@@ -285,11 +932,12 @@
         }
 
         .create-post {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            transition: 0.3s;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 255, 0.96));
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 44px rgba(17, 42, 112, 0.10);
+            border: 1px solid rgba(26, 115, 232, 0.14);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
         .create-post-top {
@@ -359,41 +1007,231 @@
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
+            position: relative;
         }
 
         .post-actions button {
-            background: none;
-            border: none;
-            color: #65676b;
+            background: rgba(26, 115, 232, 0.08);
+            border: 1px solid rgba(26, 115, 232, 0.18);
+            color: #1a4d8c;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 8px;
-            transition: 0.3s;
+            padding: 8px 14px;
+            border-radius: 999px;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .post-actions button:hover {
-            background: #f0f2f5;
+            background: rgba(26, 115, 232, 0.16);
+            border-color: rgba(26, 115, 232, 0.28);
+            transform: translateY(-1px);
+        }
+
+        /* ===== EMOJI PICKER POPOVER & MOBILE BOTTOM SHEET ===== */
+        .emoji-picker-popover {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 0;
+            z-index: 2000;
+            width: 350px;
+            max-width: 92vw;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1.5px solid rgba(26, 115, 232, 0.25);
+            box-shadow: 0 16px 48px rgba(13, 40, 95, 0.22);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: emojiPop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .emoji-picker-popover.active {
+            display: flex;
+        }
+
+        @keyframes emojiPop {
+            0% { opacity: 0; transform: translateY(12px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .emoji-picker-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+        }
+
+        .emoji-picker-title {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .emoji-picker-close {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: none !important;
+            color: white !important;
+            width: 26px;
+            height: 26px;
+            padding: 0 !important;
+            border-radius: 50% !important;
+            font-size: 14px !important;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .emoji-picker-close:hover {
+            background: rgba(255, 255, 255, 0.4) !important;
+            transform: scale(1.1) !important;
+        }
+
+        .emoji-picker-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+            background: #f0f4fa;
+            border-bottom: 1px solid rgba(26, 115, 232, 0.12);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .emoji-picker-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .emoji-tab-btn {
+            background: transparent !important;
+            border: none !important;
+            padding: 6px 10px !important;
+            border-radius: 12px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #4a5568 !important;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .emoji-tab-btn:hover {
+            background: rgba(26, 115, 232, 0.1) !important;
+            color: #1a73e8 !important;
+        }
+
+        .emoji-tab-btn.active {
+            background: #1a73e8 !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3) !important;
+        }
+
+        .emoji-picker-search {
+            padding: 8px 12px;
+            background: #ffffff;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .emoji-picker-search input {
+            width: 100%;
+            padding: 8px 14px;
+            border-radius: 16px;
+            border: 1px solid #cbd5e1;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .emoji-picker-search input:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+        }
+
+        .emoji-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            padding: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        .emoji-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            padding: 6px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.15s, background 0.15s;
+        }
+
+        .emoji-item:hover {
+            background: #e8f0fe;
+            transform: scale(1.3);
+        }
+
+        /* Mobile bottom sheet view */
+        @media (max-width: 600px) {
+            .emoji-picker-popover {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100vw;
+                max-width: 100vw;
+                border-radius: 24px 24px 0 0;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+                z-index: 100000;
+                animation: emojiSheetUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.2);
+            }
+
+            @keyframes emojiSheetUp {
+                0% { transform: translateY(100%); }
+                100% { transform: translateY(0); }
+            }
+
+            .emoji-picker-grid {
+                grid-template-columns: repeat(8, 1fr);
+                max-height: 280px;
+                padding: 12px;
+            }
+
+            .emoji-item {
+                font-size: 26px;
+                padding: 8px 0;
+            }
         }
 
         .post-btn {
-            background: #1a73e8;
+            background: linear-gradient(135deg, #1a73e8, #0f62d6);
             color: white;
             border: none;
-            padding: 8px 28px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 14px;
+            padding: 12px 30px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 15px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+            box-shadow: 0 10px 20px rgba(26, 115, 232, 0.18);
         }
 
         .post-btn:hover {
-            background: #1557b0;
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #0f62d6, #165fca);
         }
 
         .upload-preview {
@@ -477,19 +1315,20 @@
 
         /* ===== SIDEBAR FILTER ===== */
         .filter-sidebar {
-            background: white;
-            border-radius: 16px;
-            padding: 16px 18px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 255, 0.95));
+            border-radius: 24px;
+            padding: 20px 22px;
+            box-shadow: 0 20px 44px rgba(17, 42, 112, 0.10);
+            border: 1px solid rgba(26, 115, 232, 0.14);
         }
 
         .filter-sidebar .filter-title {
             font-size: 15px;
             font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f2f5;
+            color: #14233d;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(26, 115, 232, 0.12);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -556,36 +1395,42 @@
         }
 
         .post-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            transition: 0.3s;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(242, 248, 255, 0.96));
+            border-radius: 26px;
+            padding: 22px;
+            box-shadow: 0 24px 54px rgba(17, 42, 112, 0.10);
+            transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
             position: relative;
+            border: 1px solid rgba(26, 115, 232, 0.14);
+            backdrop-filter: blur(10px);
         }
 
         .post-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 32px 72px rgba(17, 42, 112, 0.18);
+            border-color: rgba(26, 115, 232, 0.25);
         }
 
         .post-card.pinned {
-            border-left: 4px solid #ffeb3b;
-            background: #fffef5;
+            border: 1px solid #ffeb3b;
+            box-shadow: 0 28px 60px rgba(255, 235, 59, 0.18);
+            background: linear-gradient(135deg, #fff9e6, #ffffff);
         }
 
         .post-card .pin-badge {
             position: absolute;
-            top: 12px;
-            right: 12px;
-            background: #ffeb3b;
-            color: #1a1a2e;
-            font-size: 11px;
+            top: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, #1a73e8, #0f5ccf);
+            color: white;
+            font-size: 12px;
             font-weight: 700;
-            padding: 2px 10px;
-            border-radius: 12px;
+            padding: 6px 14px;
+            border-radius: 999px;
             display: none;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            box-shadow: 0 8px 22px rgba(26, 115, 232, 0.2);
         }
 
         .post-card.pinned .pin-badge {
@@ -684,7 +1529,8 @@
         }
 
         .post-header .more-btn:hover {
-            background: #f0f2f5;
+            background: rgba(26, 115, 232, 0.08);
+            color: #0f4f9c;
         }
 
         /* ===== POST CONTENT - THU GỌN ===== */
@@ -719,37 +1565,187 @@
             overflow-wrap: break-word;
         }
 
-        .post-content .read-more-btn {
+        .read-more-btn {
             background: none;
-            border: none;
+            border: 1px solid #1a73e8;
             color: #1a73e8;
             font-weight: 600;
             cursor: pointer;
-            padding: 4px 0;
-            font-size: 14px;
-            transition: 0.3s;
-            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
         }
 
-        .post-content .read-more-btn:hover {
+        .read-more-btn:hover {
+            background: #e8f0fe;
             color: #1557b0;
-            text-decoration: underline;
+            border-color: #1557b0;
+        }
+
+        .post-image-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 200px;
+            max-height: 480px;
+            border-radius: 16px;
+            margin: 10px 0;
+            overflow: hidden;
+            background: #eef2f7;
+        }
+
+        .post-image-skeleton {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+            background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 50%, #eef2f7 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.5s infinite;
+            z-index: 1;
+        }
+
+        @keyframes skeletonShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .post-image {
             width: 100%;
-            border-radius: 12px;
-            margin: 10px 0;
-            max-height: 400px;
+            height: auto;
+            max-height: 480px;
             object-fit: cover;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.35s ease-in-out, transform 0.3s ease, filter 0.3s ease;
+            cursor: zoom-in;
+        }
+
+        .post-image.loaded {
+            opacity: 1;
+        }
+
+        .post-image:hover {
+            transform: scale(1.012);
+            filter: brightness(1.03);
+            box-shadow: 0 12px 30px rgba(17, 42, 112, 0.15);
         }
 
         .post-video {
             width: 100%;
-            border-radius: 12px;
+            border-radius: 16px;
             margin: 10px 0;
-            max-height: 400px;
+            max-height: 440px;
             background: #000;
+        }
+
+        /* ===== IMAGE LIGHTBOX MODAL ===== */
+        .image-lightbox-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-lightbox-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 20, 40, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .lightbox-content {
+            position: relative;
+            z-index: 2;
+            max-width: 92vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: lightboxZoom 0.35s cubic-bezier(0.2, 0.9, 0.2, 1);
+        }
+
+        @keyframes lightboxZoom {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            user-select: none;
+        }
+
+        .lightbox-close-btn {
+            position: absolute;
+            top: -48px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-close-btn:hover {
+            background: rgba(233, 69, 96, 0.9);
+            border-color: #e94560;
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .lightbox-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .lightbox-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-btn:hover {
+            background: #1a73e8;
+            border-color: #1a73e8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 115, 232, 0.4);
         }
 
         .post-stats {
@@ -874,47 +1870,73 @@
         }
 
         @keyframes heartPop {
-            0% { transform: scale(1); }
-            25% { transform: scale(1.3); }
-            50% { transform: scale(0.9); }
-            75% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.3);
+            }
+
+            50% {
+                transform: scale(0.9);
+            }
+
+            75% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
+        /* ===== COMMENT SECTION ===== */
         .comments-section {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e4e6eb;
+            margin-top: 0;
+            border-top: 1px solid #e8ecf0;
             display: none;
+            animation: slideDown 0.25s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
         .comments-section.open {
             display: block;
         }
 
+        .comments-list {
+            padding: 12px 16px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Comment Item */
         .comment-item {
             display: flex;
             gap: 10px;
-            padding: 8px 0;
+            align-items: flex-start;
         }
 
         .comment-item .avatar-link {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             overflow: hidden;
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
+            display: block;
+            border: 2px solid #e8f0fe;
             text-decoration: none;
-            cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .comment-item .avatar-link:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
+            box-shadow: 0 2px 8px rgba(26,115,232,0.25);
         }
 
         .comment-item .avatar-link img {
@@ -924,78 +1946,172 @@
         }
 
         .comment-item .comment-body {
-            background: #f0f2f5;
-            padding: 8px 14px;
-            border-radius: 16px;
             flex: 1;
+            min-width: 0;
         }
 
-        .comment-item .comment-body .name {
-            font-weight: 600;
-            font-size: 13px;
+        .comment-bubble {
+            background: #f0f4ff;
+            border: 1px solid #e2eaff;
+            padding: 10px 14px 8px;
+            border-radius: 0 16px 16px 16px;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .comment-item:hover .comment-bubble {
+            background: #e8f0fe;
+        }
+
+        .comment-bubble .comment-name-row {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             flex-wrap: wrap;
+            margin-bottom: 3px;
         }
 
-        .comment-item .comment-body .name .profile-link {
+        .comment-bubble .comment-name-row .profile-link {
+            font-weight: 700;
+            font-size: 13px;
+            color: #1a1a2e;
             text-decoration: none;
-            color: inherit;
-            cursor: pointer;
-            transition: 0.3s;
+            transition: color 0.2s;
         }
 
-        .comment-item .comment-body .name .profile-link:hover {
+        .comment-bubble .comment-name-row .profile-link:hover {
             color: #1a73e8;
-            text-decoration: underline;
         }
 
-        .comment-item .comment-body .name .logo-small {
-            height: 16px;
+        .comment-bubble .comment-name-row .logo-small {
+            height: 15px;
             width: auto;
             border-radius: 50%;
         }
 
-        .comment-item .comment-body .text {
+        .comment-bubble .comment-text {
             font-size: 14px;
-            color: #1a1a2e;
+            color: #2d3748;
+            line-height: 1.55;
+            word-break: break-word;
+            white-space: pre-wrap;
         }
 
-        .comment-item .comment-body .time {
+        .comment-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+            padding-left: 2px;
+        }
+
+        .comment-time {
+            font-size: 11.5px;
+            color: #8a94a6;
+            font-weight: 500;
+        }
+
+        .comment-delete-btn {
+            background: none;
+            border: none;
+            color: #c0c7d4;
             font-size: 11px;
-            color: #65676b;
+            cursor: pointer;
+            padding: 2px 7px;
+            border-radius: 20px;
+            transition: all 0.2s;
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 500;
         }
 
-        .comment-input {
+        .comment-item:hover .comment-delete-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .comment-delete-btn:hover {
+            background: #fff0f0;
+            color: #e53e3e;
+        }
+
+        /* Comment Input */
+        .comment-input-wrapper {
             display: flex;
             gap: 10px;
-            margin-top: 8px;
+            align-items: flex-end;
+            padding: 10px 16px 14px;
+            border-top: 1px solid #f0f2f5;
         }
 
-        .comment-input input {
+        .comment-input-wrapper .comment-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e8f0fe;
+            flex-shrink: 0;
+        }
+
+        .comment-input-box {
             flex: 1;
-            padding: 8px 14px;
-            border: none;
-            background: #f0f2f5;
-            border-radius: 20px;
+            position: relative;
+        }
+
+        .comment-input-box input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 52px 10px 16px;
+            border: 1.5px solid #dde3f0;
+            background: #f7f8fc;
+            border-radius: 24px;
             font-size: 14px;
             outline: none;
+            color: #1a1a2e;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            font-family: inherit;
         }
 
-        .comment-input button {
+        .comment-input-box input:focus {
+            border-color: #1a73e8;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+        }
+
+        .comment-input-box input::placeholder {
+            color: #a0aab8;
+        }
+
+        .comment-send-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
             background: #1a73e8;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background 0.2s, transform 0.2s;
+            flex-shrink: 0;
         }
 
-        .comment-input button:hover {
+        .comment-send-btn:hover {
             background: #1557b0;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .comment-send-btn:active {
+            transform: translateY(-50%) scale(0.95);
         }
 
         .empty-state {
@@ -1030,10 +2146,10 @@
         }
 
         .event-card {
-            background: white;
-            border-radius: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #f5faff 100%);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 16px 36px rgba(17, 42, 112, 0.09);
             transition: 0.3s;
             cursor: pointer;
             border: 2px solid transparent;
@@ -1041,7 +2157,7 @@
 
         .event-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 18px 44px rgba(17, 42, 112, 0.16);
             border-color: #1a73e8;
         }
 
@@ -1062,6 +2178,7 @@
             color: #1a1a2e;
             margin-bottom: 4px;
             display: -webkit-box;
+            line-clamp: 1;
             -webkit-line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1071,6 +2188,7 @@
             font-size: 13px;
             color: #666;
             display: -webkit-box;
+            line-clamp: 2;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1498,14 +2616,47 @@
             gap: 16px;
         }
 
+        .movie-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 10px 0 4px;
+        }
+
+        .pagination-btn {
+            min-width: 40px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 999px;
+            background: #e8f0fe;
+            color: #1a3f7c;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .pagination-btn:hover {
+            background: #d2e4ff;
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, #1a73e8, #0f5ccf);
+            color: white;
+            box-shadow: 0 12px 26px rgba(26, 115, 232, 0.18);
+        }
+
         .movie-card {
-            background: white;
-            border-radius: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #f5faff 100%);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 16px 36px rgba(17, 42, 112, 0.09);
             cursor: default;
             transition: 0.3s;
             position: relative;
+            border: 1px solid rgba(26, 115, 232, 0.12);
         }
 
         .movie-card.locked {
@@ -1552,8 +2703,9 @@
         }
 
         .movie-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 20px 40px rgba(17, 42, 112, 0.16);
+            border-color: rgba(26, 115, 232, 0.25);
         }
 
         .movie-card img {
@@ -1571,6 +2723,7 @@
             margin-bottom: 4px;
             color: #1a1a2e;
             display: -webkit-box;
+            line-clamp: 1;
             -webkit-line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1580,6 +2733,7 @@
             font-size: 13px;
             color: #666;
             display: -webkit-box;
+            line-clamp: 2;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -1605,21 +2759,21 @@
         .movie-card .movie-info .view-link {
             display: inline-block;
             margin-top: 8px;
-            padding: 6px 16px;
-            background: #1a73e8;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #1a73e8, #0f61ca);
             color: white;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 13px;
             font-weight: 600;
             text-decoration: none;
-            transition: 0.3s;
+            transition: transform 0.2s ease, background 0.2s ease;
             border: none;
             cursor: pointer;
         }
 
         .movie-card .movie-info .view-link:hover {
-            background: #1557b0;
-            transform: scale(1.02);
+            background: linear-gradient(135deg, #1557b0, #134aa3);
+            transform: translateY(-1px);
         }
 
         .movie-card .movie-info .view-link .external-icon {
@@ -1632,6 +2786,47 @@
 
         .movie-card .movie-info .view-link.btn-login-required:hover {
             background: #c62828;
+        }
+
+        @keyframes floatCloud {
+
+            0%,
+            100% {
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate3d(8px, -12px, 0) scale(1.04);
+            }
+        }
+
+        @keyframes bob {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        @keyframes flyAcrossScreen {
+            0% {
+                opacity: 0;
+                transform: translate(-220px, -220px) scale(0.8);
+            }
+
+            40% {
+                opacity: 1;
+                transform: translate(40px, 30px) scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
         }
 
         .loading-spinner {
@@ -1651,8 +2846,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .report-fab {
@@ -1819,27 +3019,31 @@
 
         .toast-report {
             position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: #1a1a2e;
+            top: 22px;
+            right: 22px;
+            left: auto;
+            transform: translateY(-16px) scale(0.98);
+            background: #1a73e8;
             color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: 999px;
+            font-weight: 700;
             z-index: 99999;
             opacity: 0;
-            transition: 0.4s;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.25s ease, transform 0.25s ease, background 0.25s ease;
+            box-shadow: 0 18px 40px rgba(17, 57, 115, 0.28);
             font-size: 14px;
-            max-width: 90%;
-            text-align: center;
+            max-width: 380px;
+            min-width: 220px;
+            text-align: left;
             pointer-events: none;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.24);
         }
 
         .toast-report.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         .login-required-overlay {
@@ -2029,6 +3233,7 @@
                 opacity: 0;
                 transform: scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
@@ -2040,6 +3245,7 @@
                 transform: translateY(30px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -2050,6 +3256,7 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -2277,9 +3484,11 @@
             .modal-box {
                 padding: 20px 16px;
             }
+
             .modal-box h2 {
                 font-size: 18px;
             }
+
             .modal-box .action-row {
                 flex-direction: column;
             }
@@ -2293,19 +3502,24 @@
                 max-width: 100%;
                 padding: 0 16px;
             }
+
             .newsfeed-sidebar-mobile {
                 display: block;
             }
+
             .newsfeed-sidebar-desktop {
                 display: none;
             }
+
             .newsfeed-wrapper {
                 flex-direction: column;
             }
+
             .filter-sidebar .filter-btn-group {
                 flex-direction: row;
                 flex-wrap: wrap;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn {
                 width: auto;
                 flex: 1;
@@ -2314,15 +3528,19 @@
                 padding: 8px 12px;
                 font-size: 13px;
             }
+
             .movie-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
             .event-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
             .movie-layout {
                 grid-template-columns: 1fr;
             }
+
             .movie-categories {
                 position: relative;
                 top: 0;
@@ -2331,25 +3549,30 @@
                 gap: 6px;
                 padding: 14px 16px;
             }
+
             .movie-categories .category-title {
                 width: 100%;
                 margin-bottom: 6px;
                 font-size: 14px;
                 padding-bottom: 6px;
             }
+
             .movie-categories .category-list {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 4px;
             }
+
             .movie-categories .category-list li {
                 padding: 5px 14px;
                 font-size: 13px;
                 border-radius: 20px;
             }
+
             .movie-categories .category-list li .count {
                 display: none;
             }
+
             .report-fab {
                 width: 50px;
                 height: 50px;
@@ -2363,68 +3586,87 @@
             .container {
                 padding: 0 12px;
             }
+
             .logo {
                 font-size: 18px;
             }
+
             .logo img {
                 height: 32px;
             }
+
             .post-footer button {
                 padding: 6px 10px;
                 font-size: 12px;
             }
+
             .post-actions {
                 gap: 8px;
                 flex-wrap: wrap;
             }
+
             .post-actions button {
                 font-size: 13px;
                 padding: 4px 8px;
             }
+
             .create-post-top textarea {
                 font-size: 14px;
             }
+
             #authStatus .user-name {
                 display: none;
             }
+
             .movie-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 12px;
             }
+
             .movie-card img {
                 height: 140px;
             }
+
             .event-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
             .event-card .event-poster {
                 height: 140px;
             }
+
             .dashboard-link {
                 font-size: 11px;
                 padding: 4px 10px;
             }
+
             .verified-badge {
                 font-size: 8px;
                 padding: 0px 5px;
             }
+
             .movie-toolbar {
                 flex-direction: column;
             }
+
             .contact-btn {
                 width: 100%;
                 justify-content: center;
             }
+
             .search-box {
                 width: 100%;
             }
+
             .search-box-wrapper {
                 width: 100%;
                 min-width: unset;
             }
+
             .report-modal {
                 padding: 24px 20px;
             }
+
             .report-fab {
                 width: 44px;
                 height: 44px;
@@ -2432,20 +3674,25 @@
                 bottom: 16px;
                 right: 16px;
             }
+
             .movie-card .movie-info .view-link {
                 font-size: 12px;
                 padding: 4px 12px;
             }
+
             .event-popup {
                 max-width: 100%;
                 border-radius: 12px;
             }
+
             .event-popup .event-popup-body {
                 padding: 16px;
             }
+
             .event-popup .event-popup-body .title {
                 font-size: 20px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn {
                 min-width: 80px;
                 font-size: 12px;
@@ -2457,48 +3704,62 @@
             .movie-grid {
                 grid-template-columns: 1fr;
             }
+
             .event-grid {
                 grid-template-columns: 1fr;
             }
+
             .movie-card img {
                 height: 180px;
             }
+
             .event-card .event-poster {
                 height: 180px;
             }
+
             .movie-categories .category-list li {
                 font-size: 11px;
                 padding: 3px 10px;
             }
+
             .empty-state {
                 padding: 40px 16px;
             }
+
             .empty-state .icon {
                 font-size: 50px;
             }
+
             .empty-state h3 {
                 font-size: 18px;
             }
+
             .upload-preview img,
             .upload-preview video {
                 max-height: 200px;
             }
+
             .verified-badge {
                 font-size: 7px;
                 padding: 0px 4px;
             }
+
             .account-deleted-content {
                 padding: 30px 20px;
             }
+
             .login-required-popup {
                 padding: 30px 20px;
             }
+
             .report-modal {
                 padding: 20px 16px;
             }
+
             .report-modal .modal-header h2 {
                 font-size: 18px;
             }
+
             .report-fab {
                 width: 40px;
                 height: 40px;
@@ -2506,28 +3767,275 @@
                 bottom: 12px;
                 right: 12px;
             }
+
             .modal-box {
                 padding: 16px;
             }
+
             .modal-box h2 {
                 font-size: 17px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn {
                 min-width: 60px;
                 font-size: 11px;
                 padding: 4px 8px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn .badge {
                 font-size: 9px;
                 padding: 0 4px;
             }
+
             .filter-sidebar .filter-btn-group .filter-btn .icon {
                 font-size: 14px;
             }
         }
+
+        @media (max-width: 480px) {
+            .post-footer {
+                gap: 2px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }
+            .post-footer::-webkit-scrollbar { display: none; }
+
+            .post-footer button {
+                white-space: nowrap;
+                flex-shrink: 0;
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .post-card {
+                border-radius: 12px;
+                margin-bottom: 10px;
+                padding: 14px 12px 10px;
+            }
+
+            .post-header .info .name {
+                font-size: 13px;
+            }
+
+            .post-header .info .time {
+                font-size: 11px;
+            }
+
+            .post-content {
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
+            .create-post {
+                border-radius: 12px;
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+
+            .create-post-top {
+                gap: 8px;
+            }
+
+            .create-post-top textarea {
+                font-size: 14px;
+                min-height: 44px;
+            }
+
+            #composerAvatar {
+                width: 36px !important;
+                height: 36px !important;
+            }
+
+            .create-post-bottom {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            .post-actions {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }
+            .post-actions::-webkit-scrollbar { display: none; }
+
+            .post-actions button {
+                white-space: nowrap;
+                flex-shrink: 0;
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            .submit-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .tabs-container {
+                gap: 4px;
+                padding: 0 8px;
+            }
+
+            .tab-btn {
+                font-size: 12px;
+                padding: 10px 10px;
+            }
+
+            .newsfeed-hero {
+                padding: 20px 14px;
+                border-radius: 12px;
+            }
+
+            .newsfeed-hero h2 {
+                font-size: 20px;
+            }
+
+            .hero-desc {
+                font-size: 13px;
+            }
+
+            .hero-links {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .hero-link {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+
+            .comment-input-wrapper {
+                padding: 8px 12px 12px;
+            }
+
+            .comment-input-box input {
+                font-size: 13px;
+                padding: 9px 46px 9px 13px;
+            }
+
+            .comment-send-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+
+            .comment-bubble {
+                padding: 8px 12px 6px;
+            }
+
+            .comment-bubble .comment-text {
+                font-size: 13px;
+            }
+
+            .post-image {
+                border-radius: 10px;
+            }
+
+            .post-video {
+                border-radius: 10px;
+            }
+
+            .pin-badge {
+                font-size: 11px;
+            }
+
+            .filter-sidebar {
+                padding: 10px 12px;
+                border-radius: 12px;
+            }
+
+            .header-inner {
+                padding: 0 10px;
+                height: 52px;
+            }
+
+            .logo img {
+                height: 28px;
+            }
+
+            #authStatus img {
+                width: 30px;
+                height: 30px;
+            }
+
+            .logout-btn, #logoutBtn {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+        }
     </style>
 </head>
+
 <body>
+    <div class="page-loading-overlay" id="pageLoadingOverlay" aria-hidden="true">
+        <img class="flight-image" id="flightImage" src="story_plane_dora.webp" alt="Loading" decoding="async">
+
+    </div>
+
+    <!-- ===== DORAEMON PAINTER SLIDE-IN MODAL ===== -->
+    <div class="doraemon-modal-overlay" id="doraemonNotification" role="dialog" aria-modal="true"
+        aria-labelledby="doraemonBoardTitle">
+        <div class="doraemon-modal-backdrop" onclick="closeDoraemonNotification()"></div>
+
+        <div class="doraemon-modal-card">
+            <!-- Doraemon Artist Mascot holding paintbrush -->
+            <div class="doraemon-artist-wrapper">
+                <img class="doraemon-artist-img" src="doraemon_ve.webp" alt="Doraemon Họa Sĩ" loading="eager" decoding="async">
+                <div class="paint-sparkle p1">✨</div>
+                <div class="paint-sparkle p2">🎨</div>
+            </div>
+
+            <!-- Main Canvas Board painted by Doraemon -->
+            <div class="doraemon-board-canvas">
+                <!-- Red Collar Header with Bell & Close button -->
+                <div class="doraemon-board-header">
+                    <div class="doraemon-bell-badge">
+                        <span class="bell-icon">🔔</span>
+                    </div>
+                    <div class="board-header-title" id="doraemonBoardTitle">
+                        <span>THÔNG BÁO</span>
+                    </div>
+                    <button class="dora-close-btn" id="closeDoraemonModalBtn" onclick="closeDoraemonNotification()"
+                        aria-label="Đóng thông báo">
+                        <span aria-hidden="true">✕</span>
+                    </button>
+                </div>
+
+                <!-- Body Content -->
+                <div class="doraemon-board-body">
+                    <h3 class="board-welcome-title"> Chào mừng bạn đến với Doraemon Fansub!</h3>
+                    <p class="board-welcome-text">
+                        Cảm ơn bạn đã ghé thăm <strong>Doraemon Fansub Việt Nam</strong>.
+                        Fanpage Dora FanClub đã bị mất, các bạn hãy vào ủng hộ Fanpage mới ở dưới!
+                    </p>
+
+                    <div class="board-action-buttons">
+                        <a href="https://www.facebook.com/profile.php?id=61590244395004"
+                            onclick="closeDoraemonNotification(); if(typeof switchTab==='function') switchTab('movies');"
+                            class="btn-dora-primary">
+                            Fanpage 1
+                        </a>
+                        <a href="https://www.facebook.com/GocNhoCuaMeoUDorafanclubvietnam/"
+                            onclick="closeDoraemonNotification(); if(typeof switchTab==='function') switchTab('movies');"
+                            class="btn-dora-primary">
+                            Fanpage 2
+                        </a>
+                        <button onclick="closeDoraemonNotification()" class="btn-dora-outline">
+                            Xem phim ngay
+                        </button>
+                        <button onclick="dismissFor24h()" class="btn-dora-dismiss" title="Ẩn thông báo này trong 24 giờ">
+                            🚫 Không hiển thị lại 24h
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== ACCOUNT DELETED MODAL ===== -->
     <div class="account-deleted-modal" id="accountDeletedModal">
@@ -2539,7 +4047,8 @@
                 <strong>Vui lòng liên hệ page để được hỗ trợ khôi phục.</strong>
             </p>
             <div class="action-group">
-                <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank" rel="noopener noreferrer" class="btn-facebook">
+                <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank" rel="noopener noreferrer"
+                    class="btn-facebook">
                     💬 Liên hệ Facebook
                 </a>
                 <button onclick="closeAccountDeletedModal()" class="btn-close-modal">
@@ -2553,9 +4062,8 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <a href="index.html" class="logo">
+                <a href="index.html" class="logo" aria-label="Doraemon Fansub">
                     <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Doraemon Fansub" loading="lazy">
-                    Doraemon
                 </a>
                 <div class="header-actions">
                     <div id="authStatus">
@@ -2580,10 +4088,32 @@
         <div class="container">
 
             <!-- ===== TABS ===== -->
+            <section class="hero-panel" aria-label="Giới thiệu Doraemon Fansub">
+                <div class="hero-copy">
+                    <div class="hero-badge">Doraemon Fansub Việt Nam</div>
+                    <h1 class="hero-title">Mỗi ngày là một cuộc phiêu lưu mới cùng <span>Doraemon</span></h1>
+                    <p class="hero-subtitle">Xem phim, chia sẻ khoảnh khắc và kết nối cùng những người yêu thích
+                        Doraemon trong một không gian sáng đẹp, ấm áp và đầy màu sắc.
+
+                    </p>
+                    <div class="hero-tags">
+                        <span><i class="fa-solid fa-film"></i> Phim mới</span>
+                        <span><i class="fa-solid fa-comment"></i> Bài viết vui</span>
+                        <span><i class="fa-solid fa-calendar-alt"></i> Sự kiện hot</span>
+                    </div>
+                </div>
+                <div class="hero-visual" aria-hidden="true">
+                    <img class="hero-robot" src="story_plane_dora.webp" alt="Robot" decoding="async" loading="lazy">
+                    <div class="hero-float hero-float-1">☁️</div>
+                    <div class="hero-float hero-float-2">⭐</div>
+                    <div class="hero-float hero-float-3">🌤️</div>
+                </div>
+            </section>
+
             <div class="tabs">
-                <button class="tab-btn active" data-tab="newsfeed">📰 Mới nhất</button>
-                <button class="tab-btn" data-tab="movies">🎬 Phim</button>
-                <button class="tab-btn" data-tab="events">🎮 Sự kiện</button>
+                <button class="tab-btn active" data-tab="newsfeed"><i class="fas fa-newspaper"></i> Mới nhất</button>
+                <button class="tab-btn" data-tab="movies"><i class="fa-solid fa-film"></i> Phim</button>
+                <button class="tab-btn" data-tab="events"><i class="fas fa-calendar-alt"></i> Sự kiện</button>
             </div>
 
             <!-- ===== TAB NEWSFEED ===== -->
@@ -2595,11 +4125,11 @@
                         <div class="filter-title">🔍 Lọc bài viết</div>
                         <div class="filter-btn-group">
                             <button class="filter-btn active" data-filter="all" onclick="applyFilter('all')">
-                                <span class="icon">📰</span> Tất cả
+                                <span class="icon"><i class="fas fa-list"></i></span> Tất cả
                                 <span class="badge" id="badgeAll">0</span>
                             </button>
                             <button class="filter-btn" data-filter="pinned" onclick="applyFilter('pinned')">
-                                <span class="icon">📌</span> Đã ghim
+                                <span class="icon"><i class="fa-solid fa-thumbtack"></i></span> Đã ghim
                                 <span class="badge" id="badgePinned">0</span>
                             </button>
                             <button class="filter-btn" data-filter="liked" onclick="applyFilter('liked')">
@@ -2616,7 +4146,7 @@
                         <div class="create-post" id="createPostBox">
                             <div class="create-post-top">
                                 <a href="profile.html" class="avatar-link">
-                                    <img src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Logo" loading="lazy">
+                                    <img id="composerAvatar" src="https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png" alt="Avatar" loading="lazy" style="border-radius:50%;width:40px;height:40px;object-fit:cover;">
                                 </a>
                                 <textarea id="postInput" placeholder="Bạn đang nghĩ gì thế?" rows="1"></textarea>
                             </div>
@@ -2633,9 +4163,36 @@
                             </div>
                             <div class="create-post-bottom">
                                 <div class="post-actions">
-                                    <button onclick="openUploadWidget('image')">📎 Ảnh</button>
-                                    <button onclick="openUploadWidget('video')">🎬 Video</button>
-                                    <button onclick="alert('😊 Chức năng đang phát triển!')">😊 Cảm xúc</button>
+                                    <button type="button" onclick="openUploadWidget('image')">
+                                        <i class="fa-solid fa-paperclip"></i> Ảnh
+                                    </button>
+                                    <button type="button" onclick="openUploadWidget('video')">
+                                        <i class="fas fa-video"></i> Video
+                                    </button>
+                                    <button type="button" id="emojiPickerBtn" onclick="toggleEmojiPicker(event)">
+                                        <i class="fas fa-smile"></i> Cảm xúc
+                                    </button>
+
+                                    <!-- Emoji Picker Popover -->
+                                    <div class="emoji-picker-popover" id="emojiPickerPopover">
+                                        <div class="emoji-picker-header">
+                                            <div class="emoji-picker-title">😊 Chọn biểu tượng cảm xúc</div>
+                                            <button type="button" class="emoji-picker-close" onclick="closeEmojiPicker()">✕</button>
+                                        </div>
+                                        <div class="emoji-picker-tabs">
+                                            <button type="button" class="emoji-tab-btn active" data-cat="smileys" onclick="switchEmojiTab('smileys', this)">😀 Biểu cảm</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="hearts" onclick="switchEmojiTab('hearts', this)">❤️ Cảm xúc</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="animals" onclick="switchEmojiTab('animals', this)">🐱 Động vật</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="food" onclick="switchEmojiTab('food', this)">🍕 Đồ ăn</button>
+                                            <button type="button" class="emoji-tab-btn" data-cat="activities" onclick="switchEmojiTab('activities', this)">🎮 Giải trí</button>
+                                        </div>
+                                        <div class="emoji-picker-search">
+                                            <input type="text" id="emojiSearchInput" placeholder="🔍 Tìm emoji (vd: cười, tim, mèo)..." oninput="filterEmojis()">
+                                        </div>
+                                        <div class="emoji-picker-grid" id="emojiPickerGrid">
+                                            <!-- Emojis populated by JS -->
+                                        </div>
+                                    </div>
                                 </div>
                                 <button class="post-btn" onclick="createPost()">Đăng</button>
                             </div>
@@ -2651,18 +4208,18 @@
                     <!-- Sidebar Desktop -->
                     <div class="newsfeed-sidebar-desktop" id="filterDesktop">
                         <div class="filter-sidebar">
-                            <div class="filter-title">🔍 Lọc bài viết</div>
+                            <div class="filter-title"><i class="fas fa-search"></i> Lọc bài viết</div>
                             <div class="filter-btn-group">
                                 <button class="filter-btn active" data-filter="all" onclick="applyFilter('all')">
-                                    <span class="icon">📰</span> Tất cả
+                                    <span class="icon"><i class="fas fa-list"></i></span> Tất cả
                                     <span class="badge" id="badgeAllDesktop">0</span>
                                 </button>
                                 <button class="filter-btn" data-filter="pinned" onclick="applyFilter('pinned')">
-                                    <span class="icon">📌</span> Đã ghim
+                                    <span class="icon"><i class="fas fa-thumbtack"></i></span> Đã ghim
                                     <span class="badge" id="badgePinnedDesktop">0</span>
                                 </button>
                                 <button class="filter-btn" data-filter="liked" onclick="applyFilter('liked')">
-                                    <span class="icon">❤️</span> Đã thích
+                                    <span class="icon"><i class="fas fa-heart"></i></span> Đã thích
                                     <span class="badge" id="badgeLikedDesktop">0</span>
                                 </button>
                             </div>
@@ -2675,24 +4232,30 @@
             <div id="tab-movies" class="tab-content">
                 <div class="movie-layout">
                     <div class="movie-categories">
-                        <div class="category-title">📂 Phân loại</div>
+                        <div class="category-title"><i class="fas fa-folder-open"></i>Phân loại</div>
                         <ul class="category-list" id="categoryList">
-                            <li class="active" data-category="all">📺 Tất cả <span class="count" id="countAll">0</span></li>
-                            <li data-category="movie">🎬 Movie <span class="count" id="countMovie">0</span></li>
-                            <li data-category="short">🎥 Short Movie <span class="count" id="countShort">0</span></li>
-                            <li data-category="seri">📺 Seri <span class="count" id="countSeri">0</span></li>
+                            <li class="active" data-category="all"><i class="fas fa-border-all"></i> Tất cả <span
+                                    class="count" id="countAll">0</span></li>
+                            <li data-category="movie"><i class="fas fa-play-circle"></i> Movie <span class="count"
+                                    id="countMovie">0</span></li>
+                            <li data-category="short"><i class="fas fa-clapperboard"></i> Short Movie <span
+                                    class="count" id="countShort">0</span></li>
+                            <li data-category="seri"><i class="fas fa-tv"></i> Seri <span class="count"
+                                    id="countSeri">0</span></li>
                         </ul>
                     </div>
                     <div>
                         <div class="movie-toolbar">
                             <div class="search-box-wrapper">
                                 <div class="search-box">
-                                    <input type="text" id="movieSearch" placeholder="🔍 Tìm kiếm phim theo tên, thể loại..." oninput="searchMovies()">
+                                    <input type="text" id="movieSearch"
+                                        placeholder="🔍 Tìm kiếm phim theo tên, thể loại..." oninput="searchMovies()">
                                     <button class="search-btn" onclick="searchMovies()">🔍</button>
                                 </div>
                                 <button class="clear-search" id="clearSearchBtn" onclick="clearSearch()">✕</button>
                             </div>
-                            <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank" rel="noopener noreferrer" class="contact-btn">
+                            <a href="https://www.facebook.com/DoraemonFansubVietNam" target="_blank"
+                                rel="noopener noreferrer" class="contact-btn">
                                 💬 Liên hệ
                             </a>
                         </div>
@@ -2710,7 +4273,8 @@
             <div id="tab-events" class="tab-content">
                 <div style="margin-bottom: 20px;">
                     <h2 style="font-size: 24px; font-weight: 700; color: #1a1a2e;">🎮 Sự kiện & Mini Game</h2>
-                    <p style="color: #666; margin-top: 4px;">Tham gia các sự kiện và mini game hấp dẫn từ cộng đồng Doraemon!</p>
+                    <p style="color: #666; margin-top: 4px;">Tham gia các sự kiện và mini game hấp dẫn từ cộng đồng
+                        Doraemon!</p>
                 </div>
                 <div class="event-grid" id="eventGrid">
                     <div class="loading-spinner">
@@ -2763,6 +4327,23 @@
         </div>
     </div>
 
+    <!-- ===== LIGHTBOX PHÓNG TO ẢNH BÀI VIẾT ===== -->
+    <div class="image-lightbox-modal" id="imageLightboxModal" role="dialog" aria-modal="true">
+        <div class="lightbox-overlay" onclick="closeImageLightbox()"></div>
+        <div class="lightbox-content">
+            <button type="button" class="lightbox-close-btn" onclick="closeImageLightbox()" title="Đóng (ESC)">✕</button>
+            <img id="lightboxImage" src="" alt="Ảnh phóng to">
+            <div class="lightbox-actions">
+                <a id="lightboxDownloadBtn" href="" target="_blank" download rel="noopener noreferrer" class="lightbox-btn">
+                    <i class="fas fa-download"></i> Tải ảnh gốc
+                </a>
+                <button type="button" onclick="closeImageLightbox()" class="lightbox-btn" style="background:rgba(255,255,255,0.25);border:none;cursor:pointer;">
+                    ✕ Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== NÚT BÁO LỖI ===== -->
     <button class="report-fab" id="reportFab" title="Báo lỗi">🐛</button>
 
@@ -2784,7 +4365,8 @@
                 </div>
                 <div class="form-group">
                     <label>Đường dẫn (URL)</label>
-                    <input type="url" id="reportUrl" placeholder="https://doraemonfansub.com/..." value="https://doraemonfansub.com/" />
+                    <input type="url" id="reportUrl" placeholder="https://doraemonfansub.com/..."
+                        value="https://doraemonfansub.com/" />
                 </div>
                 <div class="form-group">
                     <label>Email liên hệ</label>
@@ -2817,12 +4399,61 @@
             measurementId: "G-0S2Z4XRK0B"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        let auth, db;
+        function initFirebaseApp() {
+            if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                // Offline Cache Persistence
+                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+                    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+                        console.warn('Firestore persistence error:', err);
+                    }
+                });
+            }
+        }
+        initFirebaseApp();
+        if (typeof firebase === 'undefined') {
+            window.addEventListener('DOMContentLoaded', initFirebaseApp);
+        }
 
         const SUPER_ADMIN_EMAIL = 'tuankhaimoi12345@gmail.com';
         const LOGO_URL = 'https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png';
+
+        function getOptimizedAvatarUrl(url, size = 150) {
+            if (!url) return LOGO_URL;
+            if (typeof url === 'string' && url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+                if (url.includes('/upload/w_') || url.includes('/upload/c_fill')) {
+                    return url;
+                }
+                return url.replace('/upload/', `/upload/w_${size},h_${size},c_fill,g_face,q_auto,f_auto/`);
+            }
+            return url;
+        }
+
+        function getOptimizedImageUrl(url, maxWidth = 800) {
+            if (!url || typeof url !== 'string') return '';
+            
+            if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+                if (url.includes('/upload/w_') || url.includes('/upload/c_limit') || url.includes('/upload/q_auto')) {
+                    return url;
+                }
+                return url.replace('/upload/', `/upload/w_${maxWidth},c_limit,q_auto,f_auto/`);
+            }
+
+            if (url.includes('res.cloudinary.com') && url.includes('/image/fetch/')) {
+                return url;
+            }
+
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                const cloudName = (typeof CLOUDINARY_CONFIG !== 'undefined' && CLOUDINARY_CONFIG.cloudName) ? CLOUDINARY_CONFIG.cloudName : 'gntkeeno';
+                return `https://res.cloudinary.com/${cloudName}/image/fetch/w_${maxWidth},c_limit,q_auto,f_auto/${url}`;
+            }
+
+            return url;
+        }
 
         // ============================================================
         // CLOUDINARY CONFIG
@@ -2838,8 +4469,55 @@
         let isLoggedIn = false;
         let isAdmin = false;
         let currentUserEmail = '';
+        let authReady = false;
         let adminEmails = new Set();
         let adminUids = new Set();
+
+        function getTimestampValue(ts) {
+            if (!ts) return 0;
+            if (typeof ts === 'number') return ts;
+            if (ts && typeof ts.toDate === 'function') return ts.toDate().getTime();
+            if (ts && typeof ts.seconds === 'number') return ts.seconds * 1000;
+            if (ts instanceof Date) return ts.getTime();
+            if (typeof ts === 'string') {
+                const parsedNum = Number(ts);
+                if (!isNaN(parsedNum) && parsedNum > 1000000000) return parsedNum;
+                const d = new Date(ts);
+                return isNaN(d.getTime()) ? 0 : d.getTime();
+            }
+            return 0;
+        }
+
+        function timeAgo(timestamp) {
+            const tsVal = getTimestampValue(timestamp);
+            if (!tsVal) return 'Vừa xong';
+
+            const now = Date.now();
+            const diff = Math.floor((now - tsVal) / 1000); // số giây
+
+            if (diff < 10) return 'Vừa xong';
+            if (diff < 60) return `${Math.max(10, diff)} giây trước`;
+            if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+            if (diff < 86400 * 30) return `${Math.floor(diff / 86400)} ngày trước`;
+            if (diff < 86400 * 365) return `${Math.floor(diff / (86400 * 30))} tháng trước`;
+            return `${Math.floor(diff / (86400 * 365))} năm trước`;
+        }
+
+        function updateLiveTimes() {
+            document.querySelectorAll('[data-timestamp]').forEach(el => {
+                const raw = el.getAttribute('data-timestamp');
+                if (raw && raw !== '0') {
+                    const num = Number(raw);
+                    const ts = !isNaN(num) ? num : raw;
+                    const updated = timeAgo(ts);
+                    if (updated && el.textContent !== updated) {
+                        el.textContent = updated;
+                    }
+                }
+            });
+        }
+        setInterval(updateLiveTimes, 10000);
 
         // ============================================================
         // FILTER STATE
@@ -2916,10 +4594,19 @@
         let editingUserPostFileType = null;
         let editUserUploadedFileUrl = '';
         let editUserUploadedFileType = '';
+        let isRemovingAttachedFile = false;
 
         // ============================================================
         // TAB SWITCH
         // ============================================================
+        function playHeroRobotAnimation() {
+            const heroRobot = document.querySelector('.hero-robot');
+            if (!heroRobot) return;
+            heroRobot.style.animation = 'none';
+            void heroRobot.offsetWidth;
+            heroRobot.style.animation = 'flyAcrossScreen 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards, bob 3s ease-in-out 1.4s infinite';
+        }
+
         function switchTab(tab) {
             currentTab = tab;
 
@@ -2945,6 +4632,10 @@
 
             window.location.hash = tab;
 
+            if (tab === 'movies' || tab === 'events' || tab === 'newsfeed') {
+                playHeroRobotAnimation();
+            }
+
             if (!tabCache[tab].loaded) {
                 if (tab === 'movies') {
                     loadMovies();
@@ -2962,14 +4653,122 @@
         // ============================================================
         // TỰ ĐỘNG MỞ TAB THEO URL HASH
         // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
+        function startLoadingOverlay() {
+            const overlay = document.getElementById('pageLoadingOverlay');
+            const flightImage = document.getElementById('flightImage');
+            const heroRobot = document.querySelector('.hero-robot');
+
+            if (!overlay || !flightImage) {
+                return;
+            }
+
+            if (heroRobot) {
+                heroRobot.classList.add('hidden-by-loading');
+            }
+
+            const startX = window.innerWidth * 0.08;
+            const startY = -120;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            flightImage.style.left = `${startX}px`;
+            flightImage.style.top = `${startY}px`;
+            flightImage.classList.remove('animate');
+
+            requestAnimationFrame(() => {
+                flightImage.style.left = `${centerX}px`;
+                flightImage.style.top = `${centerY}px`;
+                flightImage.classList.add('animate');
+            });
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                if (heroRobot) {
+                    heroRobot.classList.remove('hidden-by-loading');
+                }
+                setTimeout(() => {
+                    overlay.remove();
+                    showDoraemonNotification();
+                }, 400);
+            }, 1250);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
             const hash = window.location.hash.replace('#', '');
             if (hash && (hash === 'newsfeed' || hash === 'movies' || hash === 'events')) {
                 switchTab(hash);
             }
+            startLoadingOverlay();
         });
 
-        window.addEventListener('hashchange', function() {
+        function showDoraemonNotification() {
+            // Kiểm tra xem người dùng đã chọn "Không hiển thị lại 24h" chưa
+            const dismissedUntil = localStorage.getItem('doraemonNotificationDismissedUntil');
+            if (dismissedUntil && Date.now() < parseInt(dismissedUntil, 10)) {
+                return; // Còn trong 24h, không hiển thị
+            }
+            const notification = document.getElementById('doraemonNotification');
+            if (notification) {
+                notification.classList.remove('hidden');
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 100);
+            }
+        }
+
+        function closeDoraemonNotification() {
+            const notification = document.getElementById('doraemonNotification');
+            if (notification) {
+                notification.classList.remove('show');
+                notification.classList.add('hidden');
+                setTimeout(() => {
+                    notification.style.visibility = 'hidden';
+                }, 400);
+            }
+        }
+
+        function dismissFor24h() {
+            // Lưu thời điểm hết hạn = bây giờ + 24 giờ (ms)
+            const expiry = Date.now() + 24 * 60 * 60 * 1000;
+            localStorage.setItem('doraemonNotificationDismissedUntil', expiry.toString());
+            closeDoraemonNotification();
+        }
+
+        // ============================================================
+        // LIGHTBOX PHÓNG TO ẢNH BÀI VIẾT
+        // ============================================================
+        window.openImageLightbox = function (imgUrl) {
+            const modal = document.getElementById('imageLightboxModal');
+            const lightboxImg = document.getElementById('lightboxImage');
+            const downloadBtn = document.getElementById('lightboxDownloadBtn');
+
+            if (!modal || !lightboxImg) return;
+
+            lightboxImg.src = imgUrl;
+            if (downloadBtn) downloadBtn.href = imgUrl;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeImageLightbox = function () {
+            const modal = document.getElementById('imageLightboxModal');
+            if (!modal) return;
+
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        // Đóng modal bằng phím ESC
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeDoraemonNotification();
+                closeImageLightbox();
+                closeEmojiPicker();
+            }
+        });
+
+        window.addEventListener('hashchange', function () {
             const hash = window.location.hash.replace('#', '');
             if (hash && (hash === 'newsfeed' || hash === 'movies' || hash === 'events')) {
                 switchTab(hash);
@@ -2980,7 +4779,7 @@
         // GẮN SỰ KIỆN CHO CÁC NÚT TAB
         // ============================================================
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const tab = this.dataset.tab;
                 switchTab(tab);
             });
@@ -2989,7 +4788,54 @@
         // ============================================================
         // LẤY DANH SÁCH ADMIN
         // ============================================================
-        async function getGoogleIdForUser(user) {
+
+
+        async function loadAdminList() {
+            try {
+                const snapshot = await db.collection('admins').get();
+                adminEmails = new Set();
+                adminUids = new Set();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
+                    if (data.uid) adminUids.add(data.uid);
+                });
+                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
+            } catch (e) {
+                console.error('Lỗi load admin list:', e);
+            }
+        }
+
+        // ============================================================
+        // KIỂM TRA ADMIN
+        // ============================================================
+        function isUserAdmin(userOrEmail, uid = null) {
+            if (!userOrEmail && !uid) return false;
+            let emailToCheck = '';
+            let uidToCheck = uid;
+
+            if (typeof userOrEmail === 'object' && userOrEmail !== null) {
+                emailToCheck = userOrEmail.email || '';
+                uidToCheck = userOrEmail.uid || uid;
+            } else if (typeof userOrEmail === 'string') {
+                emailToCheck = userOrEmail;
+            }
+
+            if (emailToCheck && adminEmails.has(emailToCheck.toLowerCase().trim())) {
+                return true;
+            }
+            if (uidToCheck && adminUids.has(uidToCheck)) {
+                return true;
+            }
+            return false;
+        }
+
+        function getUserFallbackName(user) {
+            if (!user) return 'Người dùng';
+            return user.displayName || user.email?.split('@')[0] || 'Người dùng';
+        }
+
+        function getGoogleIdForUser(user) {
             if (!user) return '';
             const googleProvider = (user.providerData || []).find(provider => provider.providerId === 'google.com');
             if (googleProvider?.uid) return googleProvider.uid;
@@ -3020,7 +4866,11 @@
                     if (googleId) updates.googleId = googleId;
                     if (user.providerData) updates.providerData = user.providerData;
                     updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-                    updates.shortId = String(Date.now()).slice(-7);
+                    if (typeof generateUniqueShortId === 'function') {
+                        updates.shortId = await generateUniqueShortId();
+                    } else {
+                        updates.shortId = String(Date.now()).slice(-7);
+                    }
                     await userRef.set(updates, { merge: true });
                     console.log('✅ Đã khởi tạo user trong Firestore:', user.email);
                 } else {
@@ -3042,7 +4892,7 @@
                         needsUpdate = true;
                     }
                     if (!data.shortId) {
-                        updates.shortId = String(Date.now()).slice(-7);
+                        updates.shortId = typeof generateUniqueShortId === 'function' ? await generateUniqueShortId() : String(Date.now()).slice(-7);
                         needsUpdate = true;
                     }
                     if (needsUpdate) {
@@ -3056,47 +4906,60 @@
             }
         }
 
+        // Lấy thông tin user từ Firestore (displayName, photoURL, shortId)
+        let _userProfileCache = null;
+        let _userProfileCacheUid = null;
 
-
-        async function loadAdminList() {
+        async function resolveUserProfile(user) {
+            if (!user) return { name: 'Người dùng', avatar: LOGO_URL, shortId: null };
+            if (_userProfileCacheUid === user.uid && _userProfileCache) return _userProfileCache;
             try {
-                const snapshot = await db.collection('admins').get();
-                adminEmails = new Set();
-                adminUids = new Set();
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
-                    if (data.uid) adminUids.add(data.uid);
-                });
-                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
-                console.log('✅ Danh sách Admin Emails:', adminEmails, 'UIDs:', adminUids);
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const data = userDoc.data();
+                if (data) {
+                    const DEFAULTS = ['Người dùng', 'người dùng', ''];
+                    const firestoreName = data.displayName || '';
+                    const authName = user.displayName || user.email?.split('@')[0] || 'Người dùng';
+                    const name = (!DEFAULTS.includes(firestoreName)) ? firestoreName : authName;
+
+                    if (DEFAULTS.includes(firestoreName) && authName !== 'Người dùng') {
+                        db.collection('users').doc(user.uid).set(
+                            { displayName: authName },
+                            { merge: true }
+                        ).catch(() => {});
+                    }
+
+                    const avatar = data.photoURL || user.photoURL ||
+                        'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1a73e8&color=fff&size=80';
+                    _userProfileCache = { name, avatar, shortId: data.shortId || null };
+                    _userProfileCacheUid = user.uid;
+                    return _userProfileCache;
+                }
             } catch (e) {
-                console.error('Lỗi load admin list:', e);
+                console.error('Lỗi lấy profile từ Firestore:', e);
             }
+            // Fallback về Firebase Auth
+            const name = user.displayName || user.email?.split('@')[0] || 'Người dùng';
+            const avatar = user.photoURL ||
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1a73e8&color=fff&size=80';
+            return { name, avatar, shortId: null };
         }
 
-        // ============================================================
-        // KIỂM TRA ADMIN
-        // ============================================================
-        function isUserAdmin(userOrEmail, uid = null) {
-            if (!userOrEmail && !uid) return false;
-            let emailToCheck = '';
-            let uidToCheck = uid;
+        // Giữ tương thích ngược: resolveUserName trả về displayName
+        async function resolveUserName(user) {
+            const profile = await resolveUserProfile(user);
+            return profile.name;
+        }
 
-            if (typeof userOrEmail === 'object' && userOrEmail !== null) {
-                emailToCheck = userOrEmail.email || '';
-                uidToCheck = userOrEmail.uid || uid;
-            } else if (typeof userOrEmail === 'string') {
-                emailToCheck = userOrEmail;
+        // Lấy shortId raw (không có #) từ Firestore
+        async function getShortId(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.data()?.shortId || null;
+            } catch (e) {
+                return null;
             }
-
-            if (emailToCheck && adminEmails.has(emailToCheck.toLowerCase().trim())) {
-                return true;
-            }
-            if (uidToCheck && adminUids.has(uidToCheck)) {
-                return true;
-            }
-            return false;
         }
 
         // ============================================================
@@ -3122,7 +4985,7 @@
         // ============================================================
         function showAccountDeletedModal() {
             accountDeletedModal.classList.add('active');
-            auth.signOut().catch(() => {});
+            auth.signOut().catch(() => { });
         }
 
         // ============================================================
@@ -3137,7 +5000,7 @@
         }
 
         // Click outside để đóng
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const modal = document.getElementById('accountDeletedModal');
             if (modal && modal.classList.contains('active')) {
                 if (e.target === modal) {
@@ -3147,7 +5010,7 @@
         });
 
         // ESC để đóng
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeAccountDeletedModal();
                 closeEventPopup();
@@ -3157,15 +5020,84 @@
             }
         });
 
+        function waitForAuthUser() {
+            if (auth.currentUser) {
+                return Promise.resolve(auth.currentUser);
+            }
+
+            if (authReady) {
+                return Promise.resolve(null);
+            }
+
+            return new Promise((resolve) => {
+                const unsubscribe = auth.onAuthStateChanged((user) => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        }
+
+        const TWO_FACTOR_SESSION_KEY = 'twoFactorVerifiedUid';
+
+        function setTwoFactorVerifiedUid(uid) {
+            if (!uid) return;
+            localStorage.setItem(TWO_FACTOR_SESSION_KEY, uid);
+        }
+
+        function getTwoFactorVerifiedUid() {
+            return localStorage.getItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function clearTwoFactorVerifiedUid() {
+            localStorage.removeItem(TWO_FACTOR_SESSION_KEY);
+        }
+
+        function isTwoFactorVerifiedForUser(uid) {
+            return uid && getTwoFactorVerifiedUid() === uid;
+        }
+
+        async function getUserTwoFactorData(uid) {
+            if (!uid) return null;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                return doc.exists ? doc.data()?.twoFactor || null : null;
+            } catch (e) {
+                console.error('Lỗi kiểm tra 2FA:', e);
+                return null;
+            }
+        }
+
+        async function ensureTwoFactorVerified(user) {
+            if (!user) return false;
+            const twoFactor = await getUserTwoFactorData(user.uid);
+            if (twoFactor?.enabled && twoFactor.secret) {
+                if (!isTwoFactorVerifiedForUser(user.uid)) {
+                    window.location.href = 'login.html';
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // ============================================================
         // AUTH STATE
         // ============================================================
         auth.onAuthStateChanged(async (user) => {
-            await loadAdminList();
+            authReady = true;
 
             if (user) {
-                ensureUserSavedInFirestore(user).catch(() => {});
-                const isBanned = await checkBannedUser(user.email);
+                const [, twoFactor, isBanned, profile] = await Promise.all([
+                    loadAdminList(),
+                    getUserTwoFactorData(user.uid),
+                    checkBannedUser(user.email),
+                    resolveUserProfile(user),
+                    ensureUserSavedInFirestore(user)
+                ]);
+
+                if (twoFactor?.enabled && twoFactor.secret && !isTwoFactorVerifiedForUser(user.uid)) {
+                    window.location.href = 'login.html';
+                    return;
+                }
                 if (isBanned) {
                     showAccountDeletedModal();
                     return;
@@ -3176,12 +5108,13 @@
                 authStatus.style.display = 'flex';
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
-                userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user
-                    .displayName || user.email);
-                userName.textContent = user.displayName || user.email;
+                userAvatar.src = profile.avatar;
+                userName.textContent = profile.name;
+                const composerAvatar = document.getElementById('composerAvatar');
+                if (composerAvatar) composerAvatar.src = profile.avatar;
                 createPostBox.style.opacity = '1';
                 createPostBox.style.pointerEvents = 'auto';
-                postInput.placeholder = `${user.displayName || 'Bạn'} đang nghĩ gì thế?`;
+                postInput.placeholder = `${profile.name} đang nghĩ gì thế?`;
 
                 isAdmin = isUserAdmin(user);
 
@@ -3197,18 +5130,13 @@
                     reportEmail.value = user.email || '';
                 }
 
-                if (!tabCache.newsfeed.loaded) {
-                    await loadPosts();
-                    tabCache.newsfeed.loaded = true;
+                if (tabCache.movies.loaded) {
+                    renderMoviesByCategory(currentCategory);
                 }
-                if (!tabCache.movies.loaded) {
-                    await loadMovies();
-                    tabCache.movies.loaded = true;
-                }
-                if (!tabCache.events.loaded) {
-                    await loadEvents();
-                    tabCache.events.loaded = true;
-                }
+
+                if (!tabCache.newsfeed.loaded) loadPosts().then(() => { tabCache.newsfeed.loaded = true; });
+                if (!tabCache.movies.loaded) loadMovies().then(() => { tabCache.movies.loaded = true; });
+                if (!tabCache.events.loaded) loadEvents().then(() => { tabCache.events.loaded = true; });
             } else {
                 isLoggedIn = false;
                 isAdmin = false;
@@ -3226,30 +5154,26 @@
                     reportEmail.value = '';
                 }
 
-                if (!tabCache.newsfeed.loaded) {
-                    await loadPosts();
-                    tabCache.newsfeed.loaded = true;
+                if (tabCache.movies.loaded) {
+                    renderMoviesByCategory(currentCategory);
                 }
-                if (!tabCache.movies.loaded) {
-                    await loadMovies();
-                    tabCache.movies.loaded = true;
-                }
-                if (!tabCache.events.loaded) {
-                    await loadEvents();
-                    tabCache.events.loaded = true;
-                }
+
+                if (!tabCache.newsfeed.loaded) loadPosts().then(() => { tabCache.newsfeed.loaded = true; });
+                if (!tabCache.movies.loaded) loadMovies().then(() => { tabCache.movies.loaded = true; });
+                if (!tabCache.events.loaded) loadEvents().then(() => { tabCache.events.loaded = true; });
             }
         });
 
         // ============================================================
         // LOGOUT
         // ============================================================
-        window.logoutUser = async function() {
+        window.logoutUser = async function () {
             try {
+                clearTwoFactorVerifiedUid();
                 await auth.signOut();
                 window.location.reload();
             } catch (error) {
-                alert('Đăng xuất thất bại!');
+                showToast('Đăng xuất thất bại!', true);
             }
         };
 
@@ -3258,13 +5182,13 @@
         // ============================================================
         function openUploadWidget(type) {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để đăng ảnh/video!');
+                showToast('🔑 Vui lòng đăng nhập để đăng ảnh/video!', true);
                 window.location.href = 'login.html';
                 return;
             }
 
             if (typeof cloudinary === 'undefined') {
-                alert('⚠️ Cloudinary đang tải, vui lòng thử lại sau!');
+                showToast('⚠️ Cloudinary đang tải, vui lòng thử lại sau!', true);
                 return;
             }
 
@@ -3282,6 +5206,8 @@
                 ],
                 cropping: isImage,
                 croppingAspectRatio: isImage ? 1.91 : undefined,
+                maxImageWidth: 1600,
+                maxImageHeight: 1600,
                 showAdvancedOptions: false,
                 styles: {
                     palette: {
@@ -3303,7 +5229,7 @@
             }, (error, result) => {
                 if (error) {
                     console.error('Lỗi Cloudinary:', error);
-                    alert('❌ Upload thất bại: ' + (error.message || 'Lỗi không xác định'));
+                    showToast('❌ Upload thất bại: ' + (error.message || 'Lỗi không xác định'), true);
                     uploadProgress.style.display = 'none';
                     return;
                 }
@@ -3339,7 +5265,7 @@
                     uploadProgress.style.display = 'none';
 
                 } else if (result.event === 'error') {
-                    alert('❌ Upload thất bại: ' + (result.info.message || 'Lỗi không xác định'));
+                    showToast('❌ Upload thất bại: ' + (result.info.message || 'Lỗi không xác định'), true);
                     uploadProgress.style.display = 'none';
                 }
             });
@@ -3362,14 +5288,14 @@
         // ============================================================
         async function createPost() {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để đăng bài!');
+                showToast('🔑 Vui lòng đăng nhập để đăng bài!', true);
                 window.location.href = 'login.html';
                 return;
             }
 
             const content = postInput.value;
             if (!content && !uploadedFileUrl) {
-                alert('📝 Vui lòng nhập nội dung hoặc đính kèm ảnh/video!');
+                showToast('📝 Vui lòng nhập nội dung hoặc đính kèm ảnh/video!', true);
                 return;
             }
 
@@ -3379,9 +5305,14 @@
 
             try {
                 const user = auth.currentUser;
+                const profile = await resolveUserProfile(user);
+                const currentUserName = profile.name;
+                const currentShortId = profile.shortId;
+                const currentUserAvatar = profile.avatar;
                 const postData = {
-                    user: user.displayName || 'Doraemon',
-                    avatar: LOGO_URL,
+                    user: currentUserName,
+                    shortId: currentShortId || '',
+                    avatar: currentUserAvatar,
                     color: '1',
                     content: content || '📸 Chia sẻ hình ảnh',
                     time: 'Vừa xong',
@@ -3391,6 +5322,7 @@
                     totalLikes: 0,
                     comments: [],
                     showComments: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     userId: user.uid,
                     userEmail: user.email,
@@ -3426,7 +5358,7 @@
                 if (errorMsg.includes('permission')) {
                     errorMsg = 'Bạn chưa có quyền đăng bài. Vui lòng kiểm tra Firestore Rules.';
                 }
-                alert('❌ Lỗi đăng bài: ' + errorMsg);
+                showToast('❌ Lỗi đăng bài: ' + errorMsg, true);
                 btn.textContent = 'Đăng';
                 btn.disabled = false;
             }
@@ -3435,12 +5367,12 @@
         // ============================================================
         // TỰ ĐỘNG TĂNG CHIỀU CAO TEXTAREA
         // ============================================================
-        postInput.addEventListener('input', function() {
+        postInput.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 200) + 'px';
         });
 
-        postInput.addEventListener('keydown', function(e) {
+        postInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 createPost();
@@ -3454,11 +5386,15 @@
             if (!postList) return;
 
             try {
-                const snapshot = await db.collection('posts')
-                    .orderBy('timestamp', 'desc')
-                    .get();
+                let snapshot;
+                try {
+                    snapshot = await db.collection('posts').get();
+                } catch (err) {
+                    console.warn('Posts fetch fallback:', err);
+                    snapshot = await db.collection('posts').get({ source: 'server' });
+                }
 
-                if (snapshot.empty) {
+                if (!snapshot || snapshot.empty) {
                     const emptyHtml = `
                         <div class="empty-state">
                             <div class="icon">📝</div>
@@ -3477,14 +5413,17 @@
                 snapshot.forEach(doc => {
                     const p = doc.data();
                     p.id = doc.id;
+                    p.time = timeAgo(p.createdAt || p.timestamp);
                     allPostsData.push(p);
                 });
 
-                // Sắp xếp: bài ghim lên đầu
+                // Sắp xếp: bài ghim lên đầu, còn lại xếp theo thời gian mới nhất
                 allPostsData.sort((a, b) => {
                     if (a.pinned && !b.pinned) return -1;
                     if (!a.pinned && b.pinned) return 1;
-                    return 0;
+                    const tsA = getTimestampValue(a.timestamp || a.createdAt);
+                    const tsB = getTimestampValue(b.timestamp || b.createdAt);
+                    return tsB - tsA;
                 });
 
                 // Lấy danh sách bài đã thích
@@ -3602,7 +5541,7 @@
                 const isLiked = !!likedBy[currentUserEmail];
                 const totalLikes = p.totalLikes || p.likes || Object.keys(likedBy).length || 0;
 
-                const canEdit = isOwner || isPostAdmin;
+                const canEdit = isOwner || isAdmin;
                 const isPinned = p.pinned === true;
 
                 // Kiểm tra nội dung dài để thu gọn
@@ -3610,35 +5549,50 @@
                 const lineBreaks = (p.content || '').split('\n').length;
                 const isLongContent = contentLength > 300 || lineBreaks > 4;
 
-                const commentsHtml = await Promise.all((p.comments || []).map(async (c) => {
+                const commentsHtml = await Promise.all((p.comments || []).map(async (c, cIndex) => {
                     const isCommentAdmin = isUserAdmin(c.userEmail);
                     const commentProfileLink =
                         `profile.html?uid=${c.userId || ''}&email=${encodeURIComponent(c.userEmail || '')}`;
+                    const canDeleteComment = currentUserEmail && (
+                        c.userEmail === currentUserEmail || 
+                        isUserAdmin(currentUserEmail)
+                    );
                     return `
-                            <div class="comment-item">
-                                <a href="${commentProfileLink}" class="avatar-link">
-                                    <img src="${c.avatar || LOGO_URL}" alt="avatar" loading="lazy">
-                                </a>
-                                <div class="comment-body">
-                                    <div class="name">
+                        <div class="comment-item">
+                            <a href="${commentProfileLink}" class="avatar-link">
+                                <img src="${getOptimizedAvatarUrl(c.avatar || LOGO_URL, 60)}" alt="avatar" loading="lazy" decoding="async">
+                            </a>
+                            <div class="comment-body">
+                                <div class="comment-bubble">
+                                    <div class="comment-name-row">
                                         <a href="${commentProfileLink}" class="profile-link">
-                                            ${c.user || 'Doraemon'}
+                                            ${c.shortId ? '#' + c.shortId : (c.user || c.userEmail?.split('@')[0] || 'Người dùng')}
                                         </a>
                                         ${isCommentAdmin ? `<span class="verified-badge">✓ Admin</span>` : ''}
                                         <img src="${LOGO_URL}" class="logo-small" alt="logo" loading="lazy">
                                     </div>
-                                    <div class="text">${c.text || ''}</div>
-                                    <div class="time">${c.time || 'Vừa xong'}</div>
+                                    <div class="comment-text">${c.text || ''}</div>
+                                </div>
+                                <div class="comment-meta-row">
+                                    <span class="comment-time" data-timestamp="${getTimestampValue(c.createdAt || c.timestamp)}">${timeAgo(c.createdAt || c.timestamp) || c.time || 'Vừa xong'}</span>
+                                    ${canDeleteComment ? `<button class="comment-delete-btn" onclick="deleteComment('${p.id}', ${cIndex})" title="Xóa bình luận">🗑️ Xóa</button>` : ''}
                                 </div>
                             </div>
-                        `;
+                        </div>
+                    `;
                 }));
                 const commentsHtmlStr = commentsHtml.join('');
 
                 let fileHtml = '';
                 if (p.fileUrl) {
                     if (p.fileType === 'image') {
-                        fileHtml = `<img src="${p.fileUrl}" class="post-image" alt="Hình ảnh" loading="lazy">`;
+                        const optUrl = getOptimizedImageUrl(p.fileUrl, 800);
+                        fileHtml = `
+                            <div class="post-image-wrapper">
+                                <div class="post-image-skeleton"></div>
+                                <img src="${optUrl}" class="post-image" alt="Hình ảnh" loading="lazy" decoding="async" onload="this.classList.add('loaded'); const sk = this.previousElementSibling; if(sk && sk.classList.contains('post-image-skeleton')) sk.remove();" onerror="this.onerror=null; const sk = this.previousElementSibling; if(sk && sk.classList.contains('post-image-skeleton')) sk.remove(); this.src='${p.fileUrl}'; this.classList.add('loaded');" onclick="openImageLightbox('${p.fileUrl}')" title="Click để xem ảnh phóng to">
+                            </div>
+                        `;
                     } else if (p.fileType === 'video') {
                         fileHtml =
                             `<video controls class="post-video"><source src="${p.fileUrl}">Trình duyệt không hỗ trợ video</video>`;
@@ -3668,18 +5622,18 @@
                             <div class="pin-badge">📌 Đã ghim</div>
                             <div class="post-header">
                                 <a href="${profileLink}" class="avatar-link">
-                                    <img src="${p.avatar || LOGO_URL}" alt="avatar" loading="lazy">
+                                    <img src="${getOptimizedAvatarUrl(p.avatar || LOGO_URL, 80)}" alt="avatar" loading="lazy" decoding="async">
                                 </a>
                                 <div class="info">
                                     <div class="name">
                                         <a href="${profileLink}" class="profile-link">
-                                            ${p.user || 'Doraemon'}
+                                            ${p.shortId ? '#' + p.shortId : (p.user || p.userEmail?.split('@')[0] || 'Người dùng')}
                                         </a>
                                         ${isPostAdmin ? `<span class="verified-badge">✓ Admin</span>` : ''}
                                         <img src="${LOGO_URL}" class="logo-small" alt="logo" loading="lazy">
                                         <span class="badge">●</span>
                                     </div>
-                                    <div class="time">${p.time || 'Vừa xong'}</div>
+                                    <div class="time" data-timestamp="${getTimestampValue(p.createdAt || p.timestamp)}">${p.time || 'Vừa xong'}</div>
                                 </div>
                                 <button class="more-btn" onclick="showPostOptions('${p.id}')">⋯</button>
                             </div>
@@ -3699,13 +5653,19 @@
                                 <button onclick="toggleComments('${p.id}')">💬 Bình luận</button>
                                 <button onclick="sharePost('${p.id}')">📤 Chia sẻ</button>
                                 ${canEdit ? `<button onclick="editUserPost('${p.id}')" class="edit-btn">✏️ Sửa</button>` : ''}
+                                ${canEdit ? `<button onclick="confirmDeletePost('${p.id}')" class="delete-post-btn">🗑️ Xóa</button>` : ''}
                                 ${isPostAdmin ? `<button onclick="togglePinPost('${p.id}')" class="pin-btn ${isPinned ? 'pinned' : ''}">${isPinned ? '📍 Đã ghim' : '📌 Ghim'}</button>` : ''}
                             </div>
                             <div class="comments-section ${p.showComments ? 'open' : ''}" id="comments-${p.id}">
-                                ${commentsHtmlStr}
-                                <div class="comment-input">
-                                    <input type="text" id="commentInput-${p.id}" placeholder="Viết bình luận...">
-                                    <button onclick="addComment('${p.id}')">Gửi</button>
+                                <div class="comments-list" id="comments-list-${p.id}">
+                                    ${commentsHtmlStr}
+                                </div>
+                                <div class="comment-input-wrapper">
+                                    <img src="${currentUser?.photoURL || LOGO_URL}" class="comment-user-avatar" alt="avatar">
+                                    <div class="comment-input-box">
+                                        <input type="text" id="commentInput-${p.id}" placeholder="Viết bình luận..." onkeydown="if(event.key==='Enter')addComment('${p.id}')">
+                                        <button class="comment-send-btn" onclick="addComment('${p.id}')" title="Gửi bình luận">➤</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3715,9 +5675,56 @@
         }
 
         // ============================================================
+        // XÓA BÌNH LUẬN
+        // ============================================================
+        window.deleteComment = async function (postId, commentIndex) {
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('🔑 Vui lòng đăng nhập!', true);
+                return;
+            }
+
+            if (!confirm('🗑️ Bạn có chắc muốn xóa bình luận này không?')) return;
+
+            try {
+                const docRef = db.collection('posts').doc(postId);
+                const doc = await docRef.get();
+                if (!doc.exists) return;
+
+                const data = doc.data();
+                const comments = data.comments || [];
+                const comment = comments[commentIndex];
+
+                if (!comment) {
+                    showToast('❌ Bình luận không tồn tại!', true);
+                    return;
+                }
+
+                // Kiểm tra quyền: chủ bình luận hoặc admin
+                const canDelete = comment.userEmail === user.email || isAdmin;
+                if (!canDelete) {
+                    showToast('⚠️ Bạn không có quyền xóa bình luận này!', true);
+                    return;
+                }
+
+                comments.splice(commentIndex, 1);
+                await docRef.update({ comments });
+
+                tabCache.newsfeed.loaded = false;
+                await loadPosts();
+                tabCache.newsfeed.loaded = true;
+
+                showToast('✅ Đã xóa bình luận!');
+            } catch (e) {
+                console.error('Lỗi xóa bình luận:', e);
+                showToast('❌ Xóa thất bại: ' + (e.message || ''), true);
+            }
+        };
+
+        // ============================================================
         // TOGGLE READ MORE
         // ============================================================
-        window.toggleReadMore = function(postId) {
+        window.toggleReadMore = function (postId) {
             const wrapper = document.getElementById(`content-wrapper-${postId}`);
             const btn = document.getElementById(`readmore-btn-${postId}`);
             if (!wrapper || !btn) return;
@@ -3773,7 +5780,7 @@
         // ============================================================
         async function toggleLike(postId) {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để thích bài viết!');
+                showToast('🔑 Vui lòng đăng nhập để thích bài viết!', true);
                 window.location.href = 'login.html';
                 return;
             }
@@ -3822,7 +5829,7 @@
 
             } catch (e) {
                 console.error('Lỗi like:', e);
-                alert('❌ Lỗi: ' + e.message);
+                showToast('❌ Lỗi: ' + e.message, true);
             }
         }
 
@@ -3874,22 +5881,39 @@
         async function addComment(postId) {
             const input = document.getElementById(`commentInput-${postId}`);
             const text = input.value.trim();
-            if (!text) return;
+            if (!text) {
+                showToast('📝 Vui lòng nhập nội dung bình luận!', true);
+                return;
+            }
+
+            const user = auth.currentUser;
+            if (!user) {
+                showToast('🔑 Vui lòng đăng nhập để bình luận!', true);
+                window.location.href = 'login.html';
+                return;
+            }
 
             try {
-                const user = auth.currentUser;
                 const doc = await db.collection('posts').doc(postId).get();
-                if (!doc.exists) return;
+                if (!doc.exists) {
+                    showToast('❌ Bài viết không tồn tại!', true);
+                    return;
+                }
+
                 const data = doc.data();
                 const comments = data.comments || [];
+                const commentUserName = await resolveUserName(user);
+                const commentShortId = await getShortId(user.uid);
                 comments.push({
-                    user: user?.displayName || 'Doraemon',
-                    avatar: LOGO_URL,
+                    user: commentUserName,
+                    shortId: commentShortId || '',
+                    avatar: user.photoURL || LOGO_URL,
                     color: '1',
                     text: text,
                     time: 'Vừa xong',
-                    userEmail: user?.email || '',
-                    userId: user?.uid || '',
+                    createdAt: Date.now(),
+                    userEmail: user.email || '',
+                    userId: user.uid || '',
                     isAdmin: isAdmin
                 });
                 await db.collection('posts').doc(postId).update({ comments });
@@ -3898,8 +5922,10 @@
                 tabCache.newsfeed.loaded = false;
                 await loadPosts();
                 tabCache.newsfeed.loaded = true;
+                showToast('✅ Đã thêm bình luận!');
             } catch (e) {
                 console.error(e);
+                showToast('❌ Lỗi gửi bình luận: ' + (e.message || 'Không thể thêm bình luận'), true);
             }
         }
 
@@ -3911,11 +5937,11 @@
             if (!post) return;
             const content = post.querySelector('.post-content')?.textContent || '';
             if (navigator.share) {
-                navigator.share({ title: 'Doraemon', text: content }).catch(() => {});
+                navigator.share({ title: 'Doraemon', text: content }).catch(() => { });
             } else {
                 navigator.clipboard.writeText(content)
-                    .then(() => alert('📤 Đã sao chép nội dung!'))
-                    .catch(() => alert('📤 Chia sẻ: ' + content));
+                    .then(() => showToast('📤 Đã sao chép nội dung!'))
+                    .catch(() => showToast('📤 Chia sẻ: ' + content));
             }
         }
 
@@ -3923,35 +5949,57 @@
         // POST OPTIONS
         // ============================================================
         async function showPostOptions(postId) {
+            // Nút ⋯ giờ không dùng nữa, xóa qua confirmDeletePost
+        }
+
+        async function confirmDeletePost(postId) {
             const user = auth.currentUser;
             if (!user) {
-                alert('⚠️ Vui lòng đăng nhập!');
+                showToast('⚠️ Vui lòng đăng nhập!', true);
                 return;
             }
 
-            if (!isAdmin) {
-                alert('⚠️ Bạn không có quyền!');
-                return;
-            }
+            // Hỏi xác nhận trước khi xóa
+            if (!confirm('🗑️ Bạn có chắc muốn xóa bài viết này không?')) return;
 
-            const choice = prompt('Chọn hành động:\n1. Xóa bài viết');
-            if (choice === '1') {
-                if (confirm('Xóa bài viết này?')) {
-                    await db.collection('posts').doc(postId).delete();
-                    tabCache.newsfeed.loaded = false;
-                    await loadPosts();
-                    tabCache.newsfeed.loaded = true;
-                    alert('✅ Đã xóa!');
+            try {
+                const doc = await db.collection('posts').doc(postId).get();
+                if (!doc.exists) return;
+
+                const data = doc.data();
+                const isOwner = data.userEmail === user.email;
+                if (!isOwner && !isAdmin) {
+                    showToast('⚠️ Bạn không có quyền xóa bài này!', true);
+                    return;
                 }
+
+                await db.collection('posts').doc(postId).delete();
+
+                const postEl = document.getElementById(`post-${postId}`);
+                if (postEl) postEl.remove();
+
+                allPostsData = allPostsData.filter(p => p.id !== postId);
+                tabCache.newsfeed.data = allPostsData;
+                tabCache.newsfeed.html = '';
+                updateFilterBadges(allPostsData);
+
+                tabCache.newsfeed.loaded = false;
+                await loadPosts();
+                tabCache.newsfeed.loaded = true;
+
+                showToast('✅ Đã xóa bài viết!');
+            } catch (e) {
+                console.error('Lỗi xóa bài viết:', e);
+                showToast('❌ Xóa thất bại: ' + (e.message || 'Không thể xóa bài viết'), true);
             }
         }
 
         // ============================================================
         // SỬA BÀI VIẾT CÁ NHÂN (POPUP MODAL)
         // ============================================================
-        window.editUserPost = async function(postId) {
+        window.editUserPost = async function (postId) {
             if (!isLoggedIn) {
-                alert('🔑 Vui lòng đăng nhập để sửa bài viết!');
+                showToast('🔑 Vui lòng đăng nhập để sửa bài viết!', true);
                 window.location.href = 'login.html';
                 return;
             }
@@ -4025,12 +6073,13 @@
             editingUserPostFileType = null;
             editUserUploadedFileUrl = '';
             editUserUploadedFileType = '';
+            isRemovingAttachedFile = false;
         }
 
         closeEditPostModal?.addEventListener('click', closeEditPostModalFunc);
         cancelEditPostBtn?.addEventListener('click', closeEditPostModalFunc);
 
-        editPostModal?.addEventListener('click', function(e) {
+        editPostModal?.addEventListener('click', function (e) {
             if (e.target === this) closeEditPostModalFunc();
         });
 
@@ -4116,11 +6165,11 @@
         // EDIT POST - REMOVE FILE
         // ============================================================
         function editPostRemoveFile() {
-            if (!confirm('Xóa file đính kèm?')) return;
             editUserUploadedFileUrl = '';
             editUserUploadedFileType = '';
             editingUserPostFileUrl = null;
             editingUserPostFileType = null;
+            isRemovingAttachedFile = true;
 
             editPostFilePreview.innerHTML = `<span style="color:#999;font-size:13px;">🗑️ Đã xóa file</span>`;
             showToast('✅ Đã xóa file!');
@@ -4129,7 +6178,7 @@
         // ============================================================
         // SUBMIT SỬA BÀI VIẾT
         // ============================================================
-        submitEditPostBtn?.addEventListener('click', async function() {
+        submitEditPostBtn?.addEventListener('click', async function () {
             const content = editPostContent.value.trim();
 
             if (!content) {
@@ -4160,7 +6209,7 @@
                 if (editUserUploadedFileUrl) {
                     updateData.fileUrl = editUserUploadedFileUrl;
                     updateData.fileType = editUserUploadedFileType;
-                } else if (editingUserPostFileUrl === null && !editUserUploadedFileUrl) {
+                } else if (isRemovingAttachedFile || editingUserPostFileUrl === null) {
                     updateData.fileUrl = null;
                     updateData.fileType = null;
                 }
@@ -4188,9 +6237,12 @@
         // ============================================================
         let allMovies = [];
         let currentCategory = 'all';
+        let currentMoviePage = 1;
+        const moviesPerPage = 21;
 
-        function openMovieInNewTab(movieId) {
-            if (!isLoggedIn) {
+        async function openMovieInNewTab(movieId) {
+            const currentUser = await waitForAuthUser();
+            if (!currentUser) {
                 showLoginRequired();
                 return;
             }
@@ -4271,9 +6323,12 @@
             if (!movieList) return;
 
             try {
-                const snapshot = await db.collection('movies')
-                    .orderBy('timestamp', 'desc')
-                    .get();
+                let snapshot;
+                try {
+                    snapshot = await db.collection('movies').get();
+                } catch (err) {
+                    snapshot = await db.collection('movies').get({ source: 'server' });
+                }
 
                 if (snapshot.empty) {
                     const sampleMovies = [{
@@ -4308,7 +6363,8 @@
                 });
 
                 updateCategoryCounts(allMovies);
-                const html = renderMoviesByCategoryHTML(currentCategory);
+                currentMoviePage = 1;
+                const html = renderMoviesByCategoryHTML(currentCategory, currentMoviePage);
                 movieList.innerHTML = html;
                 tabCache.movies.html = html;
                 tabCache.movies.data = allMovies;
@@ -4328,7 +6384,8 @@
                 }];
                 allMovies = sampleMovies;
                 updateCategoryCounts(allMovies);
-                const html = renderMoviesByCategoryHTML('all');
+                currentMoviePage = 1;
+                const html = renderMoviesByCategoryHTML('all', currentMoviePage);
                 movieList.innerHTML = html;
                 tabCache.movies.html = html;
                 tabCache.movies.data = allMovies;
@@ -4350,7 +6407,20 @@
             document.getElementById('countSeri').textContent = counts.seri;
         }
 
-        function renderMoviesByCategoryHTML(category) {
+        function renderMoviePaginationHTML(totalPages, currentPage) {
+            if (totalPages <= 1) return '';
+
+            let paginationHtml = '<div class="movie-pagination">';
+            for (let page = 1; page <= totalPages; page++) {
+                paginationHtml += `
+                    <button class="pagination-btn ${page === currentPage ? 'active' : ''}" onclick="changeMoviePage(${page})">${page}</button>
+                `;
+            }
+            paginationHtml += '</div>';
+            return paginationHtml;
+        }
+
+        function renderMoviesByCategoryHTML(category, page = 1) {
             currentCategory = category;
             const filtered = category === 'all' ?
                 allMovies :
@@ -4366,9 +6436,15 @@
                     `;
             }
 
+            const totalPages = Math.ceil(filtered.length / moviesPerPage);
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            const startIndex = (page - 1) * moviesPerPage;
+            const pageMovies = filtered.slice(startIndex, startIndex + moviesPerPage);
+
             let html = `<div class="movie-grid">`;
-            filtered.forEach(m => {
-                const showLock = !isLoggedIn;
+            pageMovies.forEach(m => {
+                const showLock = authReady && !isLoggedIn;
 
                 html += `
                         <div class="movie-card ${showLock ? 'locked' : ''}">
@@ -4401,12 +6477,14 @@
                     `;
             });
             html += `</div>`;
+            html += renderMoviePaginationHTML(totalPages, page);
             return html;
         }
 
         function renderMoviesByCategory(category) {
             currentCategory = category;
-            const html = renderMoviesByCategoryHTML(category);
+            currentMoviePage = 1;
+            const html = renderMoviesByCategoryHTML(category, currentMoviePage);
             movieList.innerHTML = html;
             tabCache.movies.html = html;
 
@@ -4414,7 +6492,15 @@
             clearSearchBtn.classList.remove('visible');
         }
 
-        document.getElementById('categoryList').addEventListener('click', function(e) {
+        window.changeMoviePage = function (page) {
+            currentMoviePage = page;
+            const html = renderMoviesByCategoryHTML(currentCategory, currentMoviePage);
+            movieList.innerHTML = html;
+            tabCache.movies.html = html;
+            window.scrollTo({ top: document.getElementById('tab-movies').offsetTop - 80, behavior: 'smooth' });
+        }
+
+        document.getElementById('categoryList').addEventListener('click', function (e) {
             const li = e.target.closest('li');
             if (!li) return;
 
@@ -4432,9 +6518,12 @@
             if (!eventGrid) return;
 
             try {
-                const snapshot = await db.collection('events')
-                    .orderBy('createdAt', 'desc')
-                    .get();
+                let snapshot;
+                try {
+                    snapshot = await db.collection('events').get();
+                } catch (err) {
+                    snapshot = await db.collection('events').get({ source: 'server' });
+                }
 
                 if (snapshot.empty) {
                     eventGrid.innerHTML = `
@@ -4547,7 +6636,7 @@
         function openEventPopup(eventId) {
             db.collection('events').doc(eventId).get().then(doc => {
                 if (!doc.exists) {
-                    alert('Sự kiện không tồn tại!');
+                    showToast('Sự kiện không tồn tại!', true);
                     return;
                 }
 
@@ -4583,7 +6672,7 @@
 
                 db.collection('events').doc(eventId).update({
                     views: (event.views || 0) + 1
-                }).catch(() => {});
+                }).catch(() => { });
 
                 const statusMap = {
                     'upcoming': '⏳ Sắp diễn ra',
@@ -4618,7 +6707,7 @@
                 document.body.style.overflow = 'hidden';
 
             }).catch(e => {
-                alert('Lỗi: ' + e.message);
+                showToast('Lỗi: ' + e.message, true);
             });
         }
 
@@ -4628,7 +6717,7 @@
             eventPopupContent.innerHTML = '';
         }
 
-        eventPopup.addEventListener('click', function(e) {
+        eventPopup.addEventListener('click', function (e) {
             if (e.target === this) closeEventPopup();
         });
 
@@ -4657,7 +6746,7 @@
             document.body.appendChild(overlay);
             document.body.style.overflow = 'hidden';
 
-            overlay.addEventListener('click', function(e) {
+            overlay.addEventListener('click', function (e) {
                 if (e.target === overlay) {
                     closeLoginRequiredPopup();
                 }
@@ -4675,7 +6764,7 @@
         // ============================================================
         // BÁO LỖI
         // ============================================================
-        reportFab.addEventListener('click', function() {
+        reportFab.addEventListener('click', function () {
             reportModal.classList.add('active');
             document.body.style.overflow = 'hidden';
             reportTitle.value = '';
@@ -4690,7 +6779,7 @@
             document.body.style.overflow = '';
         }
 
-        reportModal.addEventListener('click', function(e) {
+        reportModal.addEventListener('click', function (e) {
             if (e.target === reportModal) {
                 closeReportModal();
             }
@@ -4744,7 +6833,7 @@
 
         function showToastReport(msg, isError = false) {
             toastReport.textContent = msg;
-            toastReport.style.background = isError ? '#c62828' : '#1a1a2e';
+            toastReport.style.background = isError ? '#c62828' : '#1a73e8';
             toastReport.classList.add('show');
             clearTimeout(toastReport._timer);
             toastReport._timer = setTimeout(() => toastReport.classList.remove('show'), 4000);
@@ -4755,11 +6844,111 @@
         // ============================================================
         function showToast(msg, isError = false) {
             toastReport.textContent = msg;
-            toastReport.style.background = isError ? '#c62828' : '#1a1a2e';
+            toastReport.style.background = isError ? '#c62828' : '#1a73e8';
             toastReport.classList.add('show');
             clearTimeout(toastReport._timer);
             toastReport._timer = setTimeout(() => toastReport.classList.remove('show'), 4000);
         }
+
+        // ============================================================
+        // BỘ CHỌN BIỂU TƯỢNG CẢM XÚC (EMOJI PICKER SYSTEM)
+        // ============================================================
+        const EMOJI_DATA = {
+            smileys: [
+                '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '🤬', '😈', '👿', '💀', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖'
+            ],
+            hearts: [
+                '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '✨', '🌟', '💫', '🔥', '💥', '⚡', '💯', '👍', '👎', '👏', '🙌', '🤲', '🤝', '👊', '✊', '🤛', '🤜', '🤞', '✌️', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '🖐️', '✋', '🖖', '🤏'
+            ],
+            animals: [
+                '🐱', '🐶', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐕', '🐩', '🐈', '🕊️', '🐇', '🐿️', '🐾'
+            ],
+            food: [
+                '🥞', '🧇', '🥓', '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🥙', '🧆', '🍳', '🥘', '🍲', '🥣', '🥗', '🍿', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯', '🍼', '🥛', '☕', '🍵', '🍶', '🍾', '🍷', '🍸', '🍹', '🍺', '🍻', '🥂', '🥃', '🥤', '🧃', '🍉', '🍊', '🍋', '🍌', '🍍', '🥭', '🍎', '🍏', '梨', '🍑', '🍒', '🍓', '🥝', '🍅', '🥥', '🥑', '🍆', '🥔', '🥕', '🌽', '🌶️', '🥒', '🥬', '🥦', '🧄', '🧅', '🍄', 'peanut', '🌰'
+            ],
+            activities: [
+                '🎮', '🎯', '🎲', '🎰', '🎳', '🎨', '🎭', '🎪', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎬', '🏹', '🥊', '🥋', '🎽', '🛹', '🛷', '⛸️', '🥌', '🎿', '⚽', '⚾', '🥎', '🏀', '🏐', '🏈', '🏉', '🎾', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🏏', '🥍', '⛳', '🎣', '🤿', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🎫', '🎟️'
+            ]
+        };
+
+        let currentEmojiTab = 'smileys';
+
+        function renderEmojis(tab = 'smileys', filterText = '') {
+            const grid = document.getElementById('emojiPickerGrid');
+            if (!grid) return;
+
+            let list = EMOJI_DATA[tab] || EMOJI_DATA.smileys;
+            if (filterText.trim()) {
+                const query = filterText.trim().toLowerCase();
+                const allList = Object.values(EMOJI_DATA).flat();
+                list = allList.filter(e => e.includes(query));
+            }
+
+            grid.innerHTML = list.map(emoji => `
+                <span class="emoji-item" onclick="selectEmoji('${emoji}')" title="${emoji}">${emoji}</span>
+            `).join('');
+        }
+
+        window.toggleEmojiPicker = function (e) {
+            if (e) e.stopPropagation();
+            const popover = document.getElementById('emojiPickerPopover');
+            if (!popover) return;
+
+            const isShowing = popover.classList.contains('active');
+            if (isShowing) {
+                closeEmojiPicker();
+            } else {
+                popover.classList.add('active');
+                renderEmojis(currentEmojiTab);
+            }
+        };
+
+        window.closeEmojiPicker = function () {
+            const popover = document.getElementById('emojiPickerPopover');
+            if (popover) popover.classList.remove('active');
+        };
+
+        window.switchEmojiTab = function (category, btnEl) {
+            currentEmojiTab = category;
+            document.querySelectorAll('.emoji-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const searchInput = document.getElementById('emojiSearchInput');
+            if (searchInput) searchInput.value = '';
+
+            renderEmojis(category);
+        };
+
+        window.filterEmojis = function () {
+            const searchInput = document.getElementById('emojiSearchInput');
+            const val = searchInput ? searchInput.value : '';
+            renderEmojis(currentEmojiTab, val);
+        };
+
+        window.selectEmoji = function (emoji) {
+            const postInput = document.getElementById('postInput');
+            if (!postInput) return;
+
+            const start = postInput.selectionStart || postInput.value.length;
+            const end = postInput.selectionEnd || postInput.value.length;
+            const text = postInput.value;
+
+            postInput.value = text.substring(0, start) + emoji + text.substring(end);
+            postInput.selectionStart = postInput.selectionEnd = start + emoji.length;
+            postInput.focus();
+
+            postInput.dispatchEvent(new Event('input'));
+            showToast('😊 Đã chọn biểu tượng ' + emoji);
+        };
+
+        document.addEventListener('click', function (e) {
+            const popover = document.getElementById('emojiPickerPopover');
+            if (popover && popover.classList.contains('active')) {
+                if (!popover.contains(e.target) && !e.target.closest('#emojiPickerBtn')) {
+                    closeEmojiPicker();
+                }
+            }
+        });
 
         // ============================================================
         // INIT
@@ -4775,4 +6964,5 @@
         console.log('📌 Sử dụng URL hash để lưu trạng thái tab');
     </script>
 </body>
+
 </html>
