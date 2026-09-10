@@ -1701,6 +1701,58 @@
             return '';
         }
 
+        let cachedUserIp = '';
+        async function getUserIpAddress() {
+            if (cachedUserIp) return cachedUserIp;
+            const sessionIp = sessionStorage.getItem('user_client_ip');
+            if (sessionIp && sessionIp.trim().length >= 7) {
+                cachedUserIp = sessionIp.trim();
+                return cachedUserIp;
+            }
+            const providers = [
+                async () => {
+                    const r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://api64.ipify.org?format=json', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://api.my-ip.io/v2/ip.json', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://icanhazip.com', { cache: 'no-store' });
+                    const t = await r.text();
+                    return t.trim();
+                }
+            ];
+
+            for (const fetchIp of providers) {
+                try {
+                    const ip = await fetchIp();
+                    if (ip && typeof ip === 'string' && ip.trim().length >= 7) {
+                        const cleanIp = ip.trim();
+                        cachedUserIp = cleanIp;
+                        sessionStorage.setItem('user_client_ip', cleanIp);
+                        return cleanIp;
+                    }
+                } catch (e) {
+                    // Try next provider
+                }
+            }
+            return '';
+        }
+
         // ============================================================
         // KIỂM TRA USER EXIST TRONG FIRESTORE
         // ============================================================
@@ -1715,6 +1767,7 @@
                 const userEmail = user.email ? user.email.trim() : '';
                 const userDisplayName = user.displayName || (userEmail ? userEmail.split('@')[0] : 'Người dùng');
                 const userPhotoURL = user.photoURL || '';
+                const clientIp = await getUserIpAddress();
 
                 if (!doc.exists) {
                     const userData = {
@@ -1726,6 +1779,7 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
+                    if (clientIp) userData.lastIp = clientIp;
                     await db.collection('users').doc(user.uid).set(userData, { merge: true });
                     console.log('✅ Đã tạo user trong Firestore:', user.email);
                     return true;
@@ -1733,6 +1787,10 @@
 
                 const updates = {};
                 let needsUpdate = false;
+                if (clientIp && (!data.lastIp || data.lastIp !== clientIp)) {
+                    updates.lastIp = clientIp;
+                    needsUpdate = true;
+                }
                 if (!data.email && userEmail) {
                     updates.email = userEmail;
                     needsUpdate = true;
@@ -1761,6 +1819,20 @@
             }
         }
 
+        function startPresenceHeartbeat(user) {
+            if (!user || !user.uid) return;
+            const updatePresence = () => {
+                db.collection('users').doc(user.uid).set({
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(() => {});
+            };
+            updatePresence();
+            if (!window._presenceInterval) {
+                window._presenceInterval = setInterval(updatePresence, 60000);
+                window.addEventListener('focus', updatePresence);
+            }
+        }
+
         // ============================================================
         // AUTH STATE
         // ============================================================
@@ -1768,6 +1840,7 @@
             loadingState.style.display = 'none';
 
             if (user) {
+                startPresenceHeartbeat(user);
                 const [, twoFactor] = await Promise.all([
                     loadAdminList(),
                     getUserTwoFactorData(user.uid)

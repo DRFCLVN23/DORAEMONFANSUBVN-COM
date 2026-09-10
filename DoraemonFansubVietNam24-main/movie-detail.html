@@ -146,6 +146,12 @@
             position: relative;
             aspect-ratio: 16/9;
             max-height: 80vh;
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            -khtml-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
         }
 
         .video-wrapper iframe {
@@ -159,6 +165,40 @@
             height: 100%;
             display: block;
             background: #000;
+        }
+
+        /* Anti-Download Video Protection & Extension Hide Rules */
+        video::-internal-media-controls-download-button,
+        video::-webkit-media-controls-download-button {
+            display: none !important;
+        }
+        video::-webkit-media-controls-enclosure {
+            overflow: hidden !important;
+        }
+        .video-security-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.65);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 5;
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        [id*="coccoc"], [class*="coccoc"], [id*="savior"], [class*="savior"],
+        div[style*="coccoc"], div[style*="savior"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
         }
 
         .movie-info {
@@ -1353,16 +1393,50 @@
             }
         }
 
+        async function loadSecureVideo(videoElId, videoUrl) {
+            const videoEl = document.getElementById(videoElId);
+            if (!videoEl || !videoUrl) return;
+
+            videoEl.setAttribute('controlsList', 'nodownload nofullscreen noremoteplayback');
+            videoEl.setAttribute('disablePictureInPicture', 'true');
+            videoEl.oncontextmenu = (e) => e.preventDefault();
+            videoEl.ondragstart = (e) => e.preventDefault();
+
+            // Attempt Blob URL masking to hide raw MP4 link from browser downloaders like Cốc Cốc/IDM
+            try {
+                const response = await fetch(videoUrl);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    videoEl.src = blobUrl;
+                    videoEl.play().catch(() => {});
+                    return;
+                }
+            } catch (err) {
+                console.warn('Blob URL protection fallback to direct stream:', err);
+            }
+
+            // Fallback direct URL if CORS restricts fetch
+            videoEl.src = videoUrl;
+            videoEl.play().catch(() => {});
+        }
+
         function renderMovieDetail(movie) {
             const container = document.getElementById('movieContent');
 
             let videoContent = '';
             if (movie.embed) {
-                videoContent = movie.embed;
+                let embedSrc = movie.embed;
+                if (typeof embedSrc === 'string' && (embedSrc.startsWith('http://') || embedSrc.startsWith('https://'))) {
+                    videoContent = `
+                        <iframe src="${embedSrc}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen frameborder="0" oncontextmenu="return false;"></iframe>
+                    `;
+                } else {
+                    videoContent = movie.embed;
+                }
             } else if (movie.video) {
                 videoContent = `
-                        <video controls autoplay>
-                            <source src="${movie.video}">
+                        <video id="playerVideo" controls autoplay controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture oncontextmenu="return false;" ondragstart="return false;" onselectstart="return false;">
                             Trình duyệt không hỗ trợ video
                         </video>
                     `;
@@ -1380,8 +1454,9 @@
             const episodeLabel = movie.episode || movie.title || 'Tập phim';
             container.innerHTML = `
                     <div class="movie-player">
-                        <div class="video-wrapper">
+                        <div class="video-wrapper" id="videoWrapper" oncontextmenu="return false;">
                             ${videoContent}
+                            <div class="video-security-badge">🔒 Doraemon Fansub • Protected Content</div>
                         </div>
                         <div class="movie-info">
                             <h1>${movie.title || 'Không có tiêu đề'}</h1>
@@ -1429,6 +1504,9 @@
                     </div>
                 `;
 
+            if (movie.video && !movie.embed) {
+                loadSecureVideo('playerVideo', movie.video);
+            }
             loadComments(movie);
         }
 
@@ -2026,10 +2104,28 @@
             }
         });
 
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.closest('.video-wrapper') || e.target.tagName === 'VIDEO') {
+                e.preventDefault();
+                showToast('🔒 Video đã được bảo vệ. Không hỗ trợ tải xuống!');
+                return false;
+            }
+        });
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeLoginRequiredPopup();
                 closeEmojiPicker();
+            }
+            if (
+                (e.ctrlKey && (e.key === 'u' || e.key === 'U')) ||
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key))
+            ) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    showToast('🔒 Tính năng bị hạn chế để bảo vệ bản quyền video.');
+                }
             }
         });
 

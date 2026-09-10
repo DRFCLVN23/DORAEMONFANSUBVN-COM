@@ -13,6 +13,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    <!-- EmailJS để gửi OTP -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
     <style>
         * {
@@ -614,6 +616,27 @@
             </div>
         </form>
 
+        <!-- OTP VERIFICATION -->
+        <div id="otpSection" style="display:none;">
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:48px;margin-bottom:8px;">📧</div>
+                <h2 style="font-size:18px;color:#1a73e8;margin-bottom:6px;">Xác minh Email</h2>
+                <p id="otpEmailHint" style="font-size:13px;color:#666;line-height:1.5;">Mã xác minh 6 chữ số đã được gửi đến email của bạn.</p>
+            </div>
+            <div class="form-group">
+                <label>🔑 Mã xác minh (6 chữ số)</label>
+                <input type="text" id="otpCodeInput" placeholder="Nhập mã 6 chữ số" maxlength="6" autocomplete="one-time-code" inputmode="numeric" style="letter-spacing:6px;font-size:22px;text-align:center;font-weight:700;" />
+            </div>
+            <button type="button" class="btn-primary" id="verifyOtpBtn">✅ Xác minh & Tạo tài khoản</button>
+            <div style="text-align:center;margin-top:12px;">
+                <span id="otpResendTimer" style="font-size:13px;color:#999;"></span>
+                <a href="#" id="resendOtpBtn" style="font-size:13px;display:none;">🔄 Gửi lại mã</a>
+            </div>
+            <div class="form-footer" style="margin-top:12px;">
+                <a href="#" id="backFromOtp">← Quay lại đăng ký</a>
+            </div>
+        </div>
+
         <!-- FORGOT -->
         <form id="forgotForm" onsubmit="return false;">
             <div class="form-group">
@@ -658,22 +681,50 @@
         async function getUserIpAddress() {
             if (cachedUserIp) return cachedUserIp;
             const sessionIp = sessionStorage.getItem('user_client_ip');
-            if (sessionIp) {
-                cachedUserIp = sessionIp;
-                return sessionIp;
+            if (sessionIp && sessionIp.trim().length >= 7) {
+                cachedUserIp = sessionIp.trim();
+                return cachedUserIp;
             }
-            try {
-                const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.ip) {
-                        cachedUserIp = data.ip;
-                        sessionStorage.setItem('user_client_ip', data.ip);
-                        return data.ip;
-                    }
+            const providers = [
+                async () => {
+                    const r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://api64.ipify.org?format=json', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://api.my-ip.io/v2/ip.json', { cache: 'no-store' });
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetch('https://icanhazip.com', { cache: 'no-store' });
+                    const t = await r.text();
+                    return t.trim();
                 }
-            } catch (e) {
-                console.warn('Không thể lấy IP:', e);
+            ];
+
+            for (const fetchIp of providers) {
+                try {
+                    const ip = await fetchIp();
+                    if (ip && typeof ip === 'string' && ip.trim().length >= 7) {
+                        const cleanIp = ip.trim();
+                        cachedUserIp = cleanIp;
+                        sessionStorage.setItem('user_client_ip', cleanIp);
+                        return cleanIp;
+                    }
+                } catch (e) {
+                    // Try next provider
+                }
             }
             return '';
         }
@@ -805,26 +856,90 @@
             }
         }
 
-        window.resendVerificationEmail = async function() {
-            const email = document.getElementById('loginEmail')?.value.trim();
-            const password = document.getElementById('loginPassword')?.value;
-            if (!email || !password) {
-                showError('🔑 Vui lòng nhập Email và Mật khẩu của bạn ở form Đăng nhập để gửi lại email xác thực!');
-                return;
+        // ============================================================
+        // EMAILJS CONFIG - Điền thông tin tài khoản EmailJS của bạn
+        // ============================================================
+        const EMAILJS_SERVICE_ID  = 'service_cen1khi';
+        const EMAILJS_TEMPLATE_ID = 'template_jlwvc3v';
+        const EMAILJS_PUBLIC_KEY  = 'LdUL49TrmaCvla-Wz';
+
+        function initEmailJS() {
+            if (typeof emailjs !== 'undefined') {
+                emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
             }
-            showLoading();
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initEmailJS);
+        } else {
+            initEmailJS();
+        }
+
+        // ============================================================
+        // OTP STORE (lưu tạm trong memory + Firestore)
+        // ============================================================
+        let _pendingOtp = null;        // mã OTP đang chờ
+        let _pendingOtpExpiry = 0;     // timestamp hết hạn (ms)
+        let _pendingRegData = null;    // dữ liệu đăng ký đang chờ
+        let _otpResendInterval = null;
+
+        function generateOTP() {
+            return String(Math.floor(100000 + Math.random() * 900000));
+        }
+
+        async function sendOtpEmail(toEmail, toName, otpCode) {
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                await user.sendEmailVerification();
-                await auth.signOut();
-                showSuccess(`📧 Đã gửi lại email xác thực tới ${email}. Vui lòng mở hộp thư (bao gồm cả thư rác / Spam) để kích hoạt!`, 10000);
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                    to_email: toEmail,
+                    to_name:  toName,
+                    otp_code: otpCode,
+                    passcode: otpCode,
+                    site_name: 'Doraemon Fansub VN'
+                });
+                return true;
             } catch (e) {
-                showError('❌ Lỗi gửi lại email xác thực: ' + (e.message || 'Không thể gửi email'));
-            } finally {
-                hideLoading();
+                console.error('Lỗi gửi OTP email:', e);
+                return false;
             }
-        };
+        }
+
+        function startOtpResendTimer(seconds = 60) {
+            clearInterval(_otpResendInterval);
+            const timerEl = document.getElementById('otpResendTimer');
+            const resendBtn = document.getElementById('resendOtpBtn');
+            if (resendBtn) resendBtn.style.display = 'none';
+            let remaining = seconds;
+            if (timerEl) timerEl.textContent = `Gửi lại sau ${remaining}s`;
+            _otpResendInterval = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(_otpResendInterval);
+                    if (timerEl) timerEl.textContent = '';
+                    if (resendBtn) resendBtn.style.display = 'inline';
+                } else {
+                    if (timerEl) timerEl.textContent = `Gửi lại sau ${remaining}s`;
+                }
+            }, 1000);
+        }
+
+        function showOtpSection(email) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('otpSection').style.display = 'block';
+            document.getElementById('forgotForm').style.display = 'none';
+            const hint = document.getElementById('otpEmailHint');
+            if (hint) hint.innerHTML = `Mã xác minh 6 chữ số đã được gửi tới <strong>${email}</strong>.<br><small>Kiểm tra cả hộp thư Spam nếu không thấy.</small>`;
+            document.getElementById('otpCodeInput').value = '';
+            document.getElementById('otpCodeInput').focus();
+            startOtpResendTimer(60);
+        }
+
+        function hideOtpSection() {
+            document.getElementById('otpSection').style.display = 'none';
+            clearInterval(_otpResendInterval);
+            _pendingOtp = null;
+            _pendingOtpExpiry = 0;
+            _pendingRegData = null;
+        }
 
         function clearMessages() {
             errorMsg.style.display = 'none';
@@ -1177,7 +1292,10 @@
         // ============================================================
         // REGISTER
         // ============================================================
-        document.getElementById('registerBtn').addEventListener('click', function() {
+        // ============================================================
+        // REGISTER - BƯỚC 1: GỬI OTP
+        // ============================================================
+        document.getElementById('registerBtn').addEventListener('click', async function() {
             const name = document.getElementById('registerName').value.trim();
             const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value.trim();
@@ -1196,16 +1314,16 @@
                 return;
             }
 
-            // 1. Rate Limit (Chống Spam Đăng ký): Giới hạn 60s giữa mỗi lần đăng ký trên 1 thiết bị
+            // Rate Limit
             const lastRegisterTime = localStorage.getItem('lastRegisterTimestamp');
             const nowTime = Date.now();
             if (lastRegisterTime && (nowTime - parseInt(lastRegisterTime)) < 60000) {
                 const remaining = Math.ceil((60000 - (nowTime - parseInt(lastRegisterTime))) / 1000);
-                showError(`⏳ Bạn thao tác quá nhanh! Vui lòng chờ ${remaining} giây trước khi đăng ký tài khoản tiếp theo để chống nick ảo spam.`);
+                showError(`⏳ Bạn thao tác quá nhanh! Vui lòng chờ ${remaining} giây trước khi đăng ký tài khoản tiếp theo.`);
                 return;
             }
 
-            // 2. Chặn các Domain Email ảo rác (Temp Mail)
+            // Chặn Temp Mail
             const tempMailDomains = [
                 'mailinator.com', 'guerrillamail.com', '10minutemail.com', 'tempmail.com',
                 'trashmail.com', 'yopmail.com', 'dispostable.com', 'getairmail.com', 'sharklasers.com',
@@ -1213,86 +1331,164 @@
             ];
             const emailDomain = email.split('@')[1]?.toLowerCase().trim();
             if (emailDomain && tempMailDomains.includes(emailDomain)) {
-                showError('🚫 Hệ thống không chấp nhận đăng ký bằng Email tạm thời / Email ảo (Temp Mail)! Vui lòng sử dụng Gmail, Yahoo, Outlook chính chủ.');
+                showError('🚫 Hệ thống không chấp nhận Email tạm thời / Email ảo! Vui lòng dùng Gmail, Yahoo, Outlook.');
                 return;
             }
 
-            // 3. Kiểm tra tên hiển thị (2 - 30 ký tự)
+            // Kiểm tra tên hiển thị
             if (name.length < 2 || name.length > 30) {
                 showError('📝 Tên hiển thị phải từ 2 đến 30 ký tự!');
                 return;
             }
 
-            localStorage.setItem('lastRegisterTimestamp', String(Date.now()));
-
-            isRegistering = true;
-            showLoading();
             this.disabled = true;
+            showLoading();
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(async (userCredential) => {
-                    const user = userCredential.user;
-
-                    // Cập nhật tên hiển thị
-                    await user.updateProfile({ displayName: name });
-
-                    // Gửi email xác thực
-                    try {
-                        await user.sendEmailVerification();
-                    } catch (verifyErr) {
-                        console.warn('Lỗi gửi email xác thực:', verifyErr);
-                    }
-
-                    const saved = await saveUserToFirestore(user, true);
-                    if (!saved) {
-                        showError('❌ Không thể tạo tài khoản do lỗi lưu dữ liệu. Vui lòng thử lại.');
-                        await auth.signOut();
-                        isRegistering = false;
-                        return;
-                    }
-
-                    await auth.signOut(); // Đăng xuất tài khoản vừa tạo
-                    isRegistering = false;
-
-                    // Chuyển form sang tab Đăng nhập và điền sẵn Email vừa tạo
-                    showLoginForm();
-                    const loginEmailInput = document.getElementById('email');
-                    if (loginEmailInput) loginEmailInput.value = email;
-                    const loginPasswordInput = document.getElementById('password');
-                    if (loginPasswordInput) loginPasswordInput.value = '';
-
-                    showSuccessHtml(`
-                        <div style="text-align:left;padding:4px;">
-                            📧 <strong style="font-size:15px;color:#2e7d32;">Đăng ký tài khoản thành công!</strong><br>
-                            Hệ thống đã gửi một liên kết xác minh đến <strong>${email}</strong>.<br>
-                            <span style="display:block;margin-top:6px;color:#333;font-size:13px;line-height:1.4;">
-                                Vui lòng mở hộp thư Email (kiểm tra cả mục <strong>Thư rác / Spam</strong>) và bấm nút <strong>Xác nhận</strong> trước khi đăng nhập!
-                            </span>
-                        </div>
-                    `, 25000);
-                })
-                .catch((err) => {
-                    isRegistering = false;
-                    let msg = '❌ Đăng ký thất bại! ';
-                    switch (err.code) {
-                        case 'auth/email-already-in-use':
-                            msg += 'Email đã được sử dụng.';
-                            break;
-                        case 'auth/invalid-email':
-                            msg += 'Email không hợp lệ.';
-                            break;
-                        case 'auth/weak-password':
-                            msg += 'Mật khẩu quá yếu.';
-                            break;
-                        default:
-                            msg += err.message;
-                    }
-                    showError(msg);
-                })
-                .finally(() => {
+            try {
+                // Kiểm tra email đã tồn tại chưa (thử đăng nhập với email)
+                const methods = await auth.fetchSignInMethodsForEmail(email);
+                if (methods && methods.length > 0) {
+                    showError('❌ Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.');
                     this.disabled = false;
                     hideLoading();
-                });
+                    return;
+                }
+            } catch (e) {
+                // Bỏ qua lỗi này, tiếp tục gửi OTP
+            }
+
+            // Tạo OTP 6 số và lưu tạm
+            const otp = generateOTP();
+            _pendingOtp = otp;
+            _pendingOtpExpiry = Date.now() + 5 * 60 * 1000; // hết hạn sau 5 phút
+            _pendingRegData = { name, email, password };
+
+            // Gửi OTP qua EmailJS
+            const sent = await sendOtpEmail(email, name, otp);
+            hideLoading();
+            this.disabled = false;
+
+            if (sent) {
+                showOtpSection(email);
+                localStorage.setItem('lastRegisterTimestamp', String(Date.now()));
+                clearMessages();
+            } else {
+                showError('❌ Không thể gửi mã xác minh. Vui lòng thử lại sau.');
+                _pendingOtp = null;
+                _pendingRegData = null;
+            }
+        });
+
+        // ============================================================
+        // REGISTER - BƯỚC 2: XÁC MINH OTP & TẠO TÀI KHOẢN
+        // ============================================================
+        document.getElementById('verifyOtpBtn').addEventListener('click', async function() {
+            const enteredCode = document.getElementById('otpCodeInput').value.trim();
+
+            if (!enteredCode) {
+                showError('📝 Vui lòng nhập mã xác minh!');
+                return;
+            }
+            if (!_pendingOtp || !_pendingRegData) {
+                showError('❌ Phiên xác minh đã hết. Vui lòng đăng ký lại.');
+                hideOtpSection();
+                showRegisterForm();
+                return;
+            }
+            if (Date.now() > _pendingOtpExpiry) {
+                showError('⏰ Mã xác minh đã hết hạn (5 phút). Vui lòng đăng ký lại.');
+                hideOtpSection();
+                showRegisterForm();
+                return;
+            }
+            if (enteredCode !== _pendingOtp) {
+                showError('❌ Mã xác minh không đúng. Vui lòng kiểm tra lại email.');
+                return;
+            }
+
+            // OTP đúng → tạo tài khoản
+            const { name, email, password } = _pendingRegData;
+            _pendingOtp = null;
+            _pendingRegData = null;
+
+            isRegistering = true;
+            this.disabled = true;
+            showLoading();
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                await user.updateProfile({ displayName: name });
+
+                const saved = await saveUserToFirestore(user, true);
+                if (!saved) {
+                    showError('❌ Không thể lưu dữ liệu tài khoản. Vui lòng thử lại.');
+                    await auth.signOut();
+                    isRegistering = false;
+                    this.disabled = false;
+                    hideLoading();
+                    return;
+                }
+
+                isRegistering = false;
+                clearInterval(_otpResendInterval);
+                showSuccess('🎉 Đăng ký thành công! Đang chuyển hướng...');
+                setTimeout(() => window.location.href = 'index.html', 1500);
+            } catch (err) {
+                isRegistering = false;
+                let msg = '❌ Đăng ký thất bại! ';
+                switch (err.code) {
+                    case 'auth/email-already-in-use': msg += 'Email đã được sử dụng.'; break;
+                    case 'auth/invalid-email': msg += 'Email không hợp lệ.'; break;
+                    case 'auth/weak-password': msg += 'Mật khẩu quá yếu.'; break;
+                    default: msg += err.message;
+                }
+                showError(msg);
+                this.disabled = false;
+                hideLoading();
+            }
+        });
+
+        // Gửi lại OTP
+        document.getElementById('resendOtpBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            if (!_pendingRegData) {
+                showError('❌ Phiên đăng ký đã hết. Vui lòng đăng ký lại.');
+                hideOtpSection();
+                showRegisterForm();
+                return;
+            }
+            const otp = generateOTP();
+            _pendingOtp = otp;
+            _pendingOtpExpiry = Date.now() + 5 * 60 * 1000;
+
+            showLoading();
+            const sent = await sendOtpEmail(_pendingRegData.email, _pendingRegData.name, otp);
+            hideLoading();
+
+            if (sent) {
+                startOtpResendTimer(60);
+                showSuccess('📧 Đã gửi lại mã xác minh. Vui lòng kiểm tra email!');
+            } else {
+                showError('❌ Không thể gửi lại mã. Vui lòng thử lại sau.');
+            }
+        });
+
+        // Quay lại form đăng ký từ OTP
+        document.getElementById('backFromOtp').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideOtpSection();
+            showRegisterForm();
+            clearMessages();
+        });
+
+        // Enter key cho OTP input
+        document.getElementById('otpCodeInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('verifyOtpBtn').click();
+            }
         });
 
         // ============================================================

@@ -4393,22 +4393,68 @@
         async function getUserIpAddress() {
             if (cachedUserIp) return cachedUserIp;
             const sessionIp = sessionStorage.getItem('user_client_ip');
-            if (sessionIp) {
-                cachedUserIp = sessionIp;
-                return sessionIp;
+            if (sessionIp && sessionIp.trim().length >= 7) {
+                cachedUserIp = sessionIp.trim();
+                return cachedUserIp;
             }
-            try {
-                const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.ip) {
-                        cachedUserIp = data.ip;
-                        sessionStorage.setItem('user_client_ip', data.ip);
-                        return data.ip;
-                    }
+            const fetchWithTimeout = async (url, timeoutMs = 1200) => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                    const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+                    clearTimeout(timer);
+                    if (!res.ok) return null;
+                    return res;
+                } catch(e) {
+                    clearTimeout(timer);
+                    return null;
                 }
-            } catch (e) {
-                console.warn('Không thể lấy IP:', e);
+            };
+            const providers = [
+                async () => {
+                    const r = await fetchWithTimeout('https://api.ipify.org?format=json');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://api64.ipify.org?format=json');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://ipapi.co/json/');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://api.my-ip.io/v2/ip.json');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://icanhazip.com');
+                    if (!r) return null;
+                    const t = await r.text();
+                    return t.trim();
+                }
+            ];
+
+            for (const fetchIp of providers) {
+                try {
+                    const ip = await fetchIp();
+                    if (ip && typeof ip === 'string' && ip.trim().length >= 7) {
+                        const cleanIp = ip.trim();
+                        cachedUserIp = cleanIp;
+                        sessionStorage.setItem('user_client_ip', cleanIp);
+                        return cleanIp;
+                    }
+                } catch (e) {
+                    // Try next provider
+                }
             }
             return '';
         }
@@ -4947,6 +4993,10 @@
                     console.log('✅ Đã khởi tạo user trong Firestore:', user.email);
                 } else {
                     let needsUpdate = false;
+                    if (clientIp && (!data.lastIp || data.lastIp !== clientIp)) {
+                        updates.lastIp = clientIp;
+                        needsUpdate = true;
+                    }
                     if (!data.email && userEmail) {
                         updates.email = userEmail;
                         needsUpdate = true;
@@ -5151,6 +5201,20 @@
             return false;
         }
 
+        function startPresenceHeartbeat(user) {
+            if (!user || !user.uid) return;
+            const updatePresence = () => {
+                db.collection('users').doc(user.uid).set({
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(() => {});
+            };
+            updatePresence();
+            if (!window._presenceInterval) {
+                window._presenceInterval = setInterval(updatePresence, 60000);
+                window.addEventListener('focus', updatePresence);
+            }
+        }
+
         // ============================================================
         // AUTH STATE
         // ============================================================
@@ -5158,12 +5222,13 @@
             authReady = true;
 
             if (user) {
+                startPresenceHeartbeat(user);
+                ensureUserSavedInFirestore(user).catch(() => {});
                 const [, twoFactor, isBanned, profile] = await Promise.all([
                     loadAdminList(),
                     getUserTwoFactorData(user.uid),
                     checkBannedUser(user.email),
-                    resolveUserProfile(user),
-                    ensureUserSavedInFirestore(user)
+                    resolveUserProfile(user)
                 ]);
 
                 if (twoFactor?.enabled && twoFactor.secret && !isTwoFactorVerifiedForUser(user.uid)) {
@@ -5316,7 +5381,7 @@
                             `<img src="${uploadedFileUrl}" alt="Preview" loading="lazy">`;
                     } else {
                         previewContent.innerHTML =
-                            `<video controls><source src="${uploadedFileUrl}">Trình duyệt không hỗ trợ video</video>`;
+                            `<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture oncontextmenu="return false;"><source src="${uploadedFileUrl}">Trình duyệt không hỗ trợ video</video>`;
                     }
                     fileName.textContent = `📎 ${result.info.original_filename || 'File'}`;
 
@@ -5667,7 +5732,7 @@
                         `;
                     } else if (p.fileType === 'video') {
                         fileHtml =
-                            `<video controls class="post-video"><source src="${p.fileUrl}">Trình duyệt không hỗ trợ video</video>`;
+                            `<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture oncontextmenu="return false;" class="post-video"><source src="${p.fileUrl}">Trình duyệt không hỗ trợ video</video>`;
                     } else {
                         fileHtml =
                             `<a href="${p.fileUrl}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px;background:#f0f2f5;border-radius:8px;margin:10px 0;color:#1a73e8;">📎 Xem file đính kèm</a>`;
@@ -6111,7 +6176,7 @@
                     } else if (editingUserPostFileType === 'video') {
                         previewContainer.innerHTML = `
                             <div style="position:relative;display:inline-block;">
-                                <video controls style="max-height:150px;border-radius:8px;border:1px solid #e4e6eb;">
+                                <video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture oncontextmenu="return false;" style="max-height:150px;border-radius:8px;border:1px solid #e4e6eb;">
                                     <source src="${editingUserPostFileUrl}">
                                 </video>
                                 <span style="display:block;font-size:12px;color:#666;margin-top:4px;">🎬 Video hiện tại</span>
@@ -6213,7 +6278,7 @@
                     } else if (editUserUploadedFileType === 'video') {
                         previewContainer.innerHTML = `
                             <div style="position:relative;display:inline-block;">
-                                <video controls style="max-height:150px;border-radius:8px;border:1px solid #34a853;">
+                                <video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture oncontextmenu="return false;" style="max-height:150px;border-radius:8px;border:1px solid #34a853;">
                                     <source src="${editUserUploadedFileUrl}">
                                 </video>
                                 <span style="display:block;font-size:12px;color:#34a853;margin-top:4px;">✅ File mới đã tải lên</span>

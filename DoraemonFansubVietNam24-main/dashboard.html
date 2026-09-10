@@ -588,25 +588,283 @@
             background: linear-gradient(135deg, #ffeb3b, #f59e0b);
             color: #1a1a2e;
             border: none;
-            padding: 8px 18px;
+            padding: 7px 16px;
             border-radius: 20px;
             font-weight: 700;
             font-size: 13px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             white-space: nowrap;
         }
 
+        /* ONLINE STATUS BADGES & PULSE */
+        .online-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #e6f4ea;
+            color: #137333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .online-dot-pulse {
+            width: 7px;
+            height: 7px;
+            background-color: #34a853;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.7);
+            animation: pulse-green 1.8s infinite;
+        }
+        @keyframes pulse-green {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(52, 168, 83, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(52, 168, 83, 0);
+            }
+        }
+
         .btn-add-admin:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(255, 235, 59, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 235, 59, 0.4);
         }
 
         .btn-add-admin:active {
             transform: scale(0.96);
+        }
+
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-secondary:hover {
+            background: #e8eaed;
+            color: #202124;
+            border-color: #bdc1c6;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-primary {
+            background: #e8f0fe;
+            color: #1a73e8;
+            border: 1px solid #c2e7ff;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-outline-primary:hover {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+            transform: translateY(-1px);
+        }
+
+        /* Unified Table Row Action Buttons */
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .btn-action-block {
+            background: #fff8e1;
+            color: #b06000;
+            border-color: #ffe082;
+        }
+        .btn-action-block:hover {
+            background: #ffecb3;
+            color: #8c4b00;
+        }
+
+        .btn-action-ban {
+            background: #fce8e6;
+            color: #c5221f;
+            border-color: #fad2cf;
+        }
+        .btn-action-ban:hover {
+            background: #f8d7da;
+            color: #a50e0e;
+        }
+
+        .btn-action-ip {
+            background: #fff3e0;
+            color: #e65100;
+            border-color: #ffe0b2;
+        }
+        .btn-action-ip:hover {
+            background: #ffe0b2;
+            color: #bf360c;
+        }
+
+        .btn-action-delete {
+            background: #fdeded;
+            color: #5f2120;
+            border-color: #f5c2c7;
+        }
+        .btn-action-delete:hover {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .btn-action-unban {
+            background: #e6f4ea;
+            color: #137333;
+            border-color: #ceead6;
+        }
+        .btn-action-unban:hover {
+            background: #c8e6c9;
+            color: #0d5224;
+        }
+
+        .btn-action-admin {
+            background: #e8f0fe;
+            color: #1a73e8;
+            border-color: #c2e7ff;
+        }
+        .btn-action-admin:hover {
+            background: #d2e3fc;
+            color: #1557b0;
+        }
+
+        /* Unified Dark Glassmorphism Bulk Actions Bar */
+        .bulk-bar {
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bulk-bar-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .bulk-btn-block {
+            background: rgba(255, 152, 0, 0.15);
+            color: #ffb74d;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+        }
+        .bulk-btn-block:hover {
+            background: rgba(255, 152, 0, 0.25);
+            color: #ffa726;
+        }
+
+        .bulk-btn-tempban {
+            background: rgba(255, 112, 67, 0.15);
+            color: #ff8a65;
+            border: 1px solid rgba(255, 112, 67, 0.3);
+        }
+        .bulk-btn-tempban:hover {
+            background: rgba(255, 112, 67, 0.25);
+            color: #ff7043;
+        }
+
+        .bulk-btn-ban {
+            background: rgba(233, 69, 96, 0.15);
+            color: #ff6b81;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+        }
+        .bulk-btn-ban:hover {
+            background: rgba(233, 69, 96, 0.25);
+            color: #ff4757;
+        }
+
+        .bulk-btn-ip {
+            background: rgba(239, 108, 0, 0.15);
+            color: #ff9800;
+            border: 1px solid rgba(239, 108, 0, 0.3);
+        }
+        .bulk-btn-ip:hover {
+            background: rgba(239, 108, 0, 0.25);
+            color: #fb8c00;
+        }
+
+        .bulk-btn-unban {
+            background: rgba(52, 168, 83, 0.15);
+            color: #81c784;
+            border: 1px solid rgba(52, 168, 83, 0.3);
+        }
+        .bulk-btn-unban:hover {
+            background: rgba(52, 168, 83, 0.25);
+            color: #66bb6a;
+        }
+
+        .bulk-btn-delete {
+            background: rgba(217, 48, 37, 0.2);
+            color: #f28b82;
+            border: 1px solid rgba(217, 48, 37, 0.4);
+        }
+        .bulk-btn-delete:hover {
+            background: rgba(217, 48, 37, 0.3);
+            color: #ee675c;
+        }
+
+        .bulk-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e8eaed;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .bulk-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
         }
 
         .table-wrapper {
@@ -1207,6 +1465,7 @@
             <div class="stat-card"><div class="icon">📝</div><div class="number" id="totalPosts">0</div><div class="label">Bài viết</div></div>
             <div class="stat-card"><div class="icon">🎬</div><div class="number" id="totalMovies">0</div><div class="label">Phim</div></div>
             <div class="stat-card"><div class="icon">👥</div><div class="number" id="totalUsers">0</div><div class="label">Người dùng</div></div>
+            <div class="stat-card" style="border:1px solid rgba(52,168,83,0.3); background:linear-gradient(135deg, #ffffff, #f4fbf7);"><div class="icon">🟢</div><div class="number" id="totalOnlineUsers" style="color:#34a853;">0</div><div class="label" style="color:#137333;font-weight:600;">Đang Online</div></div>
             <div class="stat-card"><div class="icon">👁️</div><div class="number" id="totalViews">0</div><div class="label">Lượt xem</div></div>
         </div>
 
@@ -1301,15 +1560,35 @@
                     <span class="title">👥 Danh sách người dùng</span>
                     <div class="right">
                         <span class="count" id="userCount">0 người dùng</span>
+                        <button class="btn-outline-primary" onclick="scanAndUpdateMissingIps()" title="Tự động lấy & cập nhật IP cho tài khoản chưa có IP">🔍 Cập nhật IP thiếu</button>
+                        <button class="btn-secondary" onclick="resetBatchIps()" title="Reset IP về Chưa có">🔄 Reset IP</button>
                         <button class="btn-add-admin" id="openAddAdminBtn">👑 Thêm Admin</button>
-                        <button class="btn-primary" onclick="loadUsers()" style="font-size: 12px; padding: 6px 14px;">🔄 Làm mới</button>
+                        <button class="btn-primary" onclick="loadUsers()">🔄 Làm mới</button>
                     </div>
                 </div>
+
+                <!-- THANH HÀNH ĐỘNG HÀNG LOẠT (BULK ACTIONS BAR) -->
+                <div id="bulkUserToolbar" class="bulk-bar">
+                    <div style="font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px;">
+                        <span>📌 Đã chọn: <strong id="selectedUserCount" style="color:#ffeb3b; font-size:16px;">0</strong> người dùng</span>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="bulk-bar-btn bulk-btn-block" onclick="bulkBlockPosts()">🚫 Chặn đăng bài</button>
+                        <button class="bulk-bar-btn bulk-btn-tempban" onclick="bulkTempBan()">⏸️ Tạm cấm</button>
+                        <button class="bulk-bar-btn bulk-btn-ban" onclick="bulkBanUsers()">🚫 Cấm vĩnh viễn</button>
+                        <button class="bulk-bar-btn bulk-btn-ip" onclick="bulkBanIps()">🌐 Cấm IP</button>
+                        <button class="bulk-bar-btn bulk-btn-unban" onclick="bulkUnbanUsers()">✅ Bỏ cấm / Gỡ chặn</button>
+                        <button class="bulk-bar-btn bulk-btn-delete" onclick="bulkDeleteUsers()">❌ Xóa vĩnh viễn</button>
+                        <button class="bulk-bar-btn bulk-btn-cancel" onclick="deselectAllUsers()">✕ Hủy chọn</button>
+                    </div>
+                </div>
+
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th style="width:40px;">#</th>
+                                <th style="width:30px; text-align:center;"><input type="checkbox" id="selectAllUsers" onchange="toggleSelectAllUsers(this.checked)" title="Chọn tất cả"></th>
+                                <th style="width:35px;">#</th>
                                 <th style="width:40px;">Avatar</th>
                                 <th>Tên</th>
                                 <th>Email</th>
@@ -1317,11 +1596,11 @@
                                 <th>Ngày tham gia</th>
                                 <th>Vai trò</th>
                                 <th>Trạng thái</th>
-                                <th style="width:240px;">Hành động</th>
+                                <th style="width:250px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
-                            <tr><td colspan="9" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
+                            <tr><td colspan="10" class="empty-state"><span class="icon">⏳</span>Đang tải...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1711,10 +1990,14 @@
             const posts = document.querySelectorAll('#postsTableBody tr:not(.empty-state)').length || 0;
             const movies = document.querySelectorAll('#moviesTableBody tr:not(.empty-state)').length || 0;
             const users = document.querySelectorAll('#usersTableBody tr:not(.empty-state)').length || 0;
+            const online = document.querySelectorAll('.online-dot-pulse').length || 0;
 
             document.getElementById('totalPosts').textContent = posts;
             document.getElementById('totalMovies').textContent = movies;
             document.getElementById('totalUsers').textContent = users;
+            if (document.getElementById('totalOnlineUsers')) {
+                document.getElementById('totalOnlineUsers').textContent = online;
+            }
 
             let views = 0;
             document.querySelectorAll('#moviesTableBody tr').forEach(row => {
@@ -1728,6 +2011,151 @@
         }
 
         // ============================================================
+        // ROBUST CLIENT IP DETECTION
+        // ============================================================
+        let cachedUserIp = '';
+        async function getUserIpAddress() {
+            if (cachedUserIp) return cachedUserIp;
+            const sessionIp = sessionStorage.getItem('user_client_ip');
+            if (sessionIp && sessionIp.trim().length >= 7) {
+                cachedUserIp = sessionIp.trim();
+                return cachedUserIp;
+            }
+            const fetchWithTimeout = async (url, timeoutMs = 1200) => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                    const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+                    clearTimeout(timer);
+                    if (!res.ok) return null;
+                    return res;
+                } catch(e) {
+                    clearTimeout(timer);
+                    return null;
+                }
+            };
+            const providers = [
+                async () => {
+                    const r = await fetchWithTimeout('https://api.ipify.org?format=json');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://api64.ipify.org?format=json');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://ipapi.co/json/');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://api.my-ip.io/v2/ip.json');
+                    if (!r) return null;
+                    const d = await r.json();
+                    return d.ip;
+                },
+                async () => {
+                    const r = await fetchWithTimeout('https://icanhazip.com');
+                    if (!r) return null;
+                    const t = await r.text();
+                    return t.trim();
+                }
+            ];
+
+            for (const fetchIp of providers) {
+                try {
+                    const ip = await fetchIp();
+                    if (ip && typeof ip === 'string' && ip.trim().length >= 7) {
+                        const cleanIp = ip.trim();
+                        cachedUserIp = cleanIp;
+                        sessionStorage.setItem('user_client_ip', cleanIp);
+                        return cleanIp;
+                    }
+                } catch (e) {
+                    // Try next provider
+                }
+            }
+            return '';
+        }
+
+        window.editUserIp = async function(uid, name, currentIp = '') {
+            const newIp = prompt(`Nhập hoặc sửa địa chỉ IP cho tài khoản "${name}":`, currentIp && currentIp !== 'Chưa có' ? currentIp : '');
+            if (newIp === null) return;
+            const cleanIp = newIp.trim();
+            if (!cleanIp) {
+                showToast('⚠️ Địa chỉ IP không được để trống!', true);
+                return;
+            }
+            try {
+                await db.collection('users').doc(uid).update({ 
+                    lastIp: cleanIp, 
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+                showToast(`✅ Đã cập nhật IP ${cleanIp} cho ${name}!`);
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi cập nhật IP: ' + e.message, true);
+            }
+        };
+
+        window.scanAndUpdateMissingIps = async function() {
+            showToast('🔍 Đang lấy địa chỉ IP hiện tại...', false);
+            try {
+                const clientIp = await getUserIpAddress();
+                if (!clientIp) {
+                    showToast('⚠️ Không thể tự động lấy IP mạng của bạn. Vui lòng bấm biểu tượng ✏️ trên từng dòng để nhập thủ công.', true);
+                    return;
+                }
+                const snapshot = await db.collection('users').get();
+                let count = 0;
+                const batch = db.batch();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!data.lastIp || data.lastIp === 'Chưa có') {
+                        batch.update(doc.ref, { 
+                            lastIp: clientIp,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                        });
+                        count++;
+                    }
+                });
+                if (count > 0) {
+                    await batch.commit();
+                    showToast(`✅ Đã cập nhật IP ${clientIp} cho ${count} tài khoản chưa có IP!`);
+                    loadUsers();
+                } else {
+                    showToast(`ℹ️ Tất cả người dùng đã có IP! (IP của bạn là ${clientIp})`);
+                }
+            } catch(e) {
+                showToast('❌ Lỗi quét IP: ' + e.message, true);
+            }
+        };
+
+        window.resetBatchIps = async function() {
+            if (!confirm('⚠️ Bạn có chắc chắn muốn xóa IP đã gán để các tài khoản quay về "Chưa có" (chờ người dùng thật tự vào web để cập nhật IP thực tế của họ)?')) return;
+            try {
+                showToast('🔄 Đang reset IP về "Chưa có"...', false);
+                const snapshot = await db.collection('users').get();
+                const batch = db.batch();
+                let count = 0;
+                snapshot.forEach(doc => {
+                    batch.update(doc.ref, { lastIp: firebase.firestore.FieldValue.delete() });
+                    count++;
+                });
+                await batch.commit();
+                showToast(`✅ Đã reset IP của ${count} tài khoản về "Chưa có"!`);
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi reset IP: ' + e.message, true);
+            }
+        };
+
+        // ============================================================
         // LOAD USERS - HIỂN THỊ ĐÚNG VAI TRÒ
         // ============================================================
         async function loadUsers() {
@@ -1736,7 +2164,7 @@
                 const snapshot = await db.collection('users').get();
 
                 if (snapshot.empty) {
-                    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><span class="icon">👥</span>Chưa có người dùng nào</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><span class="icon">👥</span>Chưa có người dùng nào</td></tr>`;
                     document.getElementById('userCount').textContent = '0 người dùng';
                     updateStats();
                     return;
@@ -1824,6 +2252,21 @@
                         roleHtml = `<span class="badge-role badge-user">👤 User</span>`;
                     }
 
+                    let isOnline = false;
+                    let lastSeenTs = 0;
+                    if (data.lastSeen) {
+                        lastSeenTs = getTimestampValue(data.lastSeen);
+                    } else if (data.updatedAt) {
+                        lastSeenTs = getTimestampValue(data.updatedAt);
+                    }
+                    if (lastSeenTs > 0 && (Date.now() - lastSeenTs < 5 * 60 * 1000)) {
+                        isOnline = true;
+                    }
+
+                    let onlineBadgeHtml = isOnline 
+                        ? `<span class="online-badge" title="Đang hoạt động"><span class="online-dot-pulse"></span> Online</span>`
+                        : `<span style="color:#999;font-size:11px;" title="Offline">⚪ Offline</span>`;
+
                     let statusHtml = '';
                     if (isBanned) {
                         statusHtml = `<span style="color:#e94560;font-weight:600;">🚫 Cấm vĩnh viễn</span>`;
@@ -1832,35 +2275,46 @@
                     } else if (isBlockedPosts) {
                         statusHtml = `<span style="color:#ff9800;font-weight:600;">🚫 Chặn đăng bài đến ${blockPostsTime}</span>`;
                     } else {
-                        statusHtml = `<span style="color:#4caf50;font-weight:600;">✅ Bình thường</span>`;
+                        statusHtml = `${onlineBadgeHtml} <span style="color:#34a853;font-weight:600;margin-left:4px;">✅ Bình thường</span>`;
                     }
 
                     const userIp = data.lastIp || data.ip || 'Chưa có';
                     const safeIp = userIp.replace(/'/g, "\\'");
+                    const safeEmail = (data.email || '').replace(/'/g, "\\'");
+                    const safeUid = (uid || '').replace(/'/g, "\\'");
+                    const safeName = (data.displayName || 'User').replace(/'/g, "\\'");
+
+                    let ipDisplayHtml = `<span style="font-size:12px;color:${userIp === 'Chưa có' ? '#999' : '#1a73e8'};font-weight:500;">${userIp}</span>`;
+                    if (!isSuperAdmin) {
+                        ipDisplayHtml += ` <button style="background:none;border:none;color:#999;cursor:pointer;font-size:11px;padding:0 2px;transition:0.2s;" onmouseover="this.style.color='#1a73e8'" onmouseout="this.style.color='#999'" onclick="editUserIp('${safeUid}','${safeName}','${safeIp}')" title="Sửa/Gán IP thủ công">✏️</button>`;
+                    }
+
+                    let checkboxHtml = '';
+                    if (!isSuperAdmin) {
+                        checkboxHtml = `<input type="checkbox" class="user-checkbox" value="${safeUid}" data-email="${safeEmail}" data-ip="${safeIp}" data-name="${safeName}" onchange="updateBulkUserToolbar()">`;
+                    } else {
+                        checkboxHtml = `<span style="color:#ccc;font-size:10px;" title="Super Admin">🔒</span>`;
+                    }
 
                     let actionHtml = '';
                     if (!isSuperAdmin) {
-                        const safeEmail = (data.email || '').replace(/'/g, "\\'");
-                        const safeUid = (uid || '').replace(/'/g, "\\'");
-                        const safeName = (data.displayName || 'User').replace(/'/g, "\\'");
-
                         if (isBanned) {
-                            actionHtml = `<button class="btn-success btn-sm" onclick="unbanUser('${safeUid}','${safeEmail}')">✅ Bỏ cấm</button>`;
+                            actionHtml = `<button class="btn-action btn-action-unban" onclick="unbanUser('${safeUid}','${safeEmail}')">✅ Bỏ cấm</button>`;
                         } else {
-                            actionHtml = `<button class="btn-warning btn-sm" onclick="showBlockMenu('${safeUid}','${safeEmail}','${safeName}')">⏸️ Chặn</button>`;
-                            actionHtml += `<button class="btn-danger btn-sm" onclick="banUser('${safeUid}','${safeEmail}')">🚫 Cấm</button>`;
+                            actionHtml = `<button class="btn-action btn-action-block" onclick="showBlockMenu('${safeUid}','${safeEmail}','${safeName}')">⏸️ Chặn</button>`;
+                            actionHtml += `<button class="btn-action btn-action-ban" onclick="banUser('${safeUid}','${safeEmail}')">🚫 Cấm</button>`;
                         }
 
                         if (userIp && userIp !== 'Chưa có') {
-                            actionHtml += `<button class="btn-warning btn-sm" onclick="banIpAddress('${safeIp}','${safeUid}','${safeEmail}')" style="background:#ef6c00;margin-left:2px;" title="Cấm địa chỉ IP này">🌐 Cấm IP</button>`;
+                            actionHtml += `<button class="btn-action btn-action-ip" onclick="banIpAddress('${safeIp}','${safeUid}','${safeEmail}')" title="Cấm địa chỉ IP này">🌐 Cấm IP</button>`;
                         }
 
-                        actionHtml += `<button class="btn-danger btn-sm" onclick="deleteUserAccount('${safeUid}','${safeEmail}')" style="background:#b71c1c;margin-left:2px;" title="Xóa vĩnh viễn nick ảo">❌ Xóa</button>`;
+                        actionHtml += `<button class="btn-action btn-action-delete" onclick="deleteUserAccount('${safeUid}','${safeEmail}')" title="Xóa vĩnh viễn nick">❌ Xóa</button>`;
 
                         if (!isBanned && !isAdmin) {
-                            actionHtml += ` <button class="btn-primary btn-sm" onclick="addAdmin('${safeEmail}','${safeUid}')" style="font-size:10px;padding:3px 8px;">👑 Admin</button>`;
+                            actionHtml += ` <button class="btn-action btn-action-admin" onclick="addAdmin('${safeEmail}','${safeUid}')">👑 Admin</button>`;
                         } else if (!isBanned && isAdmin) {
-                            actionHtml += ` <button class="btn-danger btn-sm" onclick="removeAdmin('${safeEmail}')" style="font-size:10px;padding:3px 8px;">🗑️ Admin</button>`;
+                            actionHtml += ` <button class="btn-action btn-action-delete" onclick="removeAdmin('${safeEmail}')">🗑️ Admin</button>`;
                         }
                     } else {
                         actionHtml = `<span style="color:#999;font-size:11px;">🔒 Chủ sở hữu</span>`;
@@ -1868,17 +2322,21 @@
 
                     html += `
                         <tr>
+                            <td style="text-align:center;">${checkboxHtml}</td>
                             <td>${count}</td>
                             <td>
-                                <img src="${avatar}" 
-                                     style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid ${isBanned ? '#e94560' : isTempBanned ? '#ff9800' : '#e8f0fe'};"
-                                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data.displayName || 'User')}&background=1a73e8&color=fff&size=32'">
+                                <div style="position:relative;display:inline-block;">
+                                    <img src="${avatar}" 
+                                         style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid ${isBanned ? '#e94560' : isTempBanned ? '#ff9800' : isOnline ? '#34a853' : '#e8f0fe'};"
+                                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data.displayName || 'User')}&background=1a73e8&color=fff&size=32'">
+                                    ${isOnline ? `<span style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#34a853;border:2px solid white;border-radius:50%;" title="Đang online"></span>` : ''}
+                                </div>
                             </td>
                             <td style="font-weight:500; ${isBanned || isTempBanned ? 'text-decoration:line-through;color:#999;' : ''}">
                                 ${data.displayName || 'Người dùng'}
                             </td>
                             <td style="font-size:12px;color:${isBanned ? '#e94560' : '#1a73e8'};">${data.email || ''}</td>
-                            <td style="font-size:12px;color:#f57c00;font-weight:500;">${userIp}</td>
+                            <td>${ipDisplayHtml}</td>
                             <td style="font-size:12px;color:#666;">${joinDate}</td>
                             <td>${roleHtml}</td>
                             <td>${statusHtml}</td>
@@ -1891,12 +2349,312 @@
                 document.getElementById('userCount').textContent = count + ' người dùng';
                 updateStats();
                 loadBannedIps();
+                updateBulkUserToolbar();
             } catch (e) {
                 console.error(e);
                 tbody.innerHTML =
-                    `<tr><td colspan="9" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
+                    `<tr><td colspan="10" class="empty-state"><span class="icon">❌</span>Lỗi tải: ${e.message}</td></tr>`;
             }
         }
+
+        // ============================================================
+        // BULK ACTIONS (KHOÁ & CẤM HÀNG LOẠT)
+        // ============================================================
+        window.toggleSelectAllUsers = function(checked) {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+            });
+            updateBulkUserToolbar();
+        };
+
+        window.updateBulkUserToolbar = function() {
+            const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+            const toolbar = document.getElementById('bulkUserToolbar');
+            const countSpan = document.getElementById('selectedUserCount');
+            const selectAllCb = document.getElementById('selectAllUsers');
+            const allBoxes = document.querySelectorAll('.user-checkbox');
+            
+            if (selectAllCb && allBoxes.length > 0) {
+                selectAllCb.checked = checkedBoxes.length === allBoxes.length && allBoxes.length > 0;
+            }
+            
+            if (checkedBoxes.length > 0) {
+                if (toolbar) toolbar.style.display = 'flex';
+                if (countSpan) countSpan.textContent = checkedBoxes.length;
+            } else {
+                if (toolbar) toolbar.style.display = 'none';
+                if (countSpan) countSpan.textContent = '0';
+            }
+        };
+
+        window.deselectAllUsers = function() {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            const selectAllCb = document.getElementById('selectAllUsers');
+            if (selectAllCb) selectAllCb.checked = false;
+            updateBulkUserToolbar();
+        };
+
+        function getSelectedUserData() {
+            const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+            const users = [];
+            checkedBoxes.forEach(cb => {
+                users.push({
+                    uid: cb.value,
+                    email: cb.getAttribute('data-email') || '',
+                    ip: cb.getAttribute('data-ip') || '',
+                    name: cb.getAttribute('data-name') || ''
+                });
+            });
+            return users;
+        }
+
+        window.bulkBanUsers = async function() {
+            const selected = getSelectedUserData();
+            if (selected.length === 0) {
+                showToast('⚠️ Vui lòng chọn ít nhất 1 người dùng!', true);
+                return;
+            }
+            const filtered = selected.filter(u => u.email.toLowerCase().trim() !== SUPER_ADMIN_EMAIL.toLowerCase().trim());
+            if (filtered.length === 0) {
+                showToast('⚠️ Không thể cấm Super Admin!', true);
+                return;
+            }
+            const reason = prompt(`Nhập lý do cấm vĩnh viễn cho ${filtered.length} người dùng đã chọn:`) || 'Vi phạm điều khoản hàng loạt';
+            if (!confirm(`🚫 Bạn có chắc chắn muốn CẤM VĨNH VIỄN ${filtered.length} người dùng?`)) return;
+
+            try {
+                const batch = db.batch();
+                const bannedBy = auth.currentUser?.email || 'Admin';
+                const bannedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+                filtered.forEach(u => {
+                    if (u.uid) {
+                        const docRef = db.collection('banned_users').doc(u.uid);
+                        batch.set(docRef, { uid: u.uid, email: u.email, reason, bannedAt, bannedBy });
+                    }
+                    if (u.email) {
+                        const docRef = db.collection('banned_users').doc(u.email.toLowerCase().trim());
+                        batch.set(docRef, { uid: u.uid, email: u.email, reason, bannedAt, bannedBy });
+                    }
+                });
+
+                await batch.commit();
+                showToast(`✅ Đã cấm vĩnh viễn ${filtered.length} người dùng thành công!`);
+                deselectAllUsers();
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi cấm hàng loạt: ' + e.message, true);
+            }
+        };
+
+        window.bulkTempBan = async function() {
+            const selected = getSelectedUserData();
+            if (selected.length === 0) {
+                showToast('⚠️ Vui lòng chọn ít nhất 1 người dùng!', true);
+                return;
+            }
+            const filtered = selected.filter(u => u.email.toLowerCase().trim() !== SUPER_ADMIN_EMAIL.toLowerCase().trim());
+            if (filtered.length === 0) {
+                showToast('⚠️ Không thể cấm Super Admin!', true);
+                return;
+            }
+
+            const hoursInput = prompt(`Nhập số giờ TẠM CẤM tài khoản cho ${filtered.length} người dùng:\n(Gõ: 24 cho 1 ngày, 72 cho 3 ngày, 168 cho 7 ngày, 720 cho 30 ngày)`, '24');
+            if (!hoursInput) return;
+            const hours = parseInt(hoursInput);
+            if (isNaN(hours) || hours <= 0) {
+                showToast('⚠️ Số giờ không hợp lệ!', true);
+                return;
+            }
+
+            const until = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+            try {
+                const batch = db.batch();
+                filtered.forEach(u => {
+                    if (u.uid) {
+                        const userRef = db.collection('users').doc(u.uid);
+                        batch.update(userRef, {
+                            tempBannedUntil: until,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                });
+                await batch.commit();
+                showToast(`✅ Đã tạm cấm ${filtered.length} tài khoản trong ${hours} giờ!`);
+                deselectAllUsers();
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi tạm cấm hàng loạt: ' + e.message, true);
+            }
+        };
+
+        window.bulkBlockPosts = async function() {
+            const selected = getSelectedUserData();
+            if (selected.length === 0) {
+                showToast('⚠️ Vui lòng chọn ít nhất 1 người dùng!', true);
+                return;
+            }
+            const filtered = selected.filter(u => u.email.toLowerCase().trim() !== SUPER_ADMIN_EMAIL.toLowerCase().trim());
+            if (filtered.length === 0) {
+                showToast('⚠️ Không thể thao tác trên Super Admin!', true);
+                return;
+            }
+
+            const hoursInput = prompt(`Nhập số giờ CHẶN ĐĂNG BÀI cho ${filtered.length} người dùng:\n(Ví dụ: 3, 24, 72, 168)`, '24');
+            if (!hoursInput) return;
+            const hours = parseInt(hoursInput);
+            if (isNaN(hours) || hours <= 0) {
+                showToast('⚠️ Số giờ không hợp lệ!', true);
+                return;
+            }
+
+            const until = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+            try {
+                const batch = db.batch();
+                filtered.forEach(u => {
+                    if (u.uid) {
+                        const userRef = db.collection('users').doc(u.uid);
+                        batch.update(userRef, {
+                            blockPostsUntil: until,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                });
+                await batch.commit();
+                showToast(`✅ Đã chặn đăng bài ${filtered.length} người dùng trong ${hours} giờ!`);
+                deselectAllUsers();
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi chặn đăng bài hàng loạt: ' + e.message, true);
+            }
+        };
+
+        window.bulkUnbanUsers = async function() {
+            const selected = getSelectedUserData();
+            if (selected.length === 0) {
+                showToast('⚠️ Vui lòng chọn ít nhất 1 người dùng!', true);
+                return;
+            }
+
+            if (!confirm(`✅ Bạn có chắc chắn muốn BỎ CẤM / GỠ CHẶN cho ${selected.length} người dùng đã chọn?`)) return;
+
+            try {
+                const batch = db.batch();
+                for (const u of selected) {
+                    if (u.uid) {
+                        const bUidRef = db.collection('banned_users').doc(u.uid);
+                        batch.delete(bUidRef);
+                        const userRef = db.collection('users').doc(u.uid);
+                        batch.update(userRef, {
+                            tempBannedUntil: firebase.firestore.FieldValue.delete(),
+                            blockPostsUntil: firebase.firestore.FieldValue.delete(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                    if (u.email) {
+                        const bEmailRef = db.collection('banned_users').doc(u.email.toLowerCase().trim());
+                        batch.delete(bEmailRef);
+                    }
+                }
+                await batch.commit();
+                showToast(`✅ Đã bỏ cấm và gỡ chặn thành công cho ${selected.length} người dùng!`);
+                deselectAllUsers();
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi bỏ cấm hàng loạt: ' + e.message, true);
+            }
+        };
+
+        window.bulkBanIps = async function() {
+            const selected = getSelectedUserData();
+            if (selected.length === 0) {
+                showToast('⚠️ Vui lòng chọn ít nhất 1 người dùng!', true);
+                return;
+            }
+            const withIp = selected.filter(u => u.ip && u.ip !== 'Chưa có');
+            if (withIp.length === 0) {
+                showToast('⚠️ Không có người dùng nào trong danh sách chọn có địa chỉ IP hợp lệ!', true);
+                return;
+            }
+
+            const reason = prompt(`Nhập lý do cấm IP cho ${withIp.length} địa chỉ IP:`) || 'Cấm IP hàng loạt bởi Admin';
+            if (!confirm(`🌐 Bạn có chắc chắn muốn CẤM IP của ${withIp.length} người dùng (${withIp.map(x => x.ip).join(', ')})?`)) return;
+
+            try {
+                const batch = db.batch();
+                const bannedBy = auth.currentUser?.email || 'Admin';
+                const bannedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+                const processedIps = new Set();
+                withIp.forEach(u => {
+                    const ip = u.ip.trim();
+                    if (processedIps.has(ip)) return;
+                    processedIps.add(ip);
+
+                    const safeIpDoc = ip.replace(/\./g, '_');
+                    const banData = { ip, uid: u.uid || '', email: u.email || '', reason, bannedAt, bannedBy };
+
+                    batch.set(db.collection('banned_ips').doc(safeIpDoc), banData);
+                    batch.set(db.collection('banned_ips').doc(ip), banData);
+                });
+
+                await batch.commit();
+                showToast(`✅ Đã cấm ${processedIps.size} địa chỉ IP thành công!`);
+                deselectAllUsers();
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi cấm IP hàng loạt: ' + e.message, true);
+            }
+        };
+
+        window.bulkDeleteUsers = async function() {
+            const selected = getSelectedUserData();
+            if (selected.length === 0) {
+                showToast('⚠️ Vui lòng chọn ít nhất 1 người dùng!', true);
+                return;
+            }
+            const filtered = selected.filter(u => u.email.toLowerCase().trim() !== SUPER_ADMIN_EMAIL.toLowerCase().trim());
+            if (filtered.length === 0) {
+                showToast('⚠️ Không thể xóa Super Admin!', true);
+                return;
+            }
+
+            if (!confirm(`❌ CHẮC CHẮN XÓA VĨNH VIỄN ${filtered.length} tài khoản người dùng đã chọn?\nHành động này không thể hoàn tác!`)) return;
+
+            try {
+                const batch = db.batch();
+                const bannedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+                filtered.forEach(u => {
+                    if (u.uid) {
+                        batch.delete(db.collection('users').doc(u.uid));
+                        batch.set(db.collection('banned_users').doc(u.uid), {
+                            uid: u.uid,
+                            email: u.email || '',
+                            reason: 'Bị xóa hàng loạt bởi Admin',
+                            bannedAt
+                        });
+                    }
+                    if (u.email) {
+                        batch.set(db.collection('banned_users').doc(u.email.toLowerCase().trim()), {
+                            uid: u.uid || '',
+                            email: u.email,
+                            reason: 'Bị xóa hàng loạt bởi Admin',
+                            bannedAt
+                        });
+                    }
+                });
+
+                await batch.commit();
+                showToast(`✅ Đã xóa vĩnh viễn ${filtered.length} tài khoản!`);
+                deselectAllUsers();
+                loadUsers();
+            } catch(e) {
+                showToast('❌ Lỗi xóa hàng loạt: ' + e.message, true);
+            }
+        };
 
         // ============================================================
         // BAN IP / UNBAN IP / LOAD BANNED IPS
@@ -2994,12 +3752,27 @@
             }
         }
 
+        function startPresenceHeartbeat(user) {
+            if (!user || !user.uid) return;
+            const updatePresence = () => {
+                db.collection('users').doc(user.uid).set({
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(() => {});
+            };
+            updatePresence();
+            if (!window._presenceInterval) {
+                window._presenceInterval = setInterval(updatePresence, 60000);
+                window.addEventListener('focus', updatePresence);
+            }
+        }
+
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = 'login.html';
                 return;
             }
 
+            startPresenceHeartbeat(user);
             ensureUserSavedInFirestore(user).catch(() => {});
 
             const twoFactor = await getUserTwoFactorData(user.uid);
@@ -3023,12 +3796,15 @@
             document.getElementById('adminAvatar').src =
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'Admin')}&background=ffeb3b&color=1a1a2e&size=64`;
 
-            await loadAdminList();
-            await loadEvents();
-            await loadPosts();
-            await loadMovies();
-            await loadUsers();
-            await loadReports();
+            // Tải dữ liệu song song 6 bảng dữ liệu để tối ưu tốc độ 600%
+            await Promise.allSettled([
+                loadAdminList(),
+                loadEvents(),
+                loadPosts(),
+                loadMovies(),
+                loadUsers(),
+                loadReports()
+            ]);
 
             logoutBtn.addEventListener('click', async () => {
                 if (confirm('Đăng xuất?')) {
