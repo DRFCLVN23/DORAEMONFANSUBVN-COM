@@ -857,7 +857,7 @@
         }
 
         const EMAILJS_SERVICE_ID  = 'service_cen1khi';
-        const EMAILJS_TEMPLATE_ID = 'template_jlwvc3v';
+        const EMAILJS_TEMPLATE_ID = 'template_llwvc3v';
         const EMAILJS_PUBLIC_KEY  = 'LdUL49TrmaCvla-Wz';
 
         function initEmailJS() {
@@ -886,10 +886,13 @@
         async function sendOtpEmail(toEmail, toName, otpCode) {
             try {
                 await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    to_email: toEmail,
-                    to_name:  toName,
-                    otp_code: otpCode,
-                    passcode: otpCode,
+                    email:     toEmail,
+                    to_email:  toEmail,
+                    user_email: toEmail,
+                    to_name:   toName,
+                    name:      toName,
+                    otp_code:  otpCode,
+                    passcode:  otpCode,
                     site_name: 'Doraemon Fansub VN'
                 });
                 return true;
