@@ -3,7 +3,9 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /dashboard.html
 Disallow: /profile/
+Disallow: /profile.html
 Disallow: /login.html
 Disallow: /register.html
 Disallow: /forgot-password.html

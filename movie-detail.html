@@ -1159,36 +1159,8 @@
 
     <div class="toast" id="toast">✅ Đã sao chép link phim!</div>
 
+    <script src="firebase-config.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBt3G9n5JYu3EsvqJR9IoW2vRAc_Es3-ws",
-            authDomain: "doraemon-fansub-vietnam.firebaseapp.com",
-            projectId: "doraemon-fansub-vietnam",
-            storageBucket: "doraemon-fansub-vietnam.firebasestorage.app",
-            messagingSenderId: "380840935390",
-            appId: "1:380840935390:web:60fab4722a9fba5053a74f",
-            measurementId: "G-0S2Z4XRK0B"
-        };
-
-        let auth, db;
-        function initFirebaseApp() {
-            if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
-                firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
-                
-                // Offline Cache Persistence
-                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-                    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
-                        console.warn('Firestore persistence error:', err);
-                    }
-                });
-            }
-        }
-        initFirebaseApp();
-        if (typeof firebase === 'undefined') {
-            window.addEventListener('DOMContentLoaded', initFirebaseApp);
-        }
 
         const LOGO_URL = 'https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png';
 

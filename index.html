@@ -4385,155 +4385,8 @@
     <!-- ============================================================ -->
     <!-- JAVASCRIPT -->
     <!-- ============================================================ -->
+    <script src="firebase-config.js"></script>
     <script>
-        // ============================================================
-        // BAN IP & CLIENT IP DETECTION
-        // ============================================================
-        let cachedUserIp = '';
-        async function getUserIpAddress() {
-            if (cachedUserIp) return cachedUserIp;
-            const sessionIp = sessionStorage.getItem('user_client_ip');
-            if (sessionIp && sessionIp.trim().length >= 7) {
-                cachedUserIp = sessionIp.trim();
-                return cachedUserIp;
-            }
-            const fetchWithTimeout = async (url, timeoutMs = 1200) => {
-                const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), timeoutMs);
-                try {
-                    const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
-                    clearTimeout(timer);
-                    if (!res.ok) return null;
-                    return res;
-                } catch(e) {
-                    clearTimeout(timer);
-                    return null;
-                }
-            };
-            const providers = [
-                async () => {
-                    const r = await fetchWithTimeout('https://api.ipify.org?format=json');
-                    if (!r) return null;
-                    const d = await r.json();
-                    return d.ip;
-                },
-                async () => {
-                    const r = await fetchWithTimeout('https://api64.ipify.org?format=json');
-                    if (!r) return null;
-                    const d = await r.json();
-                    return d.ip;
-                },
-                async () => {
-                    const r = await fetchWithTimeout('https://ipapi.co/json/');
-                    if (!r) return null;
-                    const d = await r.json();
-                    return d.ip;
-                },
-                async () => {
-                    const r = await fetchWithTimeout('https://api.my-ip.io/v2/ip.json');
-                    if (!r) return null;
-                    const d = await r.json();
-                    return d.ip;
-                },
-                async () => {
-                    const r = await fetchWithTimeout('https://icanhazip.com');
-                    if (!r) return null;
-                    const t = await r.text();
-                    return t.trim();
-                }
-            ];
-
-            for (const fetchIp of providers) {
-                try {
-                    const ip = await fetchIp();
-                    if (ip && typeof ip === 'string' && ip.trim().length >= 7) {
-                        const cleanIp = ip.trim();
-                        cachedUserIp = cleanIp;
-                        sessionStorage.setItem('user_client_ip', cleanIp);
-                        return cleanIp;
-                    }
-                } catch (e) {
-                    // Try next provider
-                }
-            }
-            return '';
-        }
-
-        async function checkBannedIp() {
-            try {
-                const clientIp = await getUserIpAddress();
-                if (!clientIp) return false;
-                
-                const safeIpDoc = clientIp.replace(/\./g, '_');
-                const docRef = await db.collection('banned_ips').doc(safeIpDoc).get();
-                if (docRef.exists) {
-                    showIpBanScreen(clientIp);
-                    return true;
-                }
-                const docRaw = await db.collection('banned_ips').doc(clientIp).get();
-                if (docRaw.exists) {
-                    showIpBanScreen(clientIp);
-                    return true;
-                }
-                return false;
-            } catch (e) {
-                console.warn('Lỗi kiểm tra IP bị cấm:', e);
-                return false;
-            }
-        }
-
-        function showIpBanScreen(ip) {
-            document.body.innerHTML = `
-                <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0f172a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999999;font-family:sans-serif;text-align:center;padding:20px;">
-                    <div style="background:rgba(239,68,68,0.1);border:2px solid #ef4444;border-radius:16px;padding:40px;max-width:550px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                        <div style="font-size:64px;margin-bottom:16px;">🚫</div>
-                        <h1 style="color:#ef4444;font-size:24px;margin-bottom:12px;font-weight:700;">ĐỊA CHỈ IP CỦA BẠN ĐÃ BỊ CẤM</h1>
-                        <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:20px;">
-                            Địa chỉ IP <strong style="color:#f87171;background:rgba(239,68,68,0.2);padding:2px 8px;border-radius:4px;">${ip}</strong> đã bị quản trị viên cấm khỏi hệ thống do vi phạm điều khoản dịch vụ hoặc thực hiện hành vi bất thường.
-                        </p>
-                        <div style="font-size:13px;color:#94a3b8;border-top:1px solid rgba(255,255,255,0.1);padding-top:16px;">
-                            Nếu bạn cho rằng đây là sự nhầm lẫn, vui lòng liên hệ Admin qua email: <strong style="color:#38bdf8;">tuankhaimoi12345@gmail.com</strong>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // ============================================================
-        // FIREBASE CONFIG
-        // ============================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBt3G9n5JYu3EsvqJR9IoW2vRAc_Es3-ws",
-            authDomain: "doraemon-fansub-vietnam.firebaseapp.com",
-            projectId: "doraemon-fansub-vietnam",
-            storageBucket: "doraemon-fansub-vietnam.firebasestorage.app",
-            messagingSenderId: "380840935390",
-            appId: "1:380840935390:web:60fab4722a9fba5053a74f",
-            measurementId: "G-0S2Z4XRK0B"
-        };
-
-        let auth, db;
-        function initFirebaseApp() {
-            if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
-                firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
-                
-                // Offline Cache Persistence
-                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-                    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
-                        console.warn('Firestore persistence error:', err);
-                    }
-                });
-                checkBannedIp();
-            }
-        }
-        initFirebaseApp();
-        if (typeof firebase === 'undefined') {
-            window.addEventListener('DOMContentLoaded', initFirebaseApp);
-        }
-
-        const SUPER_ADMIN_EMAIL = 'tuankhaimoi12345@gmail.com';
         const LOGO_URL = 'https://i.ibb.co/9kJhtfp1/Doraemon-fansub.png';
 
         function getOptimizedAvatarUrl(url, size = 150) {
@@ -4568,15 +4421,6 @@
 
             return url;
         }
-
-        // ============================================================
-        // CLOUDINARY CONFIG
-        // ============================================================
-        const CLOUDINARY_CONFIG = {
-            cloudName: 'gntkeeno',
-            uploadPreset: 'doraemon_fansub_vn',
-            folder: 'posts'
-        };
 
         let uploadedFileUrl = '';
         let uploadedFileType = '';
@@ -7091,7 +6935,6 @@
         // INIT
         // ============================================================
         console.log('🎬 Doraemon Fansub đã sẵn sàng!');
-        console.log('👑 Super Admin:', SUPER_ADMIN_EMAIL);
         console.log('📌 Đã thêm tính năng Ghim bài viết (Admin)');
         console.log('🔍 Đã thêm bộ lọc: Tất cả | Đã ghim | Đã thích');
         console.log('📰 Giao diện 1 cột với sidebar bên phải');

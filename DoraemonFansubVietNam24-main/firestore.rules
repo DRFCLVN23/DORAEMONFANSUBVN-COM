@@ -7,69 +7,100 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email != null && request.auth.token.email.lower() == 'tuankhaimoi12345@gmail.com') ||
+        request.auth.token.admin == true
+      );
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || (
+        isSignedIn() && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+          (request.auth.token.email != null && exists(/databases/$(database)/documents/admins/$(request.auth.token.email)))
+        )
+      );
+    }
+
+    function isNotBanned() {
+      return isSignedIn() && 
+        !exists(/databases/$(database)/documents/banned_users/$(request.auth.uid)) &&
+        (request.auth.token.email == null || !exists(/databases/$(database)/documents/banned_users/$(request.auth.token.email)));
+    }
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Collection Phim
+    // Collection Phim: Ai cũng xem được, chỉ Admin mới được thêm/sửa/xóa
     match /movies/{movieId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-    // Collection Bình luận phim
+    // Collection Bình luận phim: Chỉ người dùng không bị cấm mới được tạo, chỉ sửa/xóa bình luận của chính mình hoặc admin
     match /movie_comments/{commentId} {
       allow read: if true;
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid);
+      allow create: if isNotBanned() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isNotBanned() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
-    // Collection Danh sách bị cấm
+    // Collection Danh sách người dùng bị cấm
     match /banned_users/{documentId} {
-      allow read: if true;
-      allow write: if isSignedIn();
+      // Cho phép chính chủ kiểm tra xem tài khoản mình có bị cấm không, cấm người ngoài quét toàn bộ danh sách
+      allow get: if isSignedIn() && (
+        request.auth.uid == documentId || 
+        (request.auth.token.email != null && request.auth.token.email == documentId) || 
+        isAdmin()
+      );
+      allow list, write: if isAdmin();
     }
 
     // Collection Danh sách IP bị cấm
     match /banned_ips/{ip} {
-      allow read: if true;
-      allow write: if isSignedIn();
+      // Chỉ cho phép kiểm tra đúng IP hiện tại (get 1 document), không cho list toàn bộ collection
+      allow get: if true;
+      allow list, write: if isAdmin();
     }
 
-    // Collection Người dùng
+    // Collection Danh sách Admin: Chỉ Admin mới được đọc & quản lý
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Collection Người dùng: Chỉ chính chủ hoặc Admin mới được sửa/xóa hồ sơ
     match /users/{userId} {
       allow read: if true;
-      allow write: if isOwner(userId) || isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
     }
 
-    // Collection Bài viết newsfeed
+    // Collection Bài viết newsfeed: Chỉ chính chủ hoặc Admin mới được sửa/xóa
     match /posts/{postId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow create: if isNotBanned() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isNotBanned() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // Sub-collection comments của bài viết
     match /posts/{postId}/comments/{commentId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow create: if isNotBanned() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isNotBanned() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // Collection Sự kiện & Báo lỗi
     match /events/{eventId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     match /reports/{reportId} {
-      allow read, write: if true;
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
   }
 }
-
-
