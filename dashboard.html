@@ -1889,35 +1889,42 @@
 
         async function checkAdminRole(uid, userEmail = null) {
             try {
+                const current = auth.currentUser;
+                const emailToCheck = userEmail || current?.email;
+                if (!uid && current) uid = current.uid;
+
+                // 1. Kiểm tra Super Admin
+                if (emailToCheck && emailToCheck.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim()) {
+                    return true;
+                }
+
+                // 2. Kiểm tra trực tiếp document của chính mình (allow get: if uid == adminId || email == adminId)
+                if (uid) {
+                    const myDoc = await db.collection('admins').doc(uid).get().catch(() => null);
+                    if (myDoc && myDoc.exists) return true;
+                }
+                if (emailToCheck) {
+                    const normEmail = emailToCheck.toLowerCase().trim();
+                    const myEmailDoc = await db.collection('admins').doc(normEmail).get().catch(() => null);
+                    if (myEmailDoc && myEmailDoc.exists) return true;
+                }
+
+                // 3. Fallback query (hỗ trợ các document admin tạo bằng add() trước đây)
                 if (uid) {
                     const adminSnapshot = await db.collection('admins')
                         .where('uid', '==', uid)
-                        .get();
-                    if (!adminSnapshot.empty) return true;
+                        .get().catch(() => null);
+                    if (adminSnapshot && !adminSnapshot.empty) return true;
                 }
-                
-                const current = auth.currentUser;
-                const emailToCheck = userEmail || current?.email;
+
                 if (emailToCheck) {
                     const normEmail = emailToCheck.toLowerCase().trim();
-                    if (normEmail === SUPER_ADMIN_EMAIL.toLowerCase().trim()) return true;
-
                     const adminByEmail = await db.collection('admins')
                         .where('email', '==', normEmail)
-                        .get();
-                    if (!adminByEmail.empty) return true;
-
-                    const allAdmins = await db.collection('admins').get();
-                    let isAdminMatch = false;
-                    allAdmins.forEach(doc => {
-                        const d = doc.data();
-                        if (d.email && d.email.toLowerCase().trim() === normEmail) {
-                            isAdminMatch = true;
-                        }
-                    });
-                    if (isAdminMatch) return true;
+                        .get().catch(() => null);
+                    if (adminByEmail && !adminByEmail.empty) return true;
                 }
-                
+
                 return false;
             } catch (e) {
                 console.error('Lỗi kiểm tra admin:', e);
@@ -2803,17 +2810,22 @@
                 return;
             }
             try {
-                const existing = await db.collection('admins').where('email', '==', email).get();
-                if (!existing.empty) {
+                const normEmail = email.toLowerCase().trim();
+                const existing = await db.collection('admins').where('email', '==', normEmail).get().catch(() => null);
+                if (existing && !existing.empty) {
                     showToast('⚠️ Đã là admin!', true);
                     return;
                 }
-                await db.collection('admins').add({
-                    email,
-                    uid,
+                const adminData = {
+                    email: normEmail,
+                    uid: uid || '',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     addedBy: auth.currentUser?.email || 'Admin'
-                });
+                };
+                if (uid) {
+                    await db.collection('admins').doc(uid).set(adminData, { merge: true });
+                }
+                await db.collection('admins').doc(normEmail).set(adminData, { merge: true });
                 showToast(`✅ Đã thêm ${email} làm admin!`);
                 await loadAdminList();
                 loadUsers();
@@ -2829,8 +2841,16 @@
             }
             if (!confirm(`Xóa quyền admin của ${email}?`)) return;
             try {
-                const snapshot = await db.collection('admins').where('email', '==', email).get();
-                snapshot.forEach(doc => doc.ref.delete());
+                const normEmail = email.toLowerCase().trim();
+                await db.collection('admins').doc(normEmail).delete().catch(() => {});
+                const snapshot = await db.collection('admins').where('email', '==', normEmail).get().catch(() => null);
+                if (snapshot) {
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        if (d.uid) db.collection('admins').doc(d.uid).delete().catch(() => {});
+                        doc.ref.delete();
+                    });
+                }
                 showToast(`✅ Đã xóa admin ${email}!`);
                 await loadAdminList();
                 loadUsers();
@@ -3093,14 +3113,19 @@
                     }
                 }
 
-                await db.collection('admins').add({
+                const normEmail = searchEmail.toLowerCase().trim();
+                const adminData = {
                     uid: uid,
-                    email: searchEmail,
+                    email: normEmail,
                     displayName: userName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     addedBy: user.email,
                     addedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                if (uid) {
+                    await db.collection('admins').doc(uid).set(adminData, { merge: true });
+                }
+                await db.collection('admins').doc(normEmail).set(adminData, { merge: true });
 
                 showToast(`✅ Đã thêm ${searchEmail} làm Admin thành công!`);
                 document.getElementById('addAdminModal').classList.remove('active');

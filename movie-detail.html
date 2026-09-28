@@ -1243,8 +1243,15 @@
         async function checkBannedUser(email) {
             if (!email) return false;
             try {
-                const doc = await db.collection('banned_users').doc(email).get();
-                return doc.exists;
+                const normEmail = email.toLowerCase().trim();
+                const doc = await db.collection('banned_users').doc(normEmail).get().catch(() => null);
+                if (doc && doc.exists) return true;
+                const user = auth.currentUser;
+                if (user && user.uid) {
+                    const docUid = await db.collection('banned_users').doc(user.uid).get().catch(() => null);
+                    if (docUid && docUid.exists) return true;
+                }
+                return false;
             } catch (e) {
                 console.error('Lỗi kiểm tra banned:', e);
                 return false;

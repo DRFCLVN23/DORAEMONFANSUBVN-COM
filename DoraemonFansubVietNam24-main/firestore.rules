@@ -2,14 +2,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
     function isSignedIn() {
       return request.auth != null;
     }
 
+    function userEmail() {
+      return request.auth != null && request.auth.token.email != null
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
     function isSuperAdmin() {
       return isSignedIn() && (
-        (request.auth.token.email != null && request.auth.token.email.lower() == 'tuankhaimoi12345@gmail.com') ||
+        (request.auth.token.email != null &&
+         request.auth.token.email.lower() == 'tuankhaimoi12345@gmail.com') ||
         request.auth.token.admin == true
       );
     }
@@ -18,89 +27,159 @@ service cloud.firestore {
       return isSuperAdmin() || (
         isSignedIn() && (
           exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-          (request.auth.token.email != null && exists(/databases/$(database)/documents/admins/$(request.auth.token.email)))
+          (request.auth.token.email != null &&
+           exists(/databases/$(database)/documents/admins/$(userEmail())))
         )
       );
     }
 
     function isNotBanned() {
-      return isSignedIn() && 
+      return isSignedIn() &&
         !exists(/databases/$(database)/documents/banned_users/$(request.auth.uid)) &&
-        (request.auth.token.email == null || !exists(/databases/$(database)/documents/banned_users/$(request.auth.token.email)));
+        (request.auth.token.email == null ||
+         !exists(/databases/$(database)/documents/banned_users/$(userEmail())));
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
     }
 
-    // Collection Phim: Ai cũng xem được, chỉ Admin mới được thêm/sửa/xóa
+    // ============================================================
+    // 1. PHIM: Công khai xem, Admin toàn quyền, người dùng/khách tăng views
+    // ============================================================
     match /movies/{movieId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || changedKeys().hasOnly(['views']);
     }
 
-    // Collection Bình luận phim: Chỉ người dùng không bị cấm mới được tạo, chỉ sửa/xóa bình luận của chính mình hoặc admin
+    // ============================================================
+    // 2. BÌNH LUẬN PHIM: Xem công khai, bình luận/trả lời/cảm xúc
+    // ============================================================
     match /movie_comments/{commentId} {
       allow read: if true;
       allow create: if isNotBanned() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isNotBanned() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isNotBanned() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin() ||
+        changedKeys().hasOnly(['replies']) ||
+        changedKeys().hasOnly(['emotions'])
+      );
+      allow delete: if isNotBanned() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
     }
 
-    // Collection Danh sách người dùng bị cấm
+    // ============================================================
+    // 3. DANH SÁCH BỊ CẤM: Khách/user xem trạng thái của mình, Admin quản trị
+    // ============================================================
     match /banned_users/{documentId} {
-      // Cho phép chính chủ kiểm tra xem tài khoản mình có bị cấm không, cấm người ngoài quét toàn bộ danh sách
       allow get: if isSignedIn() && (
-        request.auth.uid == documentId || 
-        (request.auth.token.email != null && request.auth.token.email == documentId) || 
+        request.auth.uid == documentId ||
+        userEmail() == documentId.lower() ||
         isAdmin()
       );
       allow list, write: if isAdmin();
     }
 
-    // Collection Danh sách IP bị cấm
+    // ============================================================
+    // 4. DANH SÁCH IP BỊ CẤM: Khách đọc IP của mình, Admin quản trị
+    // ============================================================
     match /banned_ips/{ip} {
-      // Chỉ cho phép kiểm tra đúng IP hiện tại (get 1 document), không cho list toàn bộ collection
       allow get: if true;
       allow list, write: if isAdmin();
     }
 
-    // Collection Danh sách Admin: Chỉ Admin mới được đọc & quản lý
+    // ============================================================
+    // 5. DANH SÁCH ADMIN: BẢO VỆ TUYỆT ĐỐI - User xem doc của mình, Admin quản trị
+    // ============================================================
     match /admins/{adminId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow get: if isSignedIn() && (
+        request.auth.uid == adminId ||
+        userEmail() == adminId.lower() ||
+        isAdmin()
+      );
+      allow list, write: if isAdmin();
     }
 
-    // Collection Người dùng: Chỉ chính chủ hoặc Admin mới được sửa/xóa hồ sơ
+    // ============================================================
+    // 6. THÔNG TIN NGƯỜI DÙNG: BẢO MẬT TUYỆT ĐỐI
+    // Chỉ chính chủ hoặc Admin mới được xem (get) thông tin cá nhân.
+    // Chỉ Admin mới được duyệt danh sách (list), chặn hoàn toàn cào data.
+    // ============================================================
     match /users/{userId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if (isSignedIn() && (
+        (request.auth.uid == userId && request.resource.data.email == request.auth.token.email) ||
+        isAdmin()
+      ));
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          request.auth.uid == userId &&
+          changedKeys().hasOnly([
+            'displayName', 'photoURL', 'lastSeen', 'lastIp',
+            'updatedAt', 'shortId', 'googleId', 'providerData',
+            'email', 'twoFactor', 'createdAt', 'bio'
+          ])
+        )
+      );
       allow delete: if isAdmin();
     }
 
-    // Collection Bài viết newsfeed: Chỉ chính chủ hoặc Admin mới được sửa/xóa
+    // ============================================================
+    // 7. BÀI VIẾT (POSTS): Người dùng đăng bài, thích, bình luận, sửa bài
+    // ============================================================
     match /posts/{postId} {
       allow read: if true;
-      allow create: if isNotBanned() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isNotBanned() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      allow create: if isNotBanned() && (
+        isAdmin() || (
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.pinned == false &&
+          request.resource.data.totalLikes == 0 &&
+          request.resource.data.likes == 0 &&
+          request.resource.data.liked == false
+        )
+      );
+
+      allow update: if isNotBanned() && (
+        isAdmin() ||
+        ((resource.data.userId == request.auth.uid ||
+          (request.auth.token.email != null && resource.data.userEmail == request.auth.token.email)) &&
+         changedKeys().hasOnly(['content', 'fileUrl', 'fileType', 'updatedAt'])) ||
+        changedKeys().hasOnly(['comments']) ||
+        changedKeys().hasOnly(['likedBy', 'totalLikes', 'likes', 'liked'])
+      );
+
+      allow delete: if isNotBanned() && (
+        resource.data.userId == request.auth.uid ||
+        (request.auth.token.email != null && resource.data.userEmail == request.auth.token.email) ||
+        isAdmin()
+      );
     }
 
-    // Sub-collection comments của bài viết
-    match /posts/{postId}/comments/{commentId} {
-      allow read: if true;
-      allow create: if isNotBanned() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isNotBanned() && (resource.data.userId == request.auth.uid || isAdmin());
-    }
-
-    // Collection Sự kiện & Báo lỗi
+    // ============================================================
+    // 8. SỰ KIỆN: Xem công khai, Admin quản lý, khách/user tăng views
+    // ============================================================
     match /events/{eventId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || changedKeys().hasOnly(['views']);
     }
 
+    // ============================================================
+    // 9. BÁO LỖI: Ai cũng có thể gửi báo lỗi, Admin xem và xử lý
+    // ============================================================
     match /reports/{reportId} {
       allow create: if true;
       allow read, update, delete: if isAdmin();
+    }
+
+    // ============================================================
+    // 10. Chặn tất cả các đường dẫn còn lại
+    // ============================================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

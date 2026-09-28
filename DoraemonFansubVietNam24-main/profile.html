@@ -1559,17 +1559,32 @@
         // ============================================================
         async function loadAdminList() {
             try {
-                const snapshot = await db.collection('admins').get();
-                adminEmails = new Set();
+                adminEmails = new Set([SUPER_ADMIN_EMAIL.toLowerCase().trim()]);
                 adminUids = new Set();
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
-                    if (data.uid) adminUids.add(data.uid);
-                });
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const isSuper = user.email && user.email.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
+                let userIsAdmin = isSuper;
+
+                if (!userIsAdmin) {
+                    const myDoc = await db.collection('admins').doc(user.uid).get().catch(() => null);
+                    if (myDoc && myDoc.exists) userIsAdmin = true;
+                }
+
+                if (userIsAdmin) {
+                    const snapshot = await db.collection('admins').get().catch(() => null);
+                    if (snapshot) {
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            if (data.email) adminEmails.add(data.email.toLowerCase().trim());
+                            if (data.uid) adminUids.add(data.uid);
+                        });
+                    }
+                }
                 adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
             } catch (e) {
-                console.error('Lỗi load admin list:', e);
+                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
             }
         }
 
@@ -1874,8 +1889,16 @@
                 displayUserData(data);
 
             } catch (e) {
-                console.error('Lỗi tải dữ liệu:', e);
-                showToast('❌ Lỗi tải dữ liệu: ' + e.message, true);
+                console.warn('Dữ liệu người dùng được bảo vệ bởi Firestore Rules:', e.message);
+                const urlParams = new URLSearchParams(window.location.search);
+                const fallbackEmail = urlParams.get('email') || '';
+                const fallbackName = fallbackEmail ? fallbackEmail.split('@')[0] : 'Người dùng';
+                displayUserData({
+                    displayName: fallbackName,
+                    email: '',
+                    bio: '⭐ Thành viên của Doraemon Fansub VN',
+                    photoURL: ''
+                });
             }
         }
 

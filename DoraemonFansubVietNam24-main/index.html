@@ -4750,17 +4750,32 @@
 
         async function loadAdminList() {
             try {
-                const snapshot = await db.collection('admins').get();
-                adminEmails = new Set();
+                adminEmails = new Set([SUPER_ADMIN_EMAIL.toLowerCase().trim()]);
                 adminUids = new Set();
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.email) adminEmails.add(data.email.toLowerCase().trim());
-                    if (data.uid) adminUids.add(data.uid);
-                });
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const isSuper = user.email && user.email.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
+                let userIsAdmin = isSuper;
+
+                if (!userIsAdmin) {
+                    const myDoc = await db.collection('admins').doc(user.uid).get().catch(() => null);
+                    if (myDoc && myDoc.exists) userIsAdmin = true;
+                }
+
+                if (userIsAdmin) {
+                    const snapshot = await db.collection('admins').get().catch(() => null);
+                    if (snapshot) {
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            if (data.email) adminEmails.add(data.email.toLowerCase().trim());
+                            if (data.uid) adminUids.add(data.uid);
+                        });
+                    }
+                }
                 adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
             } catch (e) {
-                console.error('Lỗi load admin list:', e);
+                adminEmails.add(SUPER_ADMIN_EMAIL.toLowerCase().trim());
             }
         }
 
@@ -4934,10 +4949,19 @@
         async function checkBannedUser(email) {
             if (!email) return false;
             try {
-                const doc = await db.collection('banned_users').doc(email).get();
-                if (doc.exists) {
-                    console.warn('⚠️ Tài khoản đã bị cấm:', email);
+                const normEmail = email.toLowerCase().trim();
+                const doc = await db.collection('banned_users').doc(normEmail).get().catch(() => null);
+                if (doc && doc.exists) {
+                    console.warn('⚠️ Tài khoản đã bị cấm:', normEmail);
                     return true;
+                }
+                const user = auth.currentUser;
+                if (user && user.uid) {
+                    const docUid = await db.collection('banned_users').doc(user.uid).get().catch(() => null);
+                    if (docUid && docUid.exists) {
+                        console.warn('⚠️ Tài khoản đã bị cấm (UID):', user.uid);
+                        return true;
+                    }
                 }
                 return false;
             } catch (e) {

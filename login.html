@@ -945,10 +945,19 @@
         async function checkBannedUser(email) {
             if (!email) return false;
             try {
-                const doc = await db.collection('banned_users').doc(email).get();
-                if (doc.exists) {
-                    console.warn('⚠️ Tài khoản đã bị cấm:', email);
+                const normEmail = email.toLowerCase().trim();
+                const doc = await db.collection('banned_users').doc(normEmail).get().catch(() => null);
+                if (doc && doc.exists) {
+                    console.warn('⚠️ Tài khoản đã bị cấm:', normEmail);
                     return true;
+                }
+                const user = auth.currentUser;
+                if (user && user.uid) {
+                    const docUid = await db.collection('banned_users').doc(user.uid).get().catch(() => null);
+                    if (docUid && docUid.exists) {
+                        console.warn('⚠️ Tài khoản đã bị cấm (UID):', user.uid);
+                        return true;
+                    }
                 }
                 return false;
             } catch (e) {
@@ -961,22 +970,12 @@
         // TẠO SHORT ID 7 CHỮ SỐ DUY NHẤT
         // ============================================================
         async function generateUniqueShortId() {
-            const max = 9999999;
-            const min = 1000000;
-            let attempts = 0;
-            while (attempts < 20) {
-                const id = Math.floor(Math.random() * (max - min + 1)) + min;
-                const idStr = id.toString();
-                // Kiểm tra xem id này đã được dùng chưa
-                const snap = await db.collection('users')
-                    .where('shortId', '==', idStr)
-                    .limit(1)
-                    .get();
-                if (snap.empty) return idStr;
-                attempts++;
+            try {
+                // Tạo ID 7 chữ số ngẫu nhiên an toàn, không cần quét database
+                return String(Math.floor(1000000 + Math.random() * 9000000));
+            } catch (e) {
+                return String(Date.now()).slice(-7);
             }
-            // Fallback: dùng timestamp để đảm bảo duy nhất
-            return String(Date.now()).slice(-7);
         }
 
         function getGoogleIdForUser(user) {
