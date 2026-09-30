@@ -1420,17 +1420,18 @@
         .post-card .pin-badge {
             position: absolute;
             top: 16px;
-            right: 16px;
+            right: 60px;
             background: linear-gradient(135deg, #1a73e8, #0f5ccf);
             color: white;
             font-size: 12px;
             font-weight: 700;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 999px;
             display: none;
             align-items: center;
             gap: 6px;
             box-shadow: 0 8px 22px rgba(26, 115, 232, 0.2);
+            z-index: 2;
         }
 
         .post-card.pinned .pin-badge {
@@ -1442,6 +1443,7 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 10px;
+            position: relative;
         }
 
         .post-header .avatar-link {
@@ -1517,20 +1519,113 @@
             color: #65676b;
         }
 
+        .post-header .post-more-wrapper {
+            position: relative;
+            margin-left: auto;
+            z-index: 10;
+        }
+
         .post-header .more-btn {
             background: none;
             border: none;
             font-size: 20px;
             color: #65676b;
             cursor: pointer;
-            padding: 4px 8px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            transition: 0.3s;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
         }
 
         .post-header .more-btn:hover {
-            background: rgba(26, 115, 232, 0.08);
+            background: rgba(26, 115, 232, 0.1);
+            color: #1a73e8;
+            transform: scale(1.08);
+        }
+
+        .post-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            min-width: 210px;
+            padding: 6px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            animation: postMenuFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes postMenuFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .post-menu-dropdown.active {
+            display: flex;
+        }
+
+        .post-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+
+        .post-menu-item:hover {
+            background: #f1f5f9;
+            color: #1a73e8;
+        }
+
+        .post-menu-item .menu-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .post-menu-item.pin-item {
             color: #0f4f9c;
+            font-weight: 600;
+        }
+
+        .post-menu-item.pin-item:hover {
+            background: rgba(26, 115, 232, 0.1);
+            color: #1a73e8;
+        }
+
+        .post-menu-item.danger {
+            color: #dc2626;
+        }
+
+        .post-menu-item.danger:hover {
+            background: #fee2e2;
+            color: #b91c1c;
         }
 
         /* ===== POST CONTENT - THU GỌN ===== */
@@ -4794,7 +4889,10 @@
                 emailToCheck = userOrEmail;
             }
 
-            if (emailToCheck && adminEmails.has(emailToCheck.toLowerCase().trim())) {
+            if (emailToCheck && (
+                emailToCheck.toLowerCase().trim() === (window.SUPER_ADMIN_EMAIL || '').toLowerCase().trim() ||
+                adminEmails.has(emailToCheck.toLowerCase().trim())
+            )) {
                 return true;
             }
             if (uidToCheck && adminUids.has(uidToCheck)) {
@@ -5139,7 +5237,11 @@
                     renderMoviesByCategory(currentCategory);
                 }
 
-                if (!tabCache.newsfeed.loaded) loadPosts().then(() => { tabCache.newsfeed.loaded = true; });
+                if (!tabCache.newsfeed.loaded) {
+                    loadPosts().then(() => { tabCache.newsfeed.loaded = true; });
+                } else if (allPostsData && allPostsData.length > 0) {
+                    applyFilter(currentFilter);
+                }
                 if (!tabCache.movies.loaded) loadMovies().then(() => { tabCache.movies.loaded = true; });
                 if (!tabCache.events.loaded) loadEvents().then(() => { tabCache.events.loaded = true; });
             } else {
@@ -5163,7 +5265,11 @@
                     renderMoviesByCategory(currentCategory);
                 }
 
-                if (!tabCache.newsfeed.loaded) loadPosts().then(() => { tabCache.newsfeed.loaded = true; });
+                if (!tabCache.newsfeed.loaded) {
+                    loadPosts().then(() => { tabCache.newsfeed.loaded = true; });
+                } else if (allPostsData && allPostsData.length > 0) {
+                    applyFilter(currentFilter);
+                }
                 if (!tabCache.movies.loaded) loadMovies().then(() => { tabCache.movies.loaded = true; });
                 if (!tabCache.events.loaded) loadEvents().then(() => { tabCache.events.loaded = true; });
             }
@@ -5640,7 +5746,35 @@
                                     </div>
                                     <div class="time" data-timestamp="${getTimestampValue(p.createdAt || p.timestamp)}">${p.time || 'Vừa xong'}</div>
                                 </div>
-                                <button class="more-btn" onclick="showPostOptions('${p.id}')">⋯</button>
+                                <div class="post-more-wrapper">
+                                    <button class="more-btn" onclick="togglePostMenu(event, '${p.id}')" aria-label="Tùy chọn bài viết" title="Tùy chọn">⋯</button>
+                                    <div class="post-menu-dropdown" id="post-menu-${p.id}">
+                                        ${isAdmin ? `
+                                            <button type="button" class="post-menu-item pin-item" onclick="handleMenuPin('${p.id}')">
+                                                <span class="menu-icon">${isPinned ? '📍' : '📌'}</span>
+                                                <span>${isPinned ? 'Bỏ ghim bài viết' : 'Ghim bài viết lên đầu'}</span>
+                                            </button>
+                                        ` : ''}
+                                        ${canEdit ? `
+                                            <button type="button" class="post-menu-item" onclick="handleMenuEdit('${p.id}')">
+                                                <span class="menu-icon">✏️</span>
+                                                <span>Chỉnh sửa bài viết</span>
+                                            </button>
+                                            <button type="button" class="post-menu-item danger" onclick="handleMenuDelete('${p.id}')">
+                                                <span class="menu-icon">🗑️</span>
+                                                <span>Xóa bài viết</span>
+                                            </button>
+                                        ` : ''}
+                                        <button type="button" class="post-menu-item" onclick="handleMenuCopyLink('${p.id}')">
+                                            <span class="menu-icon">📋</span>
+                                            <span>Sao chép liên kết</span>
+                                        </button>
+                                        <button type="button" class="post-menu-item" onclick="handleMenuReport('${p.id}')">
+                                            <span class="menu-icon">🚩</span>
+                                            <span>Báo cáo bài viết</span>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             ${contentHtml}
                             ${fileHtml}
@@ -5659,7 +5793,7 @@
                                 <button onclick="sharePost('${p.id}')">📤 Chia sẻ</button>
                                 ${canEdit ? `<button onclick="editUserPost('${p.id}')" class="edit-btn">✏️ Sửa</button>` : ''}
                                 ${canEdit ? `<button onclick="confirmDeletePost('${p.id}')" class="delete-post-btn">🗑️ Xóa</button>` : ''}
-                                ${isPostAdmin ? `<button onclick="togglePinPost('${p.id}')" class="pin-btn ${isPinned ? 'pinned' : ''}">${isPinned ? '📍 Đã ghim' : '📌 Ghim'}</button>` : ''}
+                                ${isAdmin ? `<button onclick="togglePinPost('${p.id}')" class="pin-btn ${isPinned ? 'pinned' : ''}">${isPinned ? '📍 Đã ghim' : '📌 Ghim'}</button>` : ''}
                             </div>
                             <div class="comments-section ${p.showComments ? 'open' : ''}" id="comments-${p.id}">
                                 <div class="comments-list" id="comments-list-${p.id}">
@@ -5748,8 +5882,10 @@
         // ============================================================
         // GHIM BÀI VIẾT
         // ============================================================
-        async function togglePinPost(postId) {
-            if (!isAdmin) {
+        window.togglePinPost = async function (postId) {
+            const currentUser = auth.currentUser;
+            const userIsAdmin = isAdmin || isUserAdmin(currentUser);
+            if (!userIsAdmin) {
                 showToast('⚠️ Chỉ Admin mới có quyền ghim bài!', true);
                 return;
             }
@@ -5757,7 +5893,10 @@
             try {
                 const docRef = db.collection('posts').doc(postId);
                 const doc = await docRef.get();
-                if (!doc.exists) return;
+                if (!doc.exists) {
+                    showToast('❌ Không tìm thấy bài viết!', true);
+                    return;
+                }
 
                 const data = doc.data();
                 const isPinned = data.pinned === true;
@@ -5767,7 +5906,7 @@
                     pinnedAt: !isPinned ? firebase.firestore.FieldValue.serverTimestamp() : null
                 });
 
-                showToast(isPinned ? '✅ Đã bỏ ghim bài viết!' : '📌 Đã ghim bài viết!');
+                showToast(isPinned ? '✅ Đã bỏ ghim bài viết!' : '📌 Đã ghim bài viết thành công!');
 
                 // Reload posts
                 tabCache.newsfeed.loaded = false;
@@ -5776,9 +5915,9 @@
 
             } catch (e) {
                 console.error('Lỗi ghim bài:', e);
-                showToast('❌ Lỗi: ' + e.message, true);
+                showToast('❌ Lỗi: ' + (e.message || 'Không thể thao tác ghim'), true);
             }
-        }
+        };
 
         // ============================================================
         // LIKE
@@ -5951,13 +6090,134 @@
         }
 
         // ============================================================
-        // POST OPTIONS
+        // POST OPTIONS & MENU DROPDOWN
         // ============================================================
-        async function showPostOptions(postId) {
-            // Nút ⋯ giờ không dùng nữa, xóa qua confirmDeletePost
+        window.togglePostMenu = function (event, postId) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            const menu = document.getElementById(`post-menu-${postId}`);
+            if (!menu) return;
+
+            const isAlreadyActive = menu.classList.contains('active');
+
+            // Đóng tất cả menu khác
+            document.querySelectorAll('.post-menu-dropdown.active').forEach(m => {
+                m.classList.remove('active');
+            });
+
+            if (!isAlreadyActive) {
+                // Tái tạo nội dung menu để đảm bảo đúng quyền thực tế ngay tức thì
+                const postData = (allPostsData || []).find(p => p.id === postId);
+                const isPinned = postData?.pinned === true;
+                const currentUser = auth.currentUser;
+                const currentUserEmail = currentUser?.email || '';
+                const isOwner = currentUserEmail && (postData?.userEmail === currentUserEmail);
+                const userIsAdmin = isAdmin || isUserAdmin(currentUser);
+                const canEditPost = isOwner || userIsAdmin;
+
+                let menuHtml = '';
+                if (userIsAdmin) {
+                    menuHtml += `
+                        <button type="button" class="post-menu-item pin-item" onclick="handleMenuPin('${postId}')">
+                            <span class="menu-icon">${isPinned ? '📍' : '📌'}</span>
+                            <span>${isPinned ? 'Bỏ ghim bài viết' : 'Ghim bài viết lên đầu'}</span>
+                        </button>
+                    `;
+                }
+                if (canEditPost) {
+                    menuHtml += `
+                        <button type="button" class="post-menu-item" onclick="handleMenuEdit('${postId}')">
+                            <span class="menu-icon">✏️</span>
+                            <span>Chỉnh sửa bài viết</span>
+                        </button>
+                        <button type="button" class="post-menu-item danger" onclick="handleMenuDelete('${postId}')">
+                            <span class="menu-icon">🗑️</span>
+                            <span>Xóa bài viết</span>
+                        </button>
+                    `;
+                }
+                menuHtml += `
+                    <button type="button" class="post-menu-item" onclick="handleMenuCopyLink('${postId}')">
+                        <span class="menu-icon">📋</span>
+                        <span>Sao chép liên kết</span>
+                    </button>
+                    <button type="button" class="post-menu-item" onclick="handleMenuReport('${postId}')">
+                        <span class="menu-icon">🚩</span>
+                        <span>Báo cáo bài viết</span>
+                    </button>
+                `;
+                menu.innerHTML = menuHtml;
+                menu.classList.add('active');
+            }
+        };
+
+        window.showPostOptions = function (postId, event) {
+            window.togglePostMenu(event || window.event, postId);
+        };
+
+        window.handleMenuPin = async function (postId) {
+            closeAllPostMenus();
+            await window.togglePinPost(postId);
+        };
+
+        window.handleMenuEdit = function (postId) {
+            closeAllPostMenus();
+            if (typeof window.editUserPost === 'function') {
+                window.editUserPost(postId);
+            }
+        };
+
+        window.handleMenuDelete = function (postId) {
+            closeAllPostMenus();
+            if (typeof window.confirmDeletePost === 'function') {
+                window.confirmDeletePost(postId);
+            }
+        };
+
+        window.handleMenuCopyLink = function (postId) {
+            closeAllPostMenus();
+            const url = `${window.location.origin}${window.location.pathname}#post-${postId}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url)
+                    .then(() => showToast('📋 Đã sao chép liên kết bài viết!'))
+                    .catch(() => showToast('📋 Liên kết: ' + url));
+            } else {
+                showToast('📋 Liên kết: ' + url);
+            }
+        };
+
+        window.handleMenuReport = function (postId) {
+            closeAllPostMenus();
+            if (typeof reportModal !== 'undefined' && reportModal) {
+                reportModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                if (reportTitle) reportTitle.value = `Báo cáo bài viết #${postId}`;
+                if (reportDesc) {
+                    reportDesc.value = `Nội dung bài viết ID: ${postId} có dấu hiệu vi phạm quy định.`;
+                    reportDesc.focus();
+                }
+                if (reportUrl) reportUrl.value = `${window.location.origin}${window.location.pathname}#post-${postId}`;
+            } else {
+                showToast('⚠️ Tính năng báo cáo tạm thời không khả dụng!', true);
+            }
+        };
+
+        function closeAllPostMenus() {
+            document.querySelectorAll('.post-menu-dropdown.active').forEach(m => {
+                m.classList.remove('active');
+            });
         }
 
-        async function confirmDeletePost(postId) {
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.post-more-wrapper')) {
+                closeAllPostMenus();
+            }
+        });
+
+        window.confirmDeletePost = async function (postId) {
             const user = auth.currentUser;
             if (!user) {
                 showToast('⚠️ Vui lòng đăng nhập!', true);
