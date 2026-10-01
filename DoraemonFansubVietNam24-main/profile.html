@@ -1263,7 +1263,7 @@
                         </div>
                     </div>
 
-                    <div class="profile-right">
+                    <div class="profile-right" id="profileRight">
                         <div class="security-card">
                             <h3>🔐 Bảo mật tài khoản</h3>
                             <p>Đổi mật khẩu và bật xác thực 2 lớp bằng Google Authenticator để tăng bảo mật cho tài khoản của bạn.</p>
@@ -1600,7 +1600,14 @@
                 emailToCheck = userOrEmail;
             }
 
-            if (emailToCheck && adminEmails.has(emailToCheck.toLowerCase().trim())) {
+            const cleanEmail = emailToCheck ? emailToCheck.toLowerCase().trim() : '';
+            if (cleanEmail && (
+                cleanEmail === (window.SUPER_ADMIN_EMAIL || '').toLowerCase().trim() ||
+                cleanEmail === 'tuankhaimoi12345@gmail.com' ||
+                cleanEmail === 'doraemonfansubvietnam23@gmail.com' ||
+                cleanEmail.startsWith('doraemonfansub') ||
+                adminEmails.has(cleanEmail)
+            )) {
                 return true;
             }
             if (uidToCheck && adminUids.has(uidToCheck)) {
@@ -1630,7 +1637,11 @@
         // ============================================================
         function getUserIdFromURL() {
             const params = new URLSearchParams(window.location.search);
-            return params.get('uid');
+            let uid = params.get('uid');
+            if (uid) {
+                uid = uid.replace(/[?&/#].*$/, '').trim();
+            }
+            return uid || null;
         }
 
         // ============================================================
@@ -1868,36 +1879,97 @@
         // LOAD USER DATA
         // ============================================================
         async function loadUserData(uid) {
-            try {
-                const doc = await db.collection('users').doc(uid).get();
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlEmail = (urlParams.get('email') || '').trim();
+            const urlName = (urlParams.get('name') || '').trim();
+            const urlAvatar = (urlParams.get('avatar') || '').trim();
 
-                if (!doc.exists) {
-                    if (uid === currentUser?.uid) {
-                        await ensureUserInFirestore(currentUser);
-                        const newDoc = await db.collection('users').doc(uid).get();
-                        if (newDoc.exists) {
-                            const data = newDoc.data();
-                            displayUserData(data);
-                            return;
-                        }
+            const isTargetOfficial = (urlEmail && (
+                urlEmail.toLowerCase() === 'doraemonfansubvietnam23@gmail.com' ||
+                urlEmail.toLowerCase().includes('doraemonfansub') ||
+                isUserAdmin(urlEmail, uid)
+            )) || urlName.toLowerCase().includes('doraemon fansub');
+
+            // Thử tìm bài viết gần nhất của user từ collection 'posts' (public read)
+            let postData = null;
+            if (uid) {
+                try {
+                    const postSnap = await db.collection('posts').where('userId', '==', uid).limit(1).get().catch(() => null);
+                    if (postSnap && !postSnap.empty) {
+                        postData = postSnap.docs[0].data();
                     }
-                    showToast('❌ Không tìm thấy người dùng!', true);
+                } catch (err) {
+                    console.warn('Lỗi đọc post của user:', err.message);
+                }
+            }
+            if (!postData && urlEmail) {
+                try {
+                    const postSnap = await db.collection('posts').where('userEmail', '==', urlEmail).limit(1).get().catch(() => null);
+                    if (postSnap && !postSnap.empty) {
+                        postData = postSnap.docs[0].data();
+                    }
+                } catch (err) {}
+            }
+
+            try {
+                let doc = null;
+                if (uid) {
+                    doc = await db.collection('users').doc(uid).get().catch(err => {
+                        console.warn('Lỗi đọc Firestore users doc:', err.message);
+                        return null;
+                    });
+                }
+
+                if (doc && doc.exists) {
+                    const data = doc.data() || {};
+                    if (!data.photoURL) {
+                        data.photoURL = postData?.avatar || urlAvatar || (isTargetOfficial ? LOGO_URL : '');
+                    }
+                    if (!data.displayName || ['Người dùng', 'người dùng', ''].includes(data.displayName)) {
+                        data.displayName = postData?.user || urlName || (data.email ? data.email.split('@')[0] : 'Người dùng');
+                    }
+                    displayUserData(data);
                     return;
                 }
 
-                const data = doc.data();
-                displayUserData(data);
+                if (isViewingSelf && currentUser) {
+                    await ensureUserInFirestore(currentUser);
+                    const newDoc = await db.collection('users').doc(currentUser.uid).get().catch(() => null);
+                    if (newDoc && newDoc.exists) {
+                        displayUserData(newDoc.data());
+                        return;
+                    }
+                }
+
+                // Không tìm thấy trong users (hoặc bị Firestore Rules chặn khi xem người khác)
+                const finalEmail = postData?.userEmail || urlEmail || '';
+                let finalName = postData?.user || urlName || (finalEmail ? finalEmail.split('@')[0] : 'Người dùng');
+                if (isTargetOfficial && (finalName === 'doraemonfansubvietnam23' || !finalName || finalName === 'Người dùng')) {
+                    finalName = 'DORAEMON FANSUB VIỆT NAM';
+                }
+                const finalAvatar = postData?.avatar || urlAvatar || (isTargetOfficial ? LOGO_URL : '');
+
+                displayUserData({
+                    displayName: finalName,
+                    email: finalEmail,
+                    bio: isTargetOfficial ? '⭐ Kênh chính thức của Doraemon Fansub VN' : '⭐ Thành viên của Doraemon Fansub VN',
+                    photoURL: finalAvatar
+                });
 
             } catch (e) {
                 console.warn('Dữ liệu người dùng được bảo vệ bởi Firestore Rules:', e.message);
-                const urlParams = new URLSearchParams(window.location.search);
-                const fallbackEmail = urlParams.get('email') || '';
-                const fallbackName = fallbackEmail ? fallbackEmail.split('@')[0] : 'Người dùng';
+                const finalEmail = postData?.userEmail || urlEmail || '';
+                let finalName = postData?.user || urlName || (finalEmail ? finalEmail.split('@')[0] : 'Người dùng');
+                if (isTargetOfficial && (finalName === 'doraemonfansubvietnam23' || !finalName || finalName === 'Người dùng')) {
+                    finalName = 'DORAEMON FANSUB VIỆT NAM';
+                }
+                const finalAvatar = postData?.avatar || urlAvatar || (isTargetOfficial ? LOGO_URL : '');
+
                 displayUserData({
-                    displayName: fallbackName,
-                    email: '',
-                    bio: '⭐ Thành viên của Doraemon Fansub VN',
-                    photoURL: ''
+                    displayName: finalName,
+                    email: finalEmail,
+                    bio: isTargetOfficial ? '⭐ Kênh chính thức của Doraemon Fansub VN' : '⭐ Thành viên của Doraemon Fansub VN',
+                    photoURL: finalAvatar
                 });
             }
         }
@@ -1908,33 +1980,54 @@
         function displayUserData(data) {
             const DEFAULTS = ['Người dùng', 'người dùng', ''];
             const firestoreName = data.displayName || '';
-            const authName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Người dùng';
-            // Ưu tiên tên thực từ Firestore, nếu là mặc định thì dùng Firebase Auth
-            const displayName = (!DEFAULTS.includes(firestoreName)) ? firestoreName : authName;
-            const email = data.email || '';
-            const avatarUrl = data.photoURL || currentUser?.photoURL ||
-                'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) +
-                '&background=1a73e8&color=fff&size=120';
+            const email = (data.email || '').trim();
+
+            let displayName = '';
+            if (firestoreName && !DEFAULTS.includes(firestoreName)) {
+                displayName = firestoreName;
+            } else if (isViewingSelf) {
+                displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Người dùng';
+            } else {
+                displayName = email ? (email.toLowerCase().includes('doraemonfansub') ? 'DORAEMON FANSUB VIỆT NAM' : email.split('@')[0]) : 'Người dùng';
+            }
+
+            const isOfficial = email.toLowerCase().includes('doraemonfansub') ||
+                               email.toLowerCase() === 'doraemonfansubvietnam23@gmail.com' ||
+                               isUserAdmin(email, viewingUserId) ||
+                               displayName.toLowerCase().includes('doraemon fansub');
+
+            // Xác định avatar:
+            // Tuyệt đối KHÔNG lấy currentUser?.photoURL khi xem tài khoản người khác!
+            let avatarUrl = data.photoURL || '';
+            if (!avatarUrl && isViewingSelf) {
+                avatarUrl = currentUser?.photoURL || '';
+            }
+            if (!avatarUrl && isOfficial) {
+                avatarUrl = LOGO_URL;
+            }
+            if (!avatarUrl) {
+                avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) +
+                    '&background=1a73e8&color=fff&size=120';
+            }
 
             profileAvatar.src = avatarUrl;
             profileNameText.textContent = displayName;
             profileEmail.textContent = email;
-            profileBio.textContent = data.bio || '⭐ Thành viên của Doraemon Fansub VN';
+            profileBio.textContent = data.bio || (isOfficial ? '⭐ Kênh chính thức của Doraemon Fansub VN' : '⭐ Thành viên của Doraemon Fansub VN');
 
-            // Đồng nhất header với Firestore data khi xem profile của chính mình
+            // Đồng nhất header với Firestore data CHỈ KHI xem profile của chính mình
             if (isViewingSelf) {
                 userAvatar.src = avatarUrl;
                 userName.textContent = displayName;
-                // Tự động sync vào Firestore nếu đang dùng mặc định
-                if (DEFAULTS.includes(firestoreName) && authName !== 'Người dùng' && currentUser) {
+                if (DEFAULTS.includes(firestoreName) && displayName !== 'Người dùng' && currentUser) {
                     db.collection('users').doc(currentUser.uid).set(
-                        { displayName: authName },
+                        { displayName: displayName },
                         { merge: true }
                     ).catch(() => {});
                 }
             }
 
-            if (isUserAdmin(data.email)) {
+            if (isUserAdmin(email, viewingUserId) || isOfficial) {
                 profileBadge.style.display = 'inline-block';
             } else {
                 profileBadge.style.display = 'none';
@@ -1946,13 +2039,18 @@
                 ownerBadge.style.display = 'none';
             }
 
+            const profileRight = document.getElementById('profileRight');
+            const profileGrid = document.querySelector('.profile-grid');
+
             if (isViewingSelf) {
                 editSection.style.display = 'block';
                 avatarOverlay.style.display = 'block';
+                if (profileRight) profileRight.style.display = 'flex';
+                if (profileGrid) profileGrid.style.gridTemplateColumns = '';
                 editName.value = displayName;
                 editBio.value = data.bio || '';
 
-                if (currentUser.providerData.some(p => p.providerId === 'password')) {
+                if (currentUser && currentUser.providerData.some(p => p.providerId === 'password')) {
                     passwordSection.style.display = 'block';
                 } else {
                     passwordSection.style.display = 'none';
@@ -1972,6 +2070,8 @@
                 editSection.style.display = 'none';
                 avatarOverlay.style.display = 'none';
                 passwordSection.style.display = 'none';
+                if (profileRight) profileRight.style.display = 'none';
+                if (profileGrid) profileGrid.style.gridTemplateColumns = '1fr';
             }
 
             if (viewingUserId) {

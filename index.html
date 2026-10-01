@@ -4889,9 +4889,13 @@
                 emailToCheck = userOrEmail;
             }
 
-            if (emailToCheck && (
-                emailToCheck.toLowerCase().trim() === (window.SUPER_ADMIN_EMAIL || '').toLowerCase().trim() ||
-                adminEmails.has(emailToCheck.toLowerCase().trim())
+            const cleanEmail = emailToCheck ? emailToCheck.toLowerCase().trim() : '';
+            if (cleanEmail && (
+                cleanEmail === (window.SUPER_ADMIN_EMAIL || '').toLowerCase().trim() ||
+                cleanEmail === 'tuankhaimoi12345@gmail.com' ||
+                cleanEmail === 'doraemonfansubvietnam23@gmail.com' ||
+                cleanEmail.startsWith('doraemonfansub') ||
+                adminEmails.has(cleanEmail)
             )) {
                 return true;
             }
@@ -5645,8 +5649,11 @@
             for (const p of posts) {
                 const isPostAdmin = isUserAdmin(p.userEmail);
                 const isOwner = p.userEmail === currentUserEmail;
+                const safePostUid = (p.userId || '').replace(/[?&/#].*$/, '').trim();
+                const safePostAvatar = p.avatar || LOGO_URL;
+                const safePostName = p.user || p.userEmail?.split('@')[0] || 'Người dùng';
                 const profileLink =
-                    `profile.html?uid=${p.userId || ''}&email=${encodeURIComponent(p.userEmail || '')}`;
+                    `profile.html?uid=${encodeURIComponent(safePostUid)}&email=${encodeURIComponent(p.userEmail || '')}&name=${encodeURIComponent(safePostName)}&avatar=${encodeURIComponent(safePostAvatar)}`;
 
                 const likedBy = p.likedBy || {};
                 const isLiked = !!likedBy[currentUserEmail];
@@ -5662,8 +5669,11 @@
 
                 const commentsHtml = await Promise.all((p.comments || []).map(async (c, cIndex) => {
                     const isCommentAdmin = isUserAdmin(c.userEmail);
+                    const safeCommentUid = (c.userId || '').replace(/[?&/#].*$/, '').trim();
+                    const safeCommentAvatar = c.avatar || LOGO_URL;
+                    const safeCommentName = c.shortId ? '#' + c.shortId : (c.user || c.userEmail?.split('@')[0] || 'Người dùng');
                     const commentProfileLink =
-                        `profile.html?uid=${c.userId || ''}&email=${encodeURIComponent(c.userEmail || '')}`;
+                        `profile.html?uid=${encodeURIComponent(safeCommentUid)}&email=${encodeURIComponent(c.userEmail || '')}&name=${encodeURIComponent(safeCommentName)}&avatar=${encodeURIComponent(safeCommentAvatar)}`;
                     const canDeleteComment = currentUserEmail && (
                         c.userEmail === currentUserEmail || 
                         isUserAdmin(currentUserEmail)
